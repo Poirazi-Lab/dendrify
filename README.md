@@ -2,6 +2,8 @@
 
 ## A python package to incorporate dendrites in spiking neuronal networks using brian2 simulator
 
+**The python package will be uploaded here soon.**
+
 Based on [Pagkalos et al., 2022](https://doi.org/10.1101/2022.05.03.490412).
 
 Reference:
