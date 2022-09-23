@@ -521,6 +521,13 @@ class Dendrite(Compartment):
 
     @property
     def events(self):
+        """events _summary_
+
+        Returns
+        -------
+        _type_
+            _description_
+        """
         return self._events
 
     @property
