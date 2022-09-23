@@ -10,6 +10,7 @@ from __future__ import annotations
 import sys
 
 import brian2
+import numpy
 import numpy as np
 from brian2.units import ms, pA
 
