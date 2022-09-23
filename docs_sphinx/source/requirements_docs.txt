@@ -1,0 +1,5 @@
+furo
+pandoc
+nbsphinx
+docutils
+autodocsumm
