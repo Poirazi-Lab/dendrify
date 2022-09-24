@@ -3,3 +3,4 @@ pandoc
 nbsphinx
 docutils
 autodocsumm
+brian2
