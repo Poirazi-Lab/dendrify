@@ -8,8 +8,10 @@ build:
 python:
   # Install our python package before building the docs
   install:
+    - requirements: docs_sphinx/source/requirements_docs.txt
     - method: pip
       path: .
+  system_packages: true
       
 sphinx:
   fail_on_warning: true
