@@ -17,11 +17,10 @@ setup(
     install_requires=[],
     keywords=['python', 'brian2', 'dendrites', 'SNNs', 'network models'],
     classifiers=[
-        "Development Status :: 1 - Planning",
+        "Development Status :: 4 - Beta",
         "Intended Audience :: Developers",
         "Programming Language :: Python :: 3",
         "Operating System :: Unix",
-        "Operating System :: MacOS :: MacOS X",
         "Operating System :: Microsoft :: Windows",
     ]
 )
