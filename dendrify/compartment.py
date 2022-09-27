@@ -42,8 +42,8 @@ class Compartment:
 
     Examples
     -------
-    >>> comp = Compartment('soma', 'leakyIF')
-    >>> comp = Compartment('soma', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>> compX = Compartment('nameX', 'leakyIF')
+    >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
     >>>                    cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
@@ -103,6 +103,11 @@ class Compartment:
             automatically (provided all necessary parameters exist). 
             Available options: ``'half_cylinders'`` (default), 
             ``'cylinder_<compartment name>'``.
+
+        Note
+        ----
+        The automatic approaches require that both compartments to be connected 
+        have specified **length**, **diameter** and **axial resistance**.
 
         Examples
         --------
@@ -173,9 +178,44 @@ class Compartment:
                 t_rise: Unit = None, t_decay: Unit = None,
                 scale_g: bool = False):
         """
-        Adds AMPA/NMDA/GABA synapses from a specified source. The 'source'
-        kwarg is used to separate synapses of the same type coming from
-        different sources. Usage -> object.add_synapse('type')
+        Adds synaptic currents equations and parameters. When only the decay
+        time constant ``t_decay`` is provided, the synaptic model assumes an
+        instantaneous rise of the synaptic conductance followed by an exponential
+        decay. When both the  rise ``t_rise`` and decay ``t_decay`` constants are
+        provided, synapses are modelled as a sum of two exponentials. For more
+        information see: 
+        `Modeling Synapses by Arnd Roth & Mark C. W. van Rossum 
+        <https://doi.org/10.7551/mitpress/9780262013277.003.0007>`_
+
+        Parameters
+        ----------
+        channel : str, optional
+            Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
+            ``'GABA'``, by default ``None``
+        pre : str, optional
+            A unique name to distinguish synapses of the same type coming from
+            different input sources, by default ``None``
+        g : brian2.units.fundamentalunits.Unit, optional
+            Maximum synaptic conductance, by default ``None``
+        t_rise : brian2.units.fundamentalunits.Unit, optional
+            Rise time constant, by default ``None``
+        t_decay : brian2.units.fundamentalunits.Unit, optional
+            Decay time constant, by default ``None``
+        scale_g : bool, optional
+            Option to add a normalization factor to scale the maximum
+            conductance at 1 when synapses are modelled as a difference of
+            exponentials (have both rise and decay kinetics), by default
+            ``False``.
+
+        Examples
+        --------
+        >>> comp = Compartment('comp')
+        >>> # adding an AMPA synapse with instant rise & exponential decay:
+        >>> comp.synapse('AMPA', g=1*nS, t_decay=5*ms, pre='X')
+        >>> # same channel, different conductance & source:
+        >>> comp.synapse('AMPA', g=2*nS, t_decay=5*ms, pre='Y')
+        >>> # different channel with both rise & decay kinetics: 
+        >>> comp.synapse('NMDA', g=1*nS, t_rise=5*ms, t_decay=50*ms, pre='X')
         """
 
         # Make sure that the user provides a synapse source
@@ -216,12 +256,19 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Unit = 20*ms, sigma: Unit = 3*pA,
-              mean: Unit = 0*pA):
+    def noise(self, tau: Unit = 20*ms, sigma: Unit = 3*pA, mean: Unit = 0*pA):
         """
-        Adds coloured noisy current. More info here:
-        https://brian2.readthedocs.io/en/stable/user/models.html#noise
-        Usage-> object.noise(optonal kwargs)
+        Adds a stochastic noise current. For more information see the Noise
+        section: of :doc:`brian2:user/models`
+
+        Parameters
+        ----------
+        tau : brian2.units.fundamentalunits.Unit, optional
+            Time constant of the Gaussian noise, by default 20*ms
+        sigma : brian2.units.fundamentalunits.Unit, optional
+            Standard deviation of the Gaussian noise, by default 3*pA
+        mean : brian2.units.fundamentalunits.Unit, optional
+            Mean of the Gaussian noise, by default 0*pA
         """
         I_noise_name = f'I_noise_{self.name}'
         noise_eqs = library['noise'].format(self.name)
@@ -506,51 +553,51 @@ class Dendrite(Compartment):
     def Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
                   g_fall: Unit = None):
         """
-        Adds Ca spike currents and some other variables
-        for controlling custom _events.
-        Usage-> object.Ca_spikes()
+        Coming soon.
         """
-        # The following code creates all necessary equations for dspikes:
-        name = self.name
-        dspike_currents = f'I_Ca_{name} + I_Kc_{name}'
+        pass
 
-        I_Ca_eqs = f'dI_Ca_{name}/dt = -I_Ca_{name}/tau_Ca  :amp'
-        I_Kc_eqs = f'dI_Kc_{name}/dt = -I_Kc_{name}/tau_Kc  :amp'
+        # # The following code creates all necessary equations for dspikes:
+        # name = self.name
+        # dspike_currents = f'I_Ca_{name} + I_Kc_{name}'
 
-        I_Ca_check = f'allow_I_Ca_{name}  :boolean'
-        I_Kc_check = f'allow_I_Kc_{name}  :boolean'
+        # I_Ca_eqs = f'dI_Ca_{name}/dt = -I_Ca_{name}/tau_Ca  :amp'
+        # I_Kc_eqs = f'dI_Kc_{name}/dt = -I_Kc_{name}/tau_Kc  :amp'
 
-        refractory_var = f'timer_Ca_{name}  :second'
-        to_replace = f'= I_ext_{name}'
+        # I_Ca_check = f'allow_I_Ca_{name}  :boolean'
+        # I_Kc_check = f'allow_I_Kc_{name}  :boolean'
 
-        self._equations = self._equations.replace(
-            to_replace, f'{to_replace} + {dspike_currents}')
-        self._equations += '\n'.join(['', I_Ca_eqs, I_Kc_eqs, I_Ca_check,
-                                      I_Kc_check, refractory_var])
+        # refractory_var = f'timer_Ca_{name}  :second'
+        # to_replace = f'= I_ext_{name}'
 
-        # Create all necessary custom _events for dspikes:
-        condition_I_Ca = library['condition_I_Ca']
-        condition_I_Kc = library['condition_I_Kc']
-        if not self._events:
-            self._events = {}
-        self._events[f"activate_I_Ca_{name}"] = condition_I_Ca.format(name)
-        self._events[f"activate_I_Kc_{name}"] = condition_I_Kc.format(name)
+        # self._equations = self._equations.replace(
+        #     to_replace, f'{to_replace} + {dspike_currents}')
+        # self._equations += '\n'.join(['', I_Ca_eqs, I_Kc_eqs, I_Ca_check,
+        #                               I_Kc_check, refractory_var])
 
-        # Specify what is going to happen inside run_on_event()
-        if not self._event_actions:
-            self._event_actions = library['run_on_Ca_spike'].format(name)
-        else:
-            self._event_actions += "\n" + \
-                library['run_on_Ca_spike'].format(name)
-        # Include params needed
-        if not self._params:
-            self._params = {}
-        if threshold:
-            self._params[f"Vth_Ca_{self.name}"] = threshold
-        if g_rise:
-            self._params[f"g_Ca_{self.name}_max"] = g_rise
-        if g_fall:
-            self._params[f"g_Kc_{self.name}_max"] = g_fall
+        # # Create all necessary custom _events for dspikes:
+        # condition_I_Ca = library['condition_I_Ca']
+        # condition_I_Kc = library['condition_I_Kc']
+        # if not self._events:
+        #     self._events = {}
+        # self._events[f"activate_I_Ca_{name}"] = condition_I_Ca.format(name)
+        # self._events[f"activate_I_Kc_{name}"] = condition_I_Kc.format(name)
+
+        # # Specify what is going to happen inside run_on_event()
+        # if not self._event_actions:
+        #     self._event_actions = library['run_on_Ca_spike'].format(name)
+        # else:
+        #     self._event_actions += "\n" + \
+        #         library['run_on_Ca_spike'].format(name)
+        # # Include params needed
+        # if not self._params:
+        #     self._params = {}
+        # if threshold:
+        #     self._params[f"Vth_Ca_{self.name}"] = threshold
+        # if g_rise:
+        #     self._params[f"g_Ca_{self.name}_max"] = g_rise
+        # if g_fall:
+        #     self._params[f"g_Kc_{self.name}_max"] = g_fall
 
     @property
     def events(self):
