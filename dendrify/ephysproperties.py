@@ -4,7 +4,7 @@ from math import pi
 class EphysProperties(object):
     """
     WARNING: This class is under development. Some of its features might change
-    or become part of the Compartment & Neuromodel classes.
+    or become part of the Compartment & NeuronModel classes.
 
     A class that helps to declare all necessary model parameters.
     """
@@ -83,12 +83,12 @@ class EphysProperties(object):
 
     @property
     def parameters(self):
-        """Summary
+        """parameters _summary_
 
         Returns
         -------
-        TYPE
-            Description
+        _type_
+            _description_
         """
         d = {}
         error = None

@@ -28,6 +28,7 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
+    'sphinx.ext.intersphinx',
     'nbsphinx',
     'autodocsumm'
 ]
@@ -41,3 +42,7 @@ pygments_style = 'sphinx'
 html_title = "Dendrify"
 autodoc_default_options = {'show-inheritance': True}
 autodoc_typehints = "none"
+intersphinx_mapping = {
+    "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
+}
+myst_url_schemes = ["http", "https", ]
