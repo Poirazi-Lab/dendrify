@@ -11,7 +11,7 @@ import sys
 
 import brian2
 import numpy as np
-from brian2.units import ms, pA
+from brian2.units import Unit, ms, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
@@ -20,30 +20,34 @@ from .equations import library
 class Compartment:
     """
     A class that automatically generates and handles all differential
-    equations needed to describe a single compartment and the currents
-    (synaptic/dendritic/noise) passing through it.
+    equations and parameters needed to describe a single compartment and
+    the currents (synaptic/dendritic/noise) passing through it.
 
     Parameters
     ----------
 
     name : str
         A unique name used to tag compartment-specific equations and parameters.
-        It is also used to distinguish the various compartments belonging to a
-        single NeuronModel.
+        It is also used to distinguish the various compartments belonging to the
+        same :class:`~dendrify.neuronmodel.NeuronModel`.
     model : str, optional
-        A keyword for accessing default library models. Custom models can also
-        be provided but they should be in the same formattable structure as the
-        library models. Available options: 'passive' (default), 'adaptiveIF',
-        'leakyIF', 'adex'.
-    kwargs : Quantity, optional
-        Text text text text text text :class:`~dendrify.ephysproperties.EphysProperties`
+        A keyword for accessing Dendrify's library models. Custom models can
+        also be provided but they should be in the same formattable structure as
+        the library models. Available options: ``'passive'`` (default),
+        ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
+    kwargs : brian2.units.fundamentalunits.Unit, optional
+        Kwargs are used to specify important electrophysiological properties,
+        such as the specific capacitance or resistance. For more information
+        see: :class:`~dendrify.ephysproperties.EphysProperties`.
 
-    Example
+    Examples
     -------
     >>> comp = Compartment('soma', 'leakyIF')
+    >>> comp = Compartment('soma', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>>                    cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: 'Quantity'):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
         self.name = name
         self._equations = None
         self._params = None
@@ -86,22 +90,29 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment,
-                g: Quantity | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g: Unit | str = 'half_cylinders'):
         """
-        Allows the electrical coupling of two compartments.
+        Allows the connection (electrical coupling) of two compartments.
 
         Parameters
         ----------
         other : Compartment
-            Another Compartment instance.
-        g : str | Quantity, optional
-            Description
+            Another compartment.
+        g : str | brian2.units.fundamentalunits.Unit, optional
+            The coupling conductance. It can be set explicitly or calculated
+            automatically (provided all necessary parameters exist). 
+            Available options: ``'half_cylinders'`` (default), 
+            ``'cylinder_<compartment name>'``.
 
         Examples
         --------
-        >>> compX.connect(compY)
+        >>> compX, compY = Compartment('x', **kwargs), Compartment('y', **kwargs)
+        >>> # explicit approach:
         >>> compX.connect(compY, g=10*nS)
+        >>> # half cylinders (default):
+        >>> compX.connect(compY)
+        >>> # cylinder of one compartment:
+        >>> compX.connect(compY, g='cylinder_x')
         """
         # Prohibit connecting compartments with the same name
         if self.name == other.name:
@@ -158,9 +169,9 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str = None, pre: str = None,
-                g: 'Quantity' = None, t_rise: 'Quantity' = None,
-                t_decay: 'Quantity' = None, scale_g: bool = False):
+    def synapse(self, channel: str = None, pre: str = None, g: Unit = None,
+                t_rise: Unit = None, t_decay: Unit = None,
+                scale_g: bool = False):
         """
         Adds AMPA/NMDA/GABA synapses from a specified source. The 'source'
         kwarg is used to separate synapses of the same type coming from
@@ -205,8 +216,8 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: 'Quantity' = 20*ms, sigma: 'Quantity' = 3*pA,
-              mean: 'Quantity' = 0*pA):
+    def noise(self, tau: Unit = 20*ms, sigma: Unit = 3*pA,
+              mean: Unit = 0*pA):
         """
         Adds coloured noisy current. More info here:
         https://brian2.readthedocs.io/en/stable/user/models.html#noise
@@ -228,15 +239,15 @@ class Compartment:
 
     @property
     def parameters(self) -> dict:
-        """parameters _summary_
+        """
+        All parameters that have been generated for a single compartment.
 
         Returns
         -------
         dict
-            _description_
         """
         d_out = {}
-        for i in [self._params, self.g_couples]:
+        for i in [self._params, self._g_couples]:
             if i:
                 d_out.update(i)
         if self._ephys_object:
@@ -244,13 +255,14 @@ class Compartment:
         return d_out
 
     @property
-    def area(self) -> 'Quantity':
-        """area _summary_
+    def area(self) -> Unit:
+        """
+        A compartment's surface area (open cylinder) based on its length
+        and its diameter.
 
         Returns
         -------
-        Quantity
-            _description_
+        brian2.units.fundamentalunits.Unit
         """
         try:
             return self._ephys_object.area
@@ -260,13 +272,14 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def capacitance(self) -> 'Quantity':
-        """capacitance _summary_
+    def capacitance(self) -> Unit:
+        """
+        A compartment's absolute capacitance based on its specific capacitance
+        (cm) and its surface area.
 
         Returns
         -------
-        Quantity
-            _description_
+        brian2.units.fundamentalunits.Unit
         """
         try:
             return self._ephys_object.capacitance
@@ -276,7 +289,15 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def g_leakage(self) -> 'Quantity':
+    def g_leakage(self) -> Unit:
+        """
+        A compartment's leakage conductance based on its specific leakage
+        conductance (gl) and its surface area.
+
+        Returns
+        -------
+        brian2.units.fundamentalunits.Unit
+        """
         try:
             return self._ephys_object.g_leakage
         except AttributeError:
@@ -286,10 +307,18 @@ class Compartment:
 
     @property
     def equations(self) -> str:
+        """
+        All differential equations that have been generated for a single
+        compartment.
+
+        Returns
+        -------
+        str
+        """
         return self._equations
 
     @property
-    def g_couples(self) -> dict:
+    def _g_couples(self) -> dict:
         # If not _connections have been specified yet
         if not self._connections:
             return None
@@ -316,7 +345,8 @@ class Compartment:
         return d_out
 
     @staticmethod
-    def g_norm_factor(trise: 'Quantity', tdecay: 'Quantity') -> 'Quantity':
+    def g_norm_factor(trise: Unit,
+                      tdecay: Unit):
         tpeak = (tdecay*trise / (tdecay-trise)) * np.log(tdecay/trise)
         factor = (((tdecay*trise) / (tdecay-trise))
                   * (-np.exp(-tpeak/trise) + np.exp(-tpeak/tdecay))
@@ -334,7 +364,7 @@ class Soma(Compartment):
     """
 
     def __init__(self, name: str, model: str = 'leakyIF',
-                 **kwargs: 'Quantity'):
+                 **kwargs: Unit):
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
@@ -375,7 +405,8 @@ class Dendrite(Compartment):
         _description_
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: 'Quantity'):
+    def __init__(self, name: str, model: str = 'passive',
+                 **kwargs: Unit):
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
@@ -413,15 +444,17 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str, threshold: 'Quantity' = None,
-                g_rise: 'Quantity' = None, g_fall: 'Quantity' = None):
+    def dspikes(self, channel: str,
+                threshold: Unit = None,
+                g_rise: Unit = None,
+                g_fall: Unit = None):
         if channel == 'Na':
             self.Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
         elif channel == 'Ca':
             self.Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
 
-    def Na_spikes(self, threshold: 'Quantity' = None, g_rise: 'Quantity' = None,
-                  g_fall: 'Quantity' = None):
+    def Na_spikes(self, threshold: Unit = None, g_rise: Unit = None,
+                  g_fall: Unit = None):
         """
         Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
         for controlling custom _events.
@@ -470,8 +503,8 @@ class Dendrite(Compartment):
         if g_fall:
             self._params[f"g_Kn_{self.name}_max"] = g_fall
 
-    def Ca_spikes(self, threshold: 'Quantity' = None, g_rise: 'Quantity' = None,
-                  g_fall: 'Quantity' = None):
+    def Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
+                  g_fall: Unit = None):
         """
         Adds Ca spike currents and some other variables
         for controlling custom _events.
