@@ -41,8 +41,10 @@ class Compartment:
         see: :class:`~dendrify.ephysproperties.EphysProperties`.
 
     Examples
-    -------
+    --------
+    >>> # specifying equations only:
     >>> compX = Compartment('nameX', 'leakyIF')
+    >>> # specifying equations and ephys properties:
     >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
     >>>                    cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
@@ -402,28 +404,49 @@ class Compartment:
 
 
 class Soma(Compartment):
-    """Soma _summary_
+    """
+    A class that automatically generates and handles all differential equations
+    and parameters needed to describe a somatic compartment and the currents
+    (synaptic/dendritic/noise) passing through it.
+
+    Note
+    ----
+    Soma is just a wrapper of Compartment with slight changes to account for
+    certain somatic properties. For a full list of its methods and attributes,
+    please see: :class:`~dendrify.compartment.Compartment`.
 
     Parameters
     ----------
-    Compartment : _type_
-        _description_
+    name : str
+        A unique name used to tag compartment-specific equations and parameters.
+        It is also used to distinguish the various compartments belonging to the
+        same :class:`~dendrify.neuronmodel.NeuronModel`.
+    model : str, optional
+        A keyword for accessing Dendrify's library models. Custom models can
+        also be provided but they should be in the same formattable structure as
+        the library models. Available options: ``'leakyIF'`` (default),
+        ``'adaptiveIF'``, ``'adex'``.
+    kwargs : brian2.units.fundamentalunits.Unit, optional
+        Kwargs are used to specify important electrophysiological properties,
+        such as the specific capacitance or resistance. For more information
+        see: :class:`~dendrify.ephysproperties.EphysProperties`.
+
+    Examples
+    --------
+    >>> # specifying equations only:
+    >>> somaX = Soma('nameX', 'leakyIF')
+    >>> # specifying equations and ephys properties:
+    >>> somaY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'leakyIF',
-                 **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Unit):
+
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
 
     def __str__(self):
-        """Summary
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
         ephys_dict = self._ephys_object.__dict__
         ephys = '\n'.join([f"\u2192 {i}:\n  [{ephys_dict[i]}]\n"
                            for i in ephys_dict])
@@ -459,28 +482,16 @@ class Dendrite(Compartment):
         self._event_actions = None
 
     def __str__(self):
-        """Summary
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
         ephys_dict = self._ephys_object.__dict__
-
         ephys = '\n'.join([f"\u2192 {i}:\n    [{ephys_dict[i]}]\n"
                            for i in ephys_dict])
-
         equations = self.equations.replace('\n', '\n    ')
-
         events = '\n'.join([f"    '{key}': '{self.events[key]}'"
                             for key in self.events
                             ]) if self.events else '    None'
-
         parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
                                 for i in self.parameters.items()
                                 ]) if self.parameters else '    None'
-
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
                f"USER PARAMETERS:\n\n{ephys}"
@@ -513,10 +524,10 @@ class Dendrite(Compartment):
         # Both currents take into account the reversal potential of Na/K
         I_Na_eqs = f'I_Na_{name} = g_Na_{name} * (E_Na-V_{name})  :amp'
         I_Kn_eqs = f'I_Kn_{name} = g_Kn_{name} * (E_K-V_{name})  :amp'
-        # Ion conductances simply decate exponentially
+        # Ion conductances simply decay exponentially
         g_Na_eqs = f'dg_Na_{name}/dt = -g_Na_{name}/tau_Na  :siemens'
         g_Kn_eqs = f'dg_Kn_{name}/dt = -g_Kn_{name}/tau_Kn  :siemens'
-        # Paramaters needed for the dSpike custom events
+        # Parameters needed for the dSpike custom events
         I_Na_check = f'allow_I_Na_{name}  :boolean'
         I_Kn_check = f'allow_I_Kn_{name}  :boolean'
         refractory_var = f'timer_Na_{name}  :second'
