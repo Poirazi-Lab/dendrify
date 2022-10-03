@@ -21,7 +21,7 @@ class Compartment:
     """
     A class that automatically generates and handles all differential
     equations and parameters needed to describe a single compartment and
-    the currents (synaptic/dendritic/noise) passing through it.
+    any currents (synaptic, dendritic, noise) passing through it.
 
     Parameters
     ----------
@@ -46,7 +46,7 @@ class Compartment:
     >>> compX = Compartment('nameX', 'leakyIF')
     >>> # specifying equations and ephys properties:
     >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
-    >>>                    cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
     def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
@@ -68,7 +68,6 @@ class Compartment:
         parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
                                 for i in self.parameters.items()
                                 ]) if self.parameters else '   None'
-
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
                f"USER PARAMETERS:\n\n{ephys}"
@@ -121,6 +120,7 @@ class Compartment:
         >>> # cylinder of one compartment:
         >>> compX.connect(compY, g='cylinder_x')
         """
+
         # Prohibit connecting compartments with the same name
         if self.name == other.name:
             print(("ERROR: Cannot connect to compartments with the same name.\n"
@@ -176,9 +176,9 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str = None, pre: str = None, g: Unit = None,
-                t_rise: Unit = None, t_decay: Unit = None,
-                scale_g: bool = False):
+    def synapse(self, channel: str | None = None, pre: str | None = None,
+                g: Unit | None = None, t_rise: Unit | None = None,
+                t_decay: Unit | None = None, scale_g: bool | None = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -233,7 +233,6 @@ class Compartment:
             key = channel
 
         current_name = f'I_{channel}_{pre}_{self.name}'
-
         current_eqs = library[key].format(self.name, pre)
 
         to_replace = f'= I_ext_{self.name}'
@@ -394,8 +393,7 @@ class Compartment:
         return d_out
 
     @staticmethod
-    def g_norm_factor(trise: Unit,
-                      tdecay: Unit):
+    def g_norm_factor(trise: Unit, tdecay: Unit):
         tpeak = (tdecay*trise / (tdecay-trise)) * np.log(tdecay/trise)
         factor = (((tdecay*trise) / (tdecay-trise))
                   * (-np.exp(-tpeak/trise) + np.exp(-tpeak/tdecay))
@@ -406,12 +404,12 @@ class Compartment:
 class Soma(Compartment):
     """
     A class that automatically generates and handles all differential equations
-    and parameters needed to describe a somatic compartment and the currents
-    (synaptic/dendritic/noise) passing through it.
+    and parameters needed to describe a somatic compartment and any currents
+    (synaptic, dendritic, noise) passing through it.
 
     Note
     ----
-    Soma is just a wrapper of Compartment with slight changes to account for
+    Soma acts as a wrapper for Compartment with slight changes to account for
     certain somatic properties. For a full list of its methods and attributes,
     please see: :class:`~dendrify.compartment.Compartment`.
 
@@ -467,16 +465,31 @@ class Soma(Compartment):
 
 
 class Dendrite(Compartment):
-    """Dendrite _summary_
+    # TODO: restrict to passive
+    """
+    A class that automatically generates and handles all differential equations
+    and parameters needed to describe a dendritic compartment, its active
+    mechanisms, and any currents (synaptic, dendritic, ionic, noise) passing
+    through it.
+
+    Note
+    ----
+    Dendrite inherits all the methods and attributes of its parent class
+    :class:`~dendrify.compartment.Compartment`. For a complete list, please refer
+    to the documentation of the latter.
 
     Parameters
     ----------
-    Compartment : _type_
-        _description_
+    name : str
+        A unique name used to tag compartment-specific equations and parameters.
+        It is also used to distinguish the various compartments belonging to the
+        same :class:`~dendrify.neuronmodel.NeuronModel`.
+    model : str, optional
+        A keyword for accessing Dendrify's library models. Dendritic compartments
+        are by default set to ``'passive'``.
     """
 
-    def __init__(self, name: str, model: str = 'passive',
-                 **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
@@ -502,21 +515,61 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str,
-                threshold: Unit = None,
-                g_rise: Unit = None,
-                g_fall: Unit = None):
-        if channel == 'Na':
-            self.Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
-        elif channel == 'Ca':
-            self.Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+    def dspikes(self, channel: str, threshold: Unit | None = None,
+                g_rise: Unit | None = None, g_fall: Unit | None = None):
+        # TODO: show error if channel does not exist.
+        """
+        Adds the mechanisms and parameters needed for dendritic spiking. Under
+        the hood, this method creates all equations, conditions and actions to
+        utilize Brian's custom events functionality. Spikes are generated through
+        the sequential activation of a positive (sodium or calcium-like) and a
+        negative current (potassium-like current) when a specified dSpike
+        threshold is crossed.
 
-    def Na_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                  g_fall: Unit = None):
+        Note
+        ----
+        The dendritic spiking mechanism as implemented here has three distinct
+        phases.
+
+        **INACTIVE PHASE:**\n
+        When the dendritic voltage is subthreshold OR the simulation step is
+        within the refractory period. dSpikes cannot be generated during this
+        phase.
+
+        **DEPOLARIZATION PHASE:**\n
+        When the dendritic voltage crosses the dSpike threshold AND the
+        refractory period has elapsed. This triggers the instant activation of a
+        positive current that enters the dendrite and then decays exponentially.
+
+        **REPOLARIZATION PHASE:**\n
+        This phase starts automatically after a specified delay from the
+        initiation of the dSpike. A negative current is activated instantly and
+        then decays exponentially. Also a new refractory period begins.  
+
+        Parameters
+        ----------
+        channel : str
+            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon)
+        threshold : brian2.units.fundamentalunits.Unit, optional
+            The membrane voltage threshold for dendritic spiking.
+        g_rise : brian2.units.fundamentalunits.Unit, optional
+            The conductance of the current that is activated during the
+            depolarization phase.
+        g_fall : brian2.units.fundamentalunits.Unit, optional
+             The conductance of the current that is activated during the
+            repolarization phase.
+        """
+        if channel == 'Na':
+            self._Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+        elif channel == 'Ca':
+            self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+
+    def _Na_spikes(self, threshold: Unit = None, g_rise: Unit = None,
+                   g_fall: Unit = None):
         """
         Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
         for controlling custom _events.
-        Usage-> object.Na_spikes()
+        Usage-> object._Na_spikes()
         """
         # The following code creates all necessary equations for dspikes:
         name = self.name
@@ -561,8 +614,9 @@ class Dendrite(Compartment):
         if g_fall:
             self._params[f"g_Kn_{self.name}_max"] = g_fall
 
-    def Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                  g_fall: Unit = None):
+    def _Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
+                   g_fall: Unit = None):
+        # TODO: check that it works as expected.
         """
         Coming soon.
         """
