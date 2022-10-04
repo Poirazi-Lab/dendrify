@@ -1,4 +1,4 @@
-Reference documentation
+API reference
 =======================
 
 .. toctree::

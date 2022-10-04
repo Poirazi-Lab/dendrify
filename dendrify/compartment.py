@@ -665,23 +665,25 @@ class Dendrite(Compartment):
         #     self._params[f"g_Kc_{self.name}_max"] = g_fall
 
     @property
-    def events(self):
-        """events _summary_
+    def events(self) -> dict:
+        """
+        A dictionary of all dSpike events created for a single dendrite.
 
         Returns
         -------
-        _type_
-            _description_
+        dict
+            Keys: event names, values: events conditions.
         """
         return self._events
 
     @property
-    def event_actions(self):
-        """event_actions _summary_
+    def event_actions(self) -> str:
+        """
+        A string that is used to tell Brian how to handle the dSpike events.
 
         Returns
         -------
-        _type_
-            _description_
+        str
+            Executable code that runs automatically in the background.
         """
         return self._event_actions
