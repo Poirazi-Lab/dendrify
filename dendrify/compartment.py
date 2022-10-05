@@ -11,7 +11,7 @@ import sys
 
 import brian2
 import numpy as np
-from brian2.units import Unit, ms, pA
+from brian2.units import Quantity, ms, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
@@ -35,7 +35,7 @@ class Compartment:
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
-    kwargs : brian2.units.fundamentalunits.Unit, optional
+    kwargs : brian2.units.fundamentalunits.Quantity, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For more information
         see: :class:`~dendrify.ephysproperties.EphysProperties`.
@@ -49,7 +49,7 @@ class Compartment:
     >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
         self.name = name
         self._equations = None
         self._params = None
@@ -91,7 +91,7 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Unit | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g: Quantity | str = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
@@ -99,7 +99,7 @@ class Compartment:
         ----------
         other : Compartment
             Another compartment.
-        g : str | brian2.units.fundamentalunits.Unit, optional
+        g : str | brian2.units.fundamentalunits.Quantity, optional
             The coupling conductance. It can be set explicitly or calculated
             automatically (provided all necessary parameters exist). 
             Available options: ``'half_cylinders'`` (default), 
@@ -177,8 +177,8 @@ class Compartment:
             print('Please select a valid conductance.')
 
     def synapse(self, channel: str | None = None, pre: str | None = None,
-                g: Unit | None = None, t_rise: Unit | None = None,
-                t_decay: Unit | None = None, scale_g: bool | None = False):
+                g: Quantity | None = None, t_rise: Quantity | None = None,
+                t_decay: Quantity | None = None, scale_g: bool | None = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -197,11 +197,11 @@ class Compartment:
         pre : str, optional
             A unique name to distinguish synapses of the same type coming from
             different input sources, by default ``None``
-        g : brian2.units.fundamentalunits.Unit, optional
+        g : brian2.units.fundamentalunits.Quantity, optional
             Maximum synaptic conductance, by default ``None``
-        t_rise : brian2.units.fundamentalunits.Unit, optional
+        t_rise : brian2.units.fundamentalunits.Quantity, optional
             Rise time constant, by default ``None``
-        t_decay : brian2.units.fundamentalunits.Unit, optional
+        t_decay : brian2.units.fundamentalunits.Quantity, optional
             Decay time constant, by default ``None``
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
@@ -257,18 +257,18 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Unit = 20*ms, sigma: Unit = 3*pA, mean: Unit = 0*pA):
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA, mean: Quantity = 0*pA):
         """
         Adds a stochastic noise current. For more information see the Noise
         section: of :doc:`brian2:user/models`
 
         Parameters
         ----------
-        tau : brian2.units.fundamentalunits.Unit, optional
+        tau : brian2.units.fundamentalunits.Quantity, optional
             Time constant of the Gaussian noise, by default 20*ms
-        sigma : brian2.units.fundamentalunits.Unit, optional
+        sigma : brian2.units.fundamentalunits.Quantity, optional
             Standard deviation of the Gaussian noise, by default 3*pA
-        mean : brian2.units.fundamentalunits.Unit, optional
+        mean : brian2.units.fundamentalunits.Quantity, optional
             Mean of the Gaussian noise, by default 0*pA
         """
         I_noise_name = f'I_noise_{self.name}'
@@ -303,14 +303,14 @@ class Compartment:
         return d_out
 
     @property
-    def area(self) -> Unit:
+    def area(self) -> Quantity:
         """
         A compartment's surface area (open cylinder) based on its length
         and its diameter.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.area
@@ -320,14 +320,14 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def capacitance(self) -> Unit:
+    def capacitance(self) -> Quantity:
         """
         A compartment's absolute capacitance based on its specific capacitance
         (cm) and its surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.capacitance
@@ -337,14 +337,14 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def g_leakage(self) -> Unit:
+    def g_leakage(self) -> Quantity:
         """
         A compartment's leakage conductance based on its specific leakage
         conductance (gl) and its surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.g_leakage
@@ -393,7 +393,7 @@ class Compartment:
         return d_out
 
     @staticmethod
-    def g_norm_factor(trise: Unit, tdecay: Unit):
+    def g_norm_factor(trise: Quantity, tdecay: Quantity):
         tpeak = (tdecay*trise / (tdecay-trise)) * np.log(tdecay/trise)
         factor = (((tdecay*trise) / (tdecay-trise))
                   * (-np.exp(-tpeak/trise) + np.exp(-tpeak/tdecay))
@@ -424,7 +424,7 @@ class Soma(Compartment):
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
-    kwargs : brian2.units.fundamentalunits.Unit, optional
+    kwargs : brian2.units.fundamentalunits.Quantity, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For more information
         see: :class:`~dendrify.ephysproperties.EphysProperties`.
@@ -438,7 +438,7 @@ class Soma(Compartment):
     >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Quantity):
 
         super().__init__(name, model, **kwargs)
         self._events = None
@@ -489,7 +489,7 @@ class Dendrite(Compartment):
         are by default set to ``'passive'``.
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
@@ -515,8 +515,8 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str, threshold: Unit | None = None,
-                g_rise: Unit | None = None, g_fall: Unit | None = None):
+    def dspikes(self, channel: str, threshold: Quantity | None = None,
+                g_rise: Quantity | None = None, g_fall: Quantity | None = None):
         # TODO: show error if channel does not exist.
         """
         Adds the mechanisms and parameters needed for dendritic spiking. Under
@@ -550,12 +550,12 @@ class Dendrite(Compartment):
         ----------
         channel : str
             Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon)
-        threshold : brian2.units.fundamentalunits.Unit, optional
+        threshold : brian2.units.fundamentalunits.Quantity, optional
             The membrane voltage threshold for dendritic spiking.
-        g_rise : brian2.units.fundamentalunits.Unit, optional
+        g_rise : brian2.units.fundamentalunits.Quantity, optional
             The conductance of the current that is activated during the
             depolarization phase.
-        g_fall : brian2.units.fundamentalunits.Unit, optional
+        g_fall : brian2.units.fundamentalunits.Quantity, optional
              The conductance of the current that is activated during the
             repolarization phase.
         """
@@ -564,8 +564,8 @@ class Dendrite(Compartment):
         elif channel == 'Ca':
             self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
 
-    def _Na_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                   g_fall: Unit = None):
+    def _Na_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
+                   g_fall: Quantity = None):
         """
         Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
         for controlling custom _events.
@@ -614,8 +614,8 @@ class Dendrite(Compartment):
         if g_fall:
             self._params[f"g_Kn_{self.name}_max"] = g_fall
 
-    def _Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                   g_fall: Unit = None):
+    def _Ca_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
+                   g_fall: Quantity = None):
         # TODO: check that it works as expected.
         """
         Coming soon.
