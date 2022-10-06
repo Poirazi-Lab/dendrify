@@ -4,3 +4,4 @@ nbsphinx
 docutils
 autodocsumm
 brian2
+sphinx >= 5.1
