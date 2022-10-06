@@ -9,11 +9,15 @@ python:
   # Install our python package before building the docs
   install:
     - method: pip
+    - requirements: docs_sphinx/source/requirements_docs.txt
       path: .
       
 sphinx:
   fail_on_warning: true
 
+sphinx:
+   configuration: docs_sphinx/source/conf.py
+
 formats:
-  - pdf
-  - epub
+   - pdf
+   - epub
