@@ -91,7 +91,7 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Quantity | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g='half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
@@ -176,9 +176,9 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str | None = None, pre: str | None = None,
-                g: Quantity | None = None, t_rise: Quantity | None = None,
-                t_decay: Quantity | None = None, scale_g: bool | None = False):
+    def synapse(self, channel: str = None, pre: str = None,
+                g: Quantity = None, t_rise: Quantity = None,
+                t_decay: Quantity = None, scale_g: bool = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -515,8 +515,8 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str, threshold: Quantity | None = None,
-                g_rise: Quantity | None = None, g_fall: Quantity | None = None):
+    def dspikes(self, channel: str, threshold: Quantity = None,
+                g_rise: Quantity = None, g_fall: Quantity = None):
         # TODO: show error if channel does not exist.
         """
         Adds the mechanisms and parameters needed for dendritic spiking. Under

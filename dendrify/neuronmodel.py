@@ -60,19 +60,6 @@ class NeuronModel:
     def __init__(self,
                  connections,
                  **kwargs):
-        """__init__ _summary_
-
-        Parameters
-        ----------
-        connections : list[tuple[Compartment, Compartment, str  |  Quantity]]
-            _description_
-        """        """__init__ _summary_
-
-        Parameters
-        ----------
-        connections : list[tuple[Compartment, Compartment, None  |  Quantity]]
-            _description_
-        """
 
         self._namespace = None
         self._compartments = None
