@@ -91,7 +91,7 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Quantity | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g: Quantity = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
