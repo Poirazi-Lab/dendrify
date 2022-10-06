@@ -1,53 +1,79 @@
 import sys
 
 import __main__ as main
-from brian2.units import mV
+from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma
-
-# The as_graph() method also imports matplotlib and networkx when called.
 
 
 class NeuronModel:
     """
-    Merges multiple Compartment objects into a single model. It also comptains
-    useful functions for custom event handling and parameter initialisation.
+    Creates a multicompartmental neuron model by connecting individual
+    compartments and merging their equations, parameters and custom events.This
+    model can then be used for creating a population of neurons through Brian's
+    :doc:`NeuronGroup <brian2:reference/brian2.groups.neurongroup.NeuronGroup>`.
+    This class also contains useful methods for managing model properties and
+    for automating the initialization of custom events and simulation parameters.
 
-    ---------------------------------------------------------------------------
-    * PARAMETERS (user-defined)
+    Note
+    ----
+    Dendrify aims to facilitate the development of reduced, **few-compartmental**
+    I&F models that help us study how key dendritic properties may affect
+    network-level functions. It is not designed to substitute morphologically
+    and biophysically detailed neuron models, commonly used for highly-accurate,
+    single-cell simulations. If you are interested in the latter category of
+    models, please see Brian's
+    :doc:`SpatialNeuron <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
 
-    neuron: str
-        Specifies which _compartments to collect from Compartment._neuron_types.
+    Parameters
+    ----------
+    connections : list[tuple[Compartment, Compartment, str  |  brian2.units.fundamentalunits.Quantity]]
+        A description of how the various compartments belonging to the same
+        neuron model should be connected.
 
-    namespace: dict, optional
-        A dictionary mapping identifier names to parameter objects.
-
-    ---------------------------------------------------------------------------
-    * PROPERTIES (handled by class functions but accessible to user)
-
-    _compartments: list
-        A list of Compartment objects that are grouped by their neuron
-        attribute.
-
-    _linked_neurongroup: brian2.NeuronGroup
-        Reference to a NeuronGroup object that is linked to a specified
-        NeuronModel onject.
-
-    _varscope: dict
-        Used to allow access to global variables of the main simulation script.
+    Example
+    -------
+    >>> # Valid format: [*(x, y, z)] 
+    >>> # - x -> Soma or Dendrite object
+    >>> # - y -> Soma or Dendrite object other than x
+    >>> # - z -> 'half_cylinders' or 'cylinder_ + name' or brian2.nS unit
+    >>> #        (default is 'half_cylinders' if left blank)
+    >>> soma = Soma('s', **kwargs)
+    >>> prox = Dendrite('p', **kwargs)
+    >>> dist = Dendrite('d', **kwargs)
+    >>> connections = [(soma, prox, 15*nS), (prox, dist, 10*nS)]
+    >>> model = NeuronModel(connections)
     """
-    defaults = {"E_AMPA": 0 * mV,
+
+    # Default values for key ionic mechanisms
+    DEFAULTS = {"E_AMPA": 0 * mV,
                 "E_NMDA": 0 * mV,
                 "E_GABA": -80 * mV,
-                "alpha": 0.062,
                 "E_Na": 70 * mV,
                 "E_K": -89 * mV,
                 "E_Ca": 136 * mV,
                 "Mg": 1.0,
+                "alpha": 0.062,
                 "beta": 3.57,
                 "gamma": 0}
 
-    def __init__(self, connections, **kwargs):
+    def __init__(self,
+                 connections: list[tuple[Compartment, Compartment, str | Quantity]],
+                 **kwargs):
+        """__init__ _summary_
+
+        Parameters
+        ----------
+        connections : list[tuple[Compartment, Compartment, str  |  Quantity]]
+            _description_
+        """        """__init__ _summary_
+
+        Parameters
+        ----------
+        connections : list[tuple[Compartment, Compartment, None  |  Quantity]]
+            _description_
+        """
+
         self._namespace = None
         self._compartments = None
         self._linked_neurongroup = None
@@ -55,8 +81,8 @@ class NeuronModel:
         self._extra_equations = None
         self._extra_params = None
         self._graph = None
-        self.parse_compartments(connections)
-        self.set_properties(**kwargs)
+        self._parse_compartments(connections)
+        self._set_properties(**kwargs)
 
     def __str__(self):
         """
@@ -69,7 +95,6 @@ class NeuronModel:
         if self.parameters:
             params_sorted = {key: self.parameters[key]
                              for key in sorted(self.parameters)}
-
             parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
                                     for i in params_sorted.items()])
         else:
@@ -100,7 +125,7 @@ class NeuronModel:
                f"\u2192 _extra_params:\n{extra_params}\n")
         return msg
 
-    def parse_compartments(self, comp_list):
+    def _parse_compartments(self, comp_list):
         error_msg = (
             "\nValid format: [*(x, y, z)] \n"
             "- x -> Soma or Dendrite object\n"
@@ -115,32 +140,37 @@ class NeuronModel:
         self._graph = []
         for comp in comp_list:
             pre, post = comp[0], comp[1]
+
             # Prohibit self connections
             if pre is post:
-                print(f"ERROR: Cannot connect '{pre.tag}' to itself.")
+                print(f"ERROR: Cannot connect '{pre.name}' to itself.")
                 print(error_msg)
                 sys.exit()
+
             # Ensure that users do not use objects that make no sense
             if not (isinstance(pre, Compartment) and
                     isinstance(post, Compartment)):
                 print(f"ERROR: Unknown compartment type provided.")
                 print(error_msg)
                 sys.exit()
+
             # Store graph-like representation for debugging or visualization
-            self._graph.append((pre.tag, post.tag))
+            self._graph.append((pre.name, post.name))
+
             # Include all compartments in a list for easy access
             if pre not in self._compartments:
                 self._compartments.append(pre)
             if post not in self._compartments:
                 self._compartments.append(post)
+
             # Call the connect method from the Compartment class
             if len(comp) == 2:
                 pre.connect(post)
             else:
                 pre.connect(post, g=comp[2])
 
-    def set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
-                       scale_factor=None, spine_factor=None):
+    def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
+                        scale_factor=None, spine_factor=None):
         for i in self._compartments:
             if cm and (not i._ephys_object.cm):
                 i._ephys_object.cm = cm
@@ -158,6 +188,21 @@ class NeuronModel:
 
     def dspike_properties(self, channel=None, tau_rise=None, tau_fall=None,
                           offset_fall=None, refractory=None):
+        """dspike_properties _summary_
+
+        Parameters
+        ----------
+        channel : _type_, optional
+            _description_, by default None
+        tau_rise : _type_, optional
+            _description_, by default None
+        tau_fall : _type_, optional
+            _description_, by default None
+        offset_fall : _type_, optional
+            _description_, by default None
+        refractory : _type_, optional
+            _description_, by default None
+        """
         # Make sure user provides a valid option:
         if channel not in ['Na', 'Ca']:
             print("Please select a valid dendritic spike type ('Na' or 'Ca')")
@@ -176,17 +221,43 @@ class NeuronModel:
         self.add_params(dspike_params)
 
     def add_params(self, params_dict):
+        """add_params _summary_
+
+        Parameters
+        ----------
+        params_dict : _type_
+            _description_
+        """
         if not self._extra_params:
             self._extra_params = {}
         self._extra_params.update(params_dict)
 
     def add_equations(self, eqs):
+        """add_equations _summary_
+
+        Parameters
+        ----------
+        eqs : _type_
+            _description_
+        """
         if not self._extra_equations:
             self._extra_equations = f"{eqs}"
         else:
             self._extra_equations += f"\n{eqs}"
 
     def link(self, ng, automate='all', verbose=None):
+        """link _summary_
+
+        Parameters
+        ----------
+        ng : _type_
+            _description_
+        automate : str, optional
+            _description_, by default 'all'
+        verbose : _type_, optional
+            _description_, by default None
+        """
+
         """
         Used to create a link between a NeuronModel and its corresponding
         NeuronGroup object. Unlocks set_rest and handle_dspikes methods
@@ -217,8 +288,8 @@ class NeuronModel:
 
         # When model parameters are passed as dict to the NeuronGroup:
         if self._namespace:
-            commands = [command.format(self._linked_neurongroup[0], i.tag,
-                                       repr(self._namespace['EL_'+i.tag]))
+            commands = [command.format(self._linked_neurongroup[0], i.name,
+                                       repr(self._namespace['EL_'+i.name]))
                         for i in self._compartments]
         executable = '\n'.join(commands)
         if verbose:
@@ -248,8 +319,8 @@ class NeuronModel:
         checks_Ca = ('{0}.allow_I_Ca_{1} = True \n'
                      '{0}.allow_I_Kc_{1} = False')
         # Compartment specific initial compditions:
-        checks_Na_comp = [checks_Na.format(ng_name, i.tag) for i in comps_Na]
-        checks_Ca_comp = [checks_Ca.format(ng_name, i.tag) for i in comps_Ca]
+        checks_Na_comp = [checks_Na.format(ng_name, i.name) for i in comps_Na]
+        checks_Ca_comp = [checks_Ca.format(ng_name, i.name) for i in comps_Ca]
         # All initial compditions and actions needed for dspikes:
         all_checks = checks_Na_comp + checks_Ca_comp
         all_actions = [i.event_actions for i in active_comps]
@@ -265,6 +336,27 @@ class NeuronModel:
     def as_graph(self, fontsize=10, fontcolor='white', scale_nodes=1,
                  color_soma='#4C6C92', color_dendrites='#A7361C', alpha=1,
                  scale_edges=1, seed=None):
+        """as_graph _summary_
+
+        Parameters
+        ----------
+        fontsize : int, optional
+            _description_, by default 10
+        fontcolor : str, optional
+            _description_, by default 'white'
+        scale_nodes : int, optional
+            _description_, by default 1
+        color_soma : str, optional
+            _description_, by default '#4C6C92'
+        color_dendrites : str, optional
+            _description_, by default '#A7361C'
+        alpha : int, optional
+            _description_, by default 1
+        scale_edges : int, optional
+            _description_, by default 1
+        seed : _type_, optional
+            _description_, by default None
+        """
         import matplotlib.pyplot as plt
         import networkx as nx
 
@@ -272,7 +364,7 @@ class NeuronModel:
         soma, dendrites = [], []
         for comp in self._compartments:
             target = soma if isinstance(comp, Soma) else dendrites
-            target.append(comp.tag)
+            target.append(comp.name)
 
         # Make graph
         G = nx.Graph()
@@ -314,7 +406,7 @@ class NeuronModel:
         d = {}
         for i in self._compartments:
             d.update(i.parameters)
-        d.update(self.defaults)
+        d.update(self.DEFAULTS)
         if self._extra_params:
             d.update(self._extra_params)
         return d

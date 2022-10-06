@@ -11,7 +11,7 @@ import sys
 
 import brian2
 import numpy as np
-from brian2.units import Unit, ms, pA
+from brian2.units import Quantity, ms, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
@@ -21,7 +21,7 @@ class Compartment:
     """
     A class that automatically generates and handles all differential
     equations and parameters needed to describe a single compartment and
-    the currents (synaptic/dendritic/noise) passing through it.
+    any currents (synaptic, dendritic, noise) passing through it.
 
     Parameters
     ----------
@@ -35,19 +35,21 @@ class Compartment:
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
-    kwargs : brian2.units.fundamentalunits.Unit, optional
+    kwargs : brian2.units.fundamentalunits.Quantity, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For more information
         see: :class:`~dendrify.ephysproperties.EphysProperties`.
 
     Examples
-    -------
+    --------
+    >>> # specifying equations only:
     >>> compX = Compartment('nameX', 'leakyIF')
+    >>> # specifying equations and ephys properties:
     >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
-    >>>                    cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
         self.name = name
         self._equations = None
         self._params = None
@@ -66,7 +68,6 @@ class Compartment:
         parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
                                 for i in self.parameters.items()
                                 ]) if self.parameters else '   None'
-
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
                f"USER PARAMETERS:\n\n{ephys}"
@@ -90,7 +91,7 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Unit | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g: Quantity | str = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
@@ -98,7 +99,7 @@ class Compartment:
         ----------
         other : Compartment
             Another compartment.
-        g : str | brian2.units.fundamentalunits.Unit, optional
+        g : str | brian2.units.fundamentalunits.Quantity, optional
             The coupling conductance. It can be set explicitly or calculated
             automatically (provided all necessary parameters exist). 
             Available options: ``'half_cylinders'`` (default), 
@@ -119,6 +120,7 @@ class Compartment:
         >>> # cylinder of one compartment:
         >>> compX.connect(compY, g='cylinder_x')
         """
+
         # Prohibit connecting compartments with the same name
         if self.name == other.name:
             print(("ERROR: Cannot connect to compartments with the same name.\n"
@@ -174,9 +176,9 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str = None, pre: str = None, g: Unit = None,
-                t_rise: Unit = None, t_decay: Unit = None,
-                scale_g: bool = False):
+    def synapse(self, channel: str | None = None, pre: str | None = None,
+                g: Quantity | None = None, t_rise: Quantity | None = None,
+                t_decay: Quantity | None = None, scale_g: bool | None = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -195,11 +197,11 @@ class Compartment:
         pre : str, optional
             A unique name to distinguish synapses of the same type coming from
             different input sources, by default ``None``
-        g : brian2.units.fundamentalunits.Unit, optional
+        g : brian2.units.fundamentalunits.Quantity, optional
             Maximum synaptic conductance, by default ``None``
-        t_rise : brian2.units.fundamentalunits.Unit, optional
+        t_rise : brian2.units.fundamentalunits.Quantity, optional
             Rise time constant, by default ``None``
-        t_decay : brian2.units.fundamentalunits.Unit, optional
+        t_decay : brian2.units.fundamentalunits.Quantity, optional
             Decay time constant, by default ``None``
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
@@ -231,7 +233,6 @@ class Compartment:
             key = channel
 
         current_name = f'I_{channel}_{pre}_{self.name}'
-
         current_eqs = library[key].format(self.name, pre)
 
         to_replace = f'= I_ext_{self.name}'
@@ -256,18 +257,18 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Unit = 20*ms, sigma: Unit = 3*pA, mean: Unit = 0*pA):
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA, mean: Quantity = 0*pA):
         """
         Adds a stochastic noise current. For more information see the Noise
         section: of :doc:`brian2:user/models`
 
         Parameters
         ----------
-        tau : brian2.units.fundamentalunits.Unit, optional
+        tau : brian2.units.fundamentalunits.Quantity, optional
             Time constant of the Gaussian noise, by default 20*ms
-        sigma : brian2.units.fundamentalunits.Unit, optional
+        sigma : brian2.units.fundamentalunits.Quantity, optional
             Standard deviation of the Gaussian noise, by default 3*pA
-        mean : brian2.units.fundamentalunits.Unit, optional
+        mean : brian2.units.fundamentalunits.Quantity, optional
             Mean of the Gaussian noise, by default 0*pA
         """
         I_noise_name = f'I_noise_{self.name}'
@@ -302,14 +303,14 @@ class Compartment:
         return d_out
 
     @property
-    def area(self) -> Unit:
+    def area(self) -> Quantity:
         """
         A compartment's surface area (open cylinder) based on its length
         and its diameter.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.area
@@ -319,14 +320,14 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def capacitance(self) -> Unit:
+    def capacitance(self) -> Quantity:
         """
         A compartment's absolute capacitance based on its specific capacitance
         (cm) and its surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.capacitance
@@ -336,14 +337,14 @@ class Compartment:
                    "returned None instead.\n"))
 
     @property
-    def g_leakage(self) -> Unit:
+    def g_leakage(self) -> Quantity:
         """
         A compartment's leakage conductance based on its specific leakage
         conductance (gl) and its surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Unit
+        brian2.units.fundamentalunits.Quantity
         """
         try:
             return self._ephys_object.g_leakage
@@ -392,8 +393,7 @@ class Compartment:
         return d_out
 
     @staticmethod
-    def g_norm_factor(trise: Unit,
-                      tdecay: Unit):
+    def g_norm_factor(trise: Quantity, tdecay: Quantity):
         tpeak = (tdecay*trise / (tdecay-trise)) * np.log(tdecay/trise)
         factor = (((tdecay*trise) / (tdecay-trise))
                   * (-np.exp(-tpeak/trise) + np.exp(-tpeak/tdecay))
@@ -402,28 +402,49 @@ class Compartment:
 
 
 class Soma(Compartment):
-    """Soma _summary_
+    """
+    A class that automatically generates and handles all differential equations
+    and parameters needed to describe a somatic compartment and any currents
+    (synaptic, dendritic, noise) passing through it.
+
+    Note
+    ----
+    Soma acts as a wrapper for Compartment with slight changes to account for
+    certain somatic properties. For a full list of its methods and attributes,
+    please see: :class:`~dendrify.compartment.Compartment`.
 
     Parameters
     ----------
-    Compartment : _type_
-        _description_
+    name : str
+        A unique name used to tag compartment-specific equations and parameters.
+        It is also used to distinguish the various compartments belonging to the
+        same :class:`~dendrify.neuronmodel.NeuronModel`.
+    model : str, optional
+        A keyword for accessing Dendrify's library models. Custom models can
+        also be provided but they should be in the same formattable structure as
+        the library models. Available options: ``'leakyIF'`` (default),
+        ``'adaptiveIF'``, ``'adex'``.
+    kwargs : brian2.units.fundamentalunits.Quantity, optional
+        Kwargs are used to specify important electrophysiological properties,
+        such as the specific capacitance or resistance. For more information
+        see: :class:`~dendrify.ephysproperties.EphysProperties`.
+
+    Examples
+    --------
+    >>> # specifying equations only:
+    >>> somaX = Soma('nameX', 'leakyIF')
+    >>> # specifying equations and ephys properties:
+    >>> somaY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'leakyIF',
-                 **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Quantity):
+
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
 
     def __str__(self):
-        """Summary
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
         ephys_dict = self._ephys_object.__dict__
         ephys = '\n'.join([f"\u2192 {i}:\n  [{ephys_dict[i]}]\n"
                            for i in ephys_dict])
@@ -444,43 +465,46 @@ class Soma(Compartment):
 
 
 class Dendrite(Compartment):
-    """Dendrite _summary_
+    # TODO: restrict to passive
+    """
+    A class that automatically generates and handles all differential equations
+    and parameters needed to describe a dendritic compartment, its active
+    mechanisms, and any currents (synaptic, dendritic, ionic, noise) passing
+    through it.
+
+    Note
+    ----
+    Dendrite inherits all the methods and attributes of its parent class
+    :class:`~dendrify.compartment.Compartment`. For a complete list, please refer
+    to the documentation of the latter.
 
     Parameters
     ----------
-    Compartment : _type_
-        _description_
+    name : str
+        A unique name used to tag compartment-specific equations and parameters.
+        It is also used to distinguish the various compartments belonging to the
+        same :class:`~dendrify.neuronmodel.NeuronModel`.
+    model : str, optional
+        A keyword for accessing Dendrify's library models. Dendritic compartments
+        are by default set to ``'passive'``.
     """
 
-    def __init__(self, name: str, model: str = 'passive',
-                 **kwargs: Unit):
+    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
         super().__init__(name, model, **kwargs)
         self._events = None
         self._event_actions = None
 
     def __str__(self):
-        """Summary
-
-        Returns
-        -------
-        TYPE
-            Description
-        """
         ephys_dict = self._ephys_object.__dict__
-
         ephys = '\n'.join([f"\u2192 {i}:\n    [{ephys_dict[i]}]\n"
                            for i in ephys_dict])
-
         equations = self.equations.replace('\n', '\n    ')
-
         events = '\n'.join([f"    '{key}': '{self.events[key]}'"
                             for key in self.events
                             ]) if self.events else '    None'
-
         parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
                                 for i in self.parameters.items()
                                 ]) if self.parameters else '    None'
-
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
                f"USER PARAMETERS:\n\n{ephys}"
@@ -491,21 +515,61 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str,
-                threshold: Unit = None,
-                g_rise: Unit = None,
-                g_fall: Unit = None):
-        if channel == 'Na':
-            self.Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
-        elif channel == 'Ca':
-            self.Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+    def dspikes(self, channel: str, threshold: Quantity | None = None,
+                g_rise: Quantity | None = None, g_fall: Quantity | None = None):
+        # TODO: show error if channel does not exist.
+        """
+        Adds the mechanisms and parameters needed for dendritic spiking. Under
+        the hood, this method creates all equations, conditions and actions to
+        utilize Brian's custom events functionality. Spikes are generated through
+        the sequential activation of a positive (sodium or calcium-like) and a
+        negative current (potassium-like current) when a specified dSpike
+        threshold is crossed.
 
-    def Na_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                  g_fall: Unit = None):
+        Note
+        ----
+        The dendritic spiking mechanism as implemented here has three distinct
+        phases.
+
+        **INACTIVE PHASE:**\n
+        When the dendritic voltage is subthreshold OR the simulation step is
+        within the refractory period. dSpikes cannot be generated during this
+        phase.
+
+        **DEPOLARIZATION PHASE:**\n
+        When the dendritic voltage crosses the dSpike threshold AND the
+        refractory period has elapsed. This triggers the instant activation of a
+        positive current that enters the dendrite and then decays exponentially.
+
+        **REPOLARIZATION PHASE:**\n
+        This phase starts automatically after a specified delay from the
+        initiation of the dSpike. A negative current is activated instantly and
+        then decays exponentially. Also a new refractory period begins.  
+
+        Parameters
+        ----------
+        channel : str
+            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon)
+        threshold : brian2.units.fundamentalunits.Quantity, optional
+            The membrane voltage threshold for dendritic spiking.
+        g_rise : brian2.units.fundamentalunits.Quantity, optional
+            The conductance of the current that is activated during the
+            depolarization phase.
+        g_fall : brian2.units.fundamentalunits.Quantity, optional
+             The conductance of the current that is activated during the
+            repolarization phase.
+        """
+        if channel == 'Na':
+            self._Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+        elif channel == 'Ca':
+            self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
+
+    def _Na_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
+                   g_fall: Quantity = None):
         """
         Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
         for controlling custom _events.
-        Usage-> object.Na_spikes()
+        Usage-> object._Na_spikes()
         """
         # The following code creates all necessary equations for dspikes:
         name = self.name
@@ -513,10 +577,10 @@ class Dendrite(Compartment):
         # Both currents take into account the reversal potential of Na/K
         I_Na_eqs = f'I_Na_{name} = g_Na_{name} * (E_Na-V_{name})  :amp'
         I_Kn_eqs = f'I_Kn_{name} = g_Kn_{name} * (E_K-V_{name})  :amp'
-        # Ion conductances simply decate exponentially
+        # Ion conductances simply decay exponentially
         g_Na_eqs = f'dg_Na_{name}/dt = -g_Na_{name}/tau_Na  :siemens'
         g_Kn_eqs = f'dg_Kn_{name}/dt = -g_Kn_{name}/tau_Kn  :siemens'
-        # Paramaters needed for the dSpike custom events
+        # Parameters needed for the dSpike custom events
         I_Na_check = f'allow_I_Na_{name}  :boolean'
         I_Kn_check = f'allow_I_Kn_{name}  :boolean'
         refractory_var = f'timer_Na_{name}  :second'
@@ -550,8 +614,9 @@ class Dendrite(Compartment):
         if g_fall:
             self._params[f"g_Kn_{self.name}_max"] = g_fall
 
-    def Ca_spikes(self, threshold: Unit = None, g_rise: Unit = None,
-                  g_fall: Unit = None):
+    def _Ca_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
+                   g_fall: Quantity = None):
+        # TODO: check that it works as expected.
         """
         Coming soon.
         """
@@ -600,23 +665,25 @@ class Dendrite(Compartment):
         #     self._params[f"g_Kc_{self.name}_max"] = g_fall
 
     @property
-    def events(self):
-        """events _summary_
+    def events(self) -> dict:
+        """
+        A dictionary of all dSpike events created for a single dendrite.
 
         Returns
         -------
-        _type_
-            _description_
+        dict
+            Keys: event names, values: events conditions.
         """
         return self._events
 
     @property
-    def event_actions(self):
-        """event_actions _summary_
+    def event_actions(self) -> str:
+        """
+        A string that is used to tell Brian how to handle the dSpike events.
 
         Returns
         -------
-        _type_
-            _description_
+        str
+            Executable code that runs automatically in the background.
         """
         return self._event_actions
