@@ -58,7 +58,7 @@ class NeuronModel:
                 "gamma": 0}
 
     def __init__(self,
-                 connections: list[tuple[Compartment, Compartment, str | Quantity]],
+                 connections,
                  **kwargs):
         """__init__ _summary_
 
