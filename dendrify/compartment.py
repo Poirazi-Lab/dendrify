@@ -259,7 +259,8 @@ class Compartment:
 
     def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA, mean: Quantity = 0*pA):
         """
-        Adds a stochastic noise current.
+        Adds a stochastic noise current. For more information see the Noise
+        section: of :doc:`brian2:user/models`
 
         Parameters
         ----------
