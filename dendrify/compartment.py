@@ -8,7 +8,7 @@
 from __future__ import annotations
 
 import sys
-from typing import Union
+from typing import Optional, Union
 
 import brian2
 import numpy as np
@@ -157,7 +157,7 @@ class Compartment:
         g_to_other = f'g_{self.name}_{other.name}'
 
         # when g is specified by user
-        if isinstance(g, brian2.units.fundamentalunits.Quantity):
+        if isinstance(g, Quantity):
             self._connections.append((g_to_self, 'user', g))
             other._connections.append((g_to_other, 'user', g))
 
@@ -177,9 +177,12 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str = None, pre: str = None,
-                g: Quantity = None, t_rise: Quantity = None,
-                t_decay: Quantity = None, scale_g: bool = False):
+    def synapse(self, channel: Optional[str] = None,
+                pre: Optional[str] = None,
+                g: Optional[Quantity] = None,
+                t_rise: Optional[Quantity] = None,
+                t_decay: Optional[Quantity] = None,
+                scale_g: bool = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -516,8 +519,10 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str, threshold: Quantity = None,
-                g_rise: Quantity = None, g_fall: Quantity = None):
+    def dspikes(self, channel: str,
+                threshold: Optional[Quantity] = None,
+                g_rise: Optional[Quantity] = None,
+                g_fall: Optional[Quantity] = None):
         # TODO: show error if channel does not exist.
         """
         Adds the mechanisms and parameters needed for dendritic spiking. Under
@@ -565,8 +570,9 @@ class Dendrite(Compartment):
         elif channel == 'Ca':
             self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
 
-    def _Na_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
-                   g_fall: Quantity = None):
+    def _Na_spikes(self, threshold: Optional[Quantity] = None,
+                   g_rise: Optional[Quantity] = None,
+                   g_fall: Optional[Quantity] = None):
         """
         Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
         for controlling custom _events.

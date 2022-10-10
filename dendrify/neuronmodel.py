@@ -1,5 +1,5 @@
 import sys
-from typing import List, Tuple, Union
+from typing import List, Optional, Tuple, Union
 
 import __main__ as main
 from brian2.units import Quantity, mV
@@ -167,21 +167,24 @@ class NeuronModel:
                 if isinstance(i, Dendrite):
                     i._ephys_object.spine_factor = spine_factor
 
-    def dspike_properties(self, channel=None, tau_rise=None, tau_fall=None,
-                          offset_fall=None, refractory=None):
+    def dspike_properties(self, channel: Optional[Quantity] = None,
+                          tau_rise: Optional[Quantity] = None,
+                          tau_fall: Optional[Quantity] = None,
+                          offset_fall: Optional[Quantity] = None,
+                          refractory: Optional[Quantity] = None):
         """dspike_properties _summary_
 
         Parameters
         ----------
-        channel : _type_, optional
+        channel : Optional[Quantity], optional
             _description_, by default None
-        tau_rise : _type_, optional
+        tau_rise : Optional[Quantity], optional
             _description_, by default None
-        tau_fall : _type_, optional
+        tau_fall : Optional[Quantity], optional
             _description_, by default None
-        offset_fall : _type_, optional
+        offset_fall : Optional[Quantity], optional
             _description_, by default None
-        refractory : _type_, optional
+        refractory : Optional[Quantity], optional
             _description_, by default None
         """
         # Make sure user provides a valid option:
