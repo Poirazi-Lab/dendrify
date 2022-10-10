@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import sys
+from typing import Union
 
 import brian2
 import numpy as np
@@ -91,7 +92,7 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Quantity | str = 'half_cylinders'):
+    def connect(self, other: Compartment, g: Union[Quantity, str] = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 

@@ -1,4 +1,5 @@
 import sys
+from typing import List, Tuple, Union
 
 import __main__ as main
 from brian2.units import Quantity, mV
@@ -57,23 +58,8 @@ class NeuronModel:
                 "beta": 3.57,
                 "gamma": 0}
 
-    def __init__(self,
-                 connections,
-                 **kwargs):
-        """__init__ _summary_
-
-        Parameters
-        ----------
-        connections : list[tuple[Compartment, Compartment, str  |  Quantity]]
-            _description_
-        """        """__init__ _summary_
-
-        Parameters
-        ----------
-        connections : list[tuple[Compartment, Compartment, None  |  Quantity]]
-            _description_
-        """
-
+    def __init__(self, connections: List[
+            Tuple[Compartment, Compartment, Union[str, Quantity]]], **kwargs):
         self._namespace = None
         self._compartments = None
         self._linked_neurongroup = None
@@ -85,11 +71,6 @@ class NeuronModel:
         self._set_properties(**kwargs)
 
     def __str__(self):
-        """
-        Prints useful information about a NeuronModel object.
-        Usage -> print(onjectName)
-        """
-
         equations = self.equations.replace('\n', '\n    ')
 
         if self.parameters:
