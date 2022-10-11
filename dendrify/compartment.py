@@ -231,7 +231,7 @@ class Compartment:
                    f"synapse @ '{self.name}'\n"
                    "Program exited.\n"))
             sys.exit()
-        # Switch to rise/decay equations if t_rise & t_decated are provided
+        # Switch to rise/decay equations if t_rise & t_decay are provided
         if all([t_rise, t_decay]):
             key = f"{channel}_rd"
         else:
