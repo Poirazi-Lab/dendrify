@@ -2,6 +2,7 @@ import sys
 from typing import List, Optional, Tuple, Union
 
 import __main__ as main
+from brian2 import NeuronGroup
 from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma
@@ -24,24 +25,34 @@ class NeuronModel:
     and biophysically detailed neuron models, commonly used for highly-accurate,
     single-cell simulations. If you are interested in the latter category of
     models, please see Brian's
-    :doc:`SpatialNeuron <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
+    :doc:`SpatialNeuron 
+    <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
 
     Parameters
     ----------
-    connections : list[tuple[Compartment, Compartment, str  |  brian2.units.fundamentalunits.Quantity]]
+    connections : list[tuple[Compartment, Compartment, str  | Quantity]]
         A description of how the various compartments belonging to the same
         neuron model should be connected.
+    kwargs : brian2.units.fundamentalunits.Quantity, optional
+        Kwargs are used to specify important electrophysiological properties,
+        such as the specific capacitance or resistance. For all available options
+        see: :class:`~dendrify.ephysproperties.EphysProperties`. 
+
+    Warning
+    -------
+    Parameters set here affect all model compartments and can override any
+    compartment-specific parameters. 
 
     Example
     -------
-    >>> # Valid format: [*(x, y, z)] 
-    >>> # - x -> Soma or Dendrite object
-    >>> # - y -> Soma or Dendrite object other than x
-    >>> # - z -> 'half_cylinders' or 'cylinder_ + name' or brian2.nS unit
-    >>> #        (default is 'half_cylinders' if left blank)
-    >>> soma = Soma('s', **kwargs)
-    >>> prox = Dendrite('p', **kwargs)
-    >>> dist = Dendrite('d', **kwargs)
+    >>> # Valid format: [*(x, y, z)], where
+    >>> # x -> Soma or Dendrite object
+    >>> # y -> Soma or Dendrite object other than x
+    >>> # z -> 'half_cylinders' or 'cylinder_ + name' or brian2.nS unit
+    >>> #      (by default 'half_cylinders')
+    >>> soma = Soma('s', ...)
+    >>> prox = Dendrite('p', ...)
+    >>> dist = Dendrite('d', ...)
     >>> connections = [(soma, prox, 15*nS), (prox, dist, 10*nS)]
     >>> model = NeuronModel(connections)
     """
@@ -72,7 +83,6 @@ class NeuronModel:
 
     def __str__(self):
         equations = self.equations.replace('\n', '\n    ')
-
         if self.parameters:
             params_sorted = {key: self.parameters[key]
                              for key in sorted(self.parameters)}
@@ -167,25 +177,30 @@ class NeuronModel:
                 if isinstance(i, Dendrite):
                     i._ephys_object.spine_factor = spine_factor
 
-    def dspike_properties(self, channel: Optional[Quantity] = None,
+    def dspike_properties(self, channel: str = None,
                           tau_rise: Optional[Quantity] = None,
                           tau_fall: Optional[Quantity] = None,
                           offset_fall: Optional[Quantity] = None,
                           refractory: Optional[Quantity] = None):
-        """dspike_properties _summary_
+        """
+        Allows specifying essential dSpike properties affecting all compartments.
 
         Parameters
         ----------
-        channel : Optional[Quantity], optional
-            _description_, by default None
-        tau_rise : Optional[Quantity], optional
-            _description_, by default None
-        tau_fall : Optional[Quantity], optional
-            _description_, by default None
-        offset_fall : Optional[Quantity], optional
-            _description_, by default None
-        refractory : Optional[Quantity], optional
-            _description_, by default None
+        channel : str
+            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming
+            soon).
+        tau_rise : brian2.units.fundamentalunits.Quantity
+            The decay time constant of the current causing the dSpike's
+            **depolarization** phase, by default ``None``.
+        tau_fall : brian2.units.fundamentalunits.Quantity
+            The decay time constant of the current causing the dSpike's
+            **repolarization** phase, by default ``None``.
+        offset_fall : brian2.units.fundamentalunits.Quantity
+            The delay for starting the dSpike repolarization phase, by default
+            ``None``.
+        refractory : brian2.units.fundamentalunits.Quantity
+            The duration of the dSpike inactive period, by default ``None``.
         """
         # Make sure user provides a valid option:
         if channel not in ['Na', 'Ca']:
@@ -204,69 +219,72 @@ class NeuronModel:
                              'tau_Kc': tau_fall}
         self.add_params(dspike_params)
 
-    def add_params(self, params_dict):
-        """add_params _summary_
+    def add_params(self, params_dict: dict):
+        """
+        Allows specifying extra/custom parameters.
 
         Parameters
         ----------
-        params_dict : _type_
-            _description_
+        params_dict : dict
+            A dictionary of parameters.
         """
         if not self._extra_params:
             self._extra_params = {}
         self._extra_params.update(params_dict)
 
-    def add_equations(self, eqs):
-        """add_equations _summary_
+    def add_equations(self, eqs: str):
+        """
+        Allows adding custom equations.
 
         Parameters
         ----------
-        eqs : _type_
-            _description_
+        eqs : str
+            A string of Brian-compatible equations.
         """
         if not self._extra_equations:
             self._extra_equations = f"{eqs}"
         else:
             self._extra_equations += f"\n{eqs}"
 
-    def link(self, ng, automate='all', verbose=None):
-        """link _summary_
+    def link(self, ng: NeuronGroup, automate: str = 'all',
+             verbose: bool = False):
+        """
+        Links a NeuronModel to a
+        :doc:`NeuronGroup <brian2:reference/brian2.groups.neurongroup.NeuronGroup>`.
+        This allows dendrify to automatically handle the initialization of
+        important simulation parameters.
 
         Parameters
         ----------
-        ng : _type_
-            _description_
+        ng : brian2.NeuronGroup
+            A NeuronGroup that was created using a NeuronModel.
         automate : str, optional
-            _description_, by default 'all'
-        verbose : _type_, optional
-            _description_, by default None
-        """
-
-        """
-        Used to create a link between a NeuronModel and its corresponding
-        NeuronGroup object. Unlocks set_rest and handle_dspikes methods
+            What to automate. Available options: ``'all'`` (default),
+            ``'v_rest'``, ``'events'``.
+        verbose : bool, optional
+            If ``True`` it prints all the code that was created and run in the 
+            background by dendrify, by default ``False``
         """
         self._namespace = ng.namespace
         self._varscope = main.__dict__
-
         items = main.__dict__.items()
         ng_name = [k for k, v in items if v is ng][0]
         self._linked_neurongroup = ng_name, ng
 
         if automate == 'all':
-            self.set_rest(verbose)
-            self.handle_events(verbose)
+            self._set_rest(verbose)
+            self._handle_events(verbose)
 
         elif automate == 'v_rest':
-            self.set_rest(verbose)
+            self._set_rest(verbose)
 
         elif automate == 'events':
-            self.handle_events(verbose)
+            self._handle_events(verbose)
 
-    def set_rest(self, verbose=None):
+    def _set_rest(self, verbose=False):
         """
-        Creates and runs executable code that initialises V rest across
-        all NeuronModel _compartments. Setting verbose=True just prints it.
+        Creates and runs executable code that initialises V rest across all
+        NeuronModel _compartments.
         """
         command = '{0}.V_{1} = {2}'
 
@@ -280,12 +298,11 @@ class NeuronModel:
             print(executable)
         exec(executable, self._varscope)
 
-    def handle_events(self, verbose=None):
+    def _handle_events(self, verbose=False):
         """
         Creates and runs executable code that:
-        a) Initialises custom event checkpoint variables.
+        a) Initializes custom event checkpoint variables.
         b) Specifies what happens during custom events.
-        Setting verbose=True just prints all the code.
         """
         ng_name = self._linked_neurongroup[0]
         # Find all active _compartments:
@@ -317,29 +334,37 @@ class NeuronModel:
             print(executable)
         exec(executable, self._varscope)
 
-    def as_graph(self, fontsize=10, fontcolor='white', scale_nodes=1,
-                 color_soma='#4C6C92', color_dendrites='#A7361C', alpha=1,
-                 scale_edges=1, seed=None):
-        """as_graph _summary_
+    def as_graph(self, fontsize: int = 10, fontcolor: str = 'white',
+                 scale_nodes: float = 1, color_soma: str = '#4C6C92',
+                 color_dendrites: str = '#A7361C', alpha: float = 1,
+                 scale_edges: float = 1, seed: Optional[int] = None):
+        """
+        Plots a graph-like representation of a NeuronModel using the
+        :doc:`Graph <networkx:reference/classes/graph>` class and the
+        :doc:`Fruchterman-Reingold force-directed algorithm
+        <networkx:reference/generated/networkx.drawing.layout.spring_layout>`
+        from `Networkx <https://networkx.org/>`_.
 
         Parameters
         ----------
         fontsize : int, optional
-            _description_, by default 10
+            The size in pt of each node's name, by default ``10``.
         fontcolor : str, optional
-            _description_, by default 'white'
-        scale_nodes : int, optional
-            _description_, by default 1
+            The color of each node's name, by default ``'white'``.
+        scale_nodes : float, optional
+            Percentage change in node size, by default ``1``.
         color_soma : str, optional
-            _description_, by default '#4C6C92'
+            Somatic node color, by default ``'#4C6C92'``.
         color_dendrites : str, optional
-            _description_, by default '#A7361C'
-        alpha : int, optional
-            _description_, by default 1
-        scale_edges : int, optional
-            _description_, by default 1
-        seed : _type_, optional
-            _description_, by default None
+            Dendritic nodes color, by default ``'#A7361C'``.
+        alpha : float, optional
+            Nodes color opacity, by default ``1``.
+        scale_edges : float, optional
+            The percentage change in edges length, by default ``1``.
+        seed : int, optional
+            Set the random state for deterministic node layouts, by default
+            ``None``.
+            .
         """
         import matplotlib.pyplot as plt
         import networkx as nx
@@ -354,7 +379,7 @@ class NeuronModel:
         G = nx.Graph()
         G.add_edges_from(self._graph)
 
-        # Visualise it
+        # Visualize it
         fig, ax = plt.subplots()
         for d in ['right', 'top', 'left', 'bottom']:
             ax.spines[d].set_visible(False)
@@ -371,14 +396,18 @@ class NeuronModel:
         nx.draw_networkx_labels(G, pos, ax=ax, font_color=fontcolor,
                                 font_size=fontsize)
         ax.set_title('Model graph', weight='bold')
-
         fig.tight_layout()
         plt.show()
 
     @property
-    def equations(self):
+    def equations(self) -> str:
         """
-        Merges all compartment equations into a single string
+        Merges all compartments' equations into a single string.
+
+        Returns
+        -------
+        str
+            All model equations.
         """
         all_eqs = [i._equations for i in self._compartments]
         if self._extra_equations:
@@ -386,7 +415,15 @@ class NeuronModel:
         return '\n\n'.join(all_eqs)
 
     @property
-    def parameters(self):
+    def parameters(self) -> dict:
+        """
+        Merges all compartments' parameters into a dictionary.
+
+        Returns
+        -------
+        dict
+            All model parameters.
+        """
         d = {}
         for i in self._compartments:
             d.update(i.parameters)
@@ -396,9 +433,14 @@ class NeuronModel:
         return d
 
     @property
-    def events(self):
+    def events(self) -> dict:
         """
-        Creates a dict of all custom events
+        Organizes all custom events for dendritic spiking into a dictionary.
+
+        Returns
+        -------
+        dict
+            All model custom events for dendritic spiking.
         """
         d_out = {}
         all_events = [i._events for i in self._compartments
@@ -408,12 +450,15 @@ class NeuronModel:
         return d_out
 
     @property
-    def event_actions(self):
+    def event_actions(self) -> list:
         """
-        Returns a string of all event_actions
+        Creates a list of all event actions for dendritic spiking.
+
+        Returns
+        -------
+        list
+            All event actions for dendritic spiking
         """
         all_actions = [i._event_actions for i in self._compartments
                        if i._event_actions and isinstance(i, Dendrite)]
-        # for d in all_actions:
-        #     d_out.update(d)
         return all_actions

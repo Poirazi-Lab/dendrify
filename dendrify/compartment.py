@@ -92,7 +92,8 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g: Union[Quantity, str] = 'half_cylinders'):
+    def connect(self, other: Compartment,
+                g: Union[Quantity, str] = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
@@ -195,17 +196,17 @@ class Compartment:
 
         Parameters
         ----------
-        channel : str, optional
+        channel : str
             Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
             ``'GABA'``, by default ``None``
-        pre : str, optional
+        pre : str
             A unique name to distinguish synapses of the same type coming from
             different input sources, by default ``None``
-        g : brian2.units.fundamentalunits.Quantity, optional
+        g : brian2.units.fundamentalunits.Quantity
             Maximum synaptic conductance, by default ``None``
-        t_rise : brian2.units.fundamentalunits.Quantity, optional
+        t_rise : brian2.units.fundamentalunits.Quantity
             Rise time constant, by default ``None``
-        t_decay : brian2.units.fundamentalunits.Quantity, optional
+        t_decay : brian2.units.fundamentalunits.Quantity
             Decay time constant, by default ``None``
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
@@ -261,7 +262,8 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA, mean: Quantity = 0*pA):
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA,
+              mean: Quantity = 0*pA):
         """
         Adds a stochastic noise current. For more information see the Noise
         section: of :doc:`brian2:user/models`
@@ -555,15 +557,16 @@ class Dendrite(Compartment):
         Parameters
         ----------
         channel : str
-            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon)
-        threshold : brian2.units.fundamentalunits.Quantity, optional
-            The membrane voltage threshold for dendritic spiking.
-        g_rise : brian2.units.fundamentalunits.Quantity, optional
+            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon).
+        threshold : brian2.units.fundamentalunits.Quantity
+            The membrane voltage threshold for dendritic spiking, by default
+            ``None``.
+        g_rise : brian2.units.fundamentalunits.Quantity
             The conductance of the current that is activated during the
-            depolarization phase.
-        g_fall : brian2.units.fundamentalunits.Quantity, optional
-             The conductance of the current that is activated during the
-            repolarization phase.
+            depolarization phase, by default ``None``.
+        g_fall : brian2.units.fundamentalunits.Quantity
+            The conductance of the current that is activated during the
+            repolarization phase, by default ``None``.
         """
         if channel == 'Na':
             self._Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
@@ -573,11 +576,6 @@ class Dendrite(Compartment):
     def _Na_spikes(self, threshold: Optional[Quantity] = None,
                    g_rise: Optional[Quantity] = None,
                    g_fall: Optional[Quantity] = None):
-        """
-        Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
-        for controlling custom _events.
-        Usage-> object._Na_spikes()
-        """
         # The following code creates all necessary equations for dspikes:
         name = self.name
         dspike_currents = f'I_Na_{name} + I_Kn_{name}'
