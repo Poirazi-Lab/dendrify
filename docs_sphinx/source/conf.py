@@ -15,7 +15,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '1.0.3'
+release = '1.0.5'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
@@ -30,7 +30,8 @@ extensions = [
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
     'nbsphinx',
-    'autodocsumm'
+    'autodocsumm',
+    'sphinx_copybutton'
 ]
 
 templates_path = ['_templates']
@@ -39,7 +40,7 @@ html_theme = 'furo'
 html_static_path = ['_static']
 autosummary_generate = True
 pygments_style = 'sphinx'
-html_title = f"Dendrify {release}"
+html_title = f"{project} {release}"
 autodoc_default_options = {'show-inheritance': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {

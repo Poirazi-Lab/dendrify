@@ -24,7 +24,7 @@ Important literature
        DOI : https://doi.org/10.1016/0165-0270(93)90151-g
 
    * - |br| 
-       **Mathematical Foundations of Neuroscience (chapters 1, 2 & 7)** |br|
+       **Book | Mathematical Foundations of Neuroscience (chapters 1, 2 & 7)** |br|
        G B Ermentrout, D H Terman |br|
        Publisher's website: https://link.springer.com/book/10.1007/978-0-387-87708-2 
 

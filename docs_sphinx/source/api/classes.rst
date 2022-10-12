@@ -1,17 +1,11 @@
-API reference
-=======================
-
 Classes
--------
+=======
 
 .. toctree::
    :maxdepth: 1
 
    compartment
-   soma
    dendrite
+   soma
    neuronmodel
    ephys
-
-Models
-------
