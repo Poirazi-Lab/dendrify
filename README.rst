@@ -42,6 +42,8 @@ M Pagkalos, S Chavlis, P Poirazi |br|
 DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
 |br|
 
+Documentation for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
+
 .. |br| raw:: html
 
      <br>
