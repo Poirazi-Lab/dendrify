@@ -30,7 +30,7 @@ performance, and biological accuracy, allowing us to explore dendritic
 contributions to network-level functions.
 
 .. image:: _static/intro.png
-   :width: 75 %
+   :width: 80 %
    :align: center
 
 If you use Dendrify for your published research, we kindly ask you to cite our
