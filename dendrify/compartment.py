@@ -8,6 +8,7 @@
 from __future__ import annotations
 
 import sys
+from typing import Optional, Union
 
 import brian2
 import numpy as np
@@ -91,7 +92,8 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment, g='half_cylinders'):
+    def connect(self, other: Compartment,
+                g: Union[Quantity, str] = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
 
@@ -156,7 +158,7 @@ class Compartment:
         g_to_other = f'g_{self.name}_{other.name}'
 
         # when g is specified by user
-        if isinstance(g, brian2.units.fundamentalunits.Quantity):
+        if isinstance(g, Quantity):
             self._connections.append((g_to_self, 'user', g))
             other._connections.append((g_to_other, 'user', g))
 
@@ -176,9 +178,12 @@ class Compartment:
         else:
             print('Please select a valid conductance.')
 
-    def synapse(self, channel: str = None, pre: str = None,
-                g: Quantity = None, t_rise: Quantity = None,
-                t_decay: Quantity = None, scale_g: bool = False):
+    def synapse(self, channel: Optional[str] = None,
+                pre: Optional[str] = None,
+                g: Optional[Quantity] = None,
+                t_rise: Optional[Quantity] = None,
+                t_decay: Optional[Quantity] = None,
+                scale_g: bool = False):
         """
         Adds synaptic currents equations and parameters. When only the decay
         time constant ``t_decay`` is provided, the synaptic model assumes an
@@ -191,17 +196,17 @@ class Compartment:
 
         Parameters
         ----------
-        channel : str, optional
+        channel : str
             Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
             ``'GABA'``, by default ``None``
-        pre : str, optional
+        pre : str
             A unique name to distinguish synapses of the same type coming from
             different input sources, by default ``None``
-        g : brian2.units.fundamentalunits.Quantity, optional
+        g : brian2.units.fundamentalunits.Quantity
             Maximum synaptic conductance, by default ``None``
-        t_rise : brian2.units.fundamentalunits.Quantity, optional
+        t_rise : brian2.units.fundamentalunits.Quantity
             Rise time constant, by default ``None``
-        t_decay : brian2.units.fundamentalunits.Quantity, optional
+        t_decay : brian2.units.fundamentalunits.Quantity
             Decay time constant, by default ``None``
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
@@ -226,7 +231,7 @@ class Compartment:
                    f"synapse @ '{self.name}'\n"
                    "Program exited.\n"))
             sys.exit()
-        # Switch to rise/decay equations if t_rise & t_decated are provided
+        # Switch to rise/decay equations if t_rise & t_decay are provided
         if all([t_rise, t_decay]):
             key = f"{channel}_rd"
         else:
@@ -257,7 +262,8 @@ class Compartment:
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
                 self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA, mean: Quantity = 0*pA):
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA,
+              mean: Quantity = 0*pA):
         """
         Adds a stochastic noise current. For more information see the Noise
         section: of :doc:`brian2:user/models`
@@ -515,8 +521,10 @@ class Dendrite(Compartment):
                f"\u2192 parameters:\n{parameters}\n")
         return msg
 
-    def dspikes(self, channel: str, threshold: Quantity = None,
-                g_rise: Quantity = None, g_fall: Quantity = None):
+    def dspikes(self, channel: str,
+                threshold: Optional[Quantity] = None,
+                g_rise: Optional[Quantity] = None,
+                g_fall: Optional[Quantity] = None):
         # TODO: show error if channel does not exist.
         """
         Adds the mechanisms and parameters needed for dendritic spiking. Under
@@ -549,28 +557,25 @@ class Dendrite(Compartment):
         Parameters
         ----------
         channel : str
-            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon)
-        threshold : brian2.units.fundamentalunits.Quantity, optional
-            The membrane voltage threshold for dendritic spiking.
-        g_rise : brian2.units.fundamentalunits.Quantity, optional
+            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon).
+        threshold : brian2.units.fundamentalunits.Quantity
+            The membrane voltage threshold for dendritic spiking, by default
+            ``None``.
+        g_rise : brian2.units.fundamentalunits.Quantity
             The conductance of the current that is activated during the
-            depolarization phase.
-        g_fall : brian2.units.fundamentalunits.Quantity, optional
-             The conductance of the current that is activated during the
-            repolarization phase.
+            depolarization phase, by default ``None``.
+        g_fall : brian2.units.fundamentalunits.Quantity
+            The conductance of the current that is activated during the
+            repolarization phase, by default ``None``.
         """
         if channel == 'Na':
             self._Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
         elif channel == 'Ca':
             self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
 
-    def _Na_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
-                   g_fall: Quantity = None):
-        """
-        Adds Na spike currents (rise->I_Na, decay->I_Kn) and  other variables
-        for controlling custom _events.
-        Usage-> object._Na_spikes()
-        """
+    def _Na_spikes(self, threshold: Optional[Quantity] = None,
+                   g_rise: Optional[Quantity] = None,
+                   g_fall: Optional[Quantity] = None):
         # The following code creates all necessary equations for dspikes:
         name = self.name
         dspike_currents = f'I_Na_{name} + I_Kn_{name}'

@@ -1,5 +1,7 @@
-Introduction
-============
+Dendrify
+========
+
+*Introducing dendrites to spiking neural networks*
 
 .. image:: https://img.shields.io/pypi/v/Dendrify.svg
         :target: https://pypi.python.org/pypi/Dendrify
@@ -39,40 +41,6 @@ article:|br|
 M Pagkalos, S Chavlis, P Poirazi |br|
 DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
 |br|
-
-**CONTENTS:**
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Quickstart
-
-   installation
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Using Dendrify
-   
-   usage/tutorial
-   usage/examples
-
-
-.. toctree::
-   :maxdepth: 2
-   :caption: Reference documentation
-
-   api/classes
-   api/models
-   genindex
-
-
-.. toctree::
-   :maxdepth: 1
-   :caption: Useful information
-
-   papers
-   changelog
-   code_of_conduct
 
 .. |br| raw:: html
 
