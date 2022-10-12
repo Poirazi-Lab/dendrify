@@ -31,7 +31,7 @@ integrative properties. Such models strike a good balance between flexibility,
 performance, and biological accuracy, allowing us to explore dendritic
 contributions to network-level functions.
 
-.. image:: _static/intro.png
+.. image:: docs_sphinx/source/_static/intro.png
    :width: 75 %
    :align: center
 
