@@ -1,6 +1,9 @@
 API reference
 =======================
 
+Classes
+-------
+
 .. toctree::
    :maxdepth: 1
 
@@ -9,3 +12,6 @@ API reference
    dendrite
    neuronmodel
    ephys
+
+Models
+------

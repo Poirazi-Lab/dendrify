@@ -1,5 +1,5 @@
-Getting started
-===============
+Quickstart
+==========
 
 
 Installation

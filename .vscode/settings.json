@@ -12,6 +12,8 @@
         "neuronmodel",
         "NMDA",
         "Rossum",
+        "sublinear",
+        "supralinear",
         "varscope"
     ]
 }
