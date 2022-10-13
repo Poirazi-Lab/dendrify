@@ -22,7 +22,8 @@ models are computationally costly, thus impractical for large-network
 simulations.
 
 To bridge the gap between these two extremes, we introduce Dendrify, a free,
-open-source Python package compatible with the Brian 2 simulator. Dendrify,
+open-source Python package compatible with the
+`Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify,
 through simple commands, automatically generates reduced compartmental neuron
 models with simplified yet biologically relevant dendritic and synaptic
 integrative properties. Such models strike a good balance between flexibility,
@@ -33,12 +34,12 @@ contributions to network-level functions.
    :width: 75 %
    :align: center
 
-If you use Dendrify for your published research, we kindly ask you to cite our
-article:|br|
-**Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
-M Pagkalos, S Chavlis, P Poirazi |br|
-DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
-|br|
+.. note::
+   If you use Dendrify for your published research, we kindly ask you to cite our
+   article:|br|
+   **Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
+   M Pagkalos, S Chavlis, P Poirazi |br|
+   DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
 
 **CONTENTS:**
 
