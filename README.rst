@@ -33,12 +33,6 @@ contributions to network-level functions.
 .. image:: _static/intro.png
    :width: 75 %
    :align: center
-   :class: only-light
-
-.. image:: _static/intro_dark.png
-   :width: 75 %
-   :align: center
-   :class: only-dark
 
 .. tip::
    If you use Dendrify for your published research, we kindly ask you to cite our
