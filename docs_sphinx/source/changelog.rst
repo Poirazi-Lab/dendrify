@@ -1,6 +1,12 @@
 Release notes
 ===============
 
+Version 1.0.5
+-------------
+    * Improved documentation.
+    * Minor improvements.
+
+
 Version 1.0.4
 -------------
 
