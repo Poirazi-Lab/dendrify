@@ -1,4 +1,4 @@
-from .equations import library
-from .compartment import Compartment, Soma, Dendrite
-from .neuronmodel import NeuronModel
+from .compartment import Compartment, Dendrite, Soma
 from .ephysproperties import EphysProperties
+from .equations import library
+from .neuronmodel import NeuronModel

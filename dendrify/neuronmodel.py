@@ -17,26 +17,26 @@ class NeuronModel:
     This class also contains useful methods for managing model properties and
     for automating the initialization of custom events and simulation parameters.
 
-    Note
-    ----
-    Dendrify aims to facilitate the development of reduced, **few-compartmental**
-    I&F models that help us study how key dendritic properties may affect
-    network-level functions. It is not designed to substitute morphologically
-    and biophysically detailed neuron models, commonly used for highly-accurate,
-    single-cell simulations. If you are interested in the latter category of
-    models, please see Brian's
-    :doc:`SpatialNeuron 
-    <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
+    .. tip::
+
+       Dendrify aims to facilitate the development of reduced,
+       **few-compartmental** I&F models that help us study how key dendritic
+       properties may affect network-level functions. It is not designed to
+       substitute morphologically and biophysically detailed neuron models,
+       commonly used for highly-accurate, single-cell simulations. If you are
+       interested in the latter category of models, please see Brian's
+       :doc:`SpatialNeuron 
+       <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
 
     Parameters
     ----------
     connections : list[tuple[Compartment, Compartment, str  | Quantity]]
         A description of how the various compartments belonging to the same
         neuron model should be connected.
-    kwargs : brian2.units.fundamentalunits.Quantity, optional
+    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For all available options
-        see: :class:`~dendrify.ephysproperties.EphysProperties`. 
+        see: :class:`.EphysProperties`. 
 
     Warning
     -------
@@ -190,16 +190,16 @@ class NeuronModel:
         channel : str
             Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming
             soon).
-        tau_rise : brian2.units.fundamentalunits.Quantity
+        tau_rise : :class:`~brian2.units.fundamentalunits.Quantity`
             The decay time constant of the current causing the dSpike's
             **depolarization** phase, by default ``None``.
-        tau_fall : brian2.units.fundamentalunits.Quantity
+        tau_fall : :class:`~brian2.units.fundamentalunits.Quantity`
             The decay time constant of the current causing the dSpike's
             **repolarization** phase, by default ``None``.
-        offset_fall : brian2.units.fundamentalunits.Quantity
+        offset_fall : :class:`~brian2.units.fundamentalunits.Quantity`
             The delay for starting the dSpike repolarization phase, by default
             ``None``.
-        refractory : brian2.units.fundamentalunits.Quantity
+        refractory : :class:`~brian2.units.fundamentalunits.Quantity`
             The duration of the dSpike inactive period, by default ``None``.
         """
         # Make sure user provides a valid option:

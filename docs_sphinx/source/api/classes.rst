@@ -5,7 +5,7 @@ Classes
    :maxdepth: 1
 
    compartment
-   dendrite
    soma
+   dendrite
    neuronmodel
    ephys

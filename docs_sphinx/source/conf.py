@@ -9,18 +9,14 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
 
-# -- Project information -----------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
-
+# -- Project information -------------------------------------------------------
 project = 'Dendrify'
 copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
 release = '1.0.4'
 
 
-# -- General configuration ---------------------------------------------------
-# https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
-
+# -- General configuration -----------------------------------------------------
 extensions = [
     "sphinx.ext.autodoc",
     "sphinx.ext.napoleon",
@@ -32,25 +28,28 @@ extensions = [
     'sphinx.ext.intersphinx',
     'nbsphinx',
     'autodocsumm',
-    'sphinx_copybutton'
+    'sphinx_copybutton',
 ]
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
-html_theme = 'furo'
 html_static_path = ['_static']
 autosummary_generate = True
-pygments_style = 'sphinx'
-html_title = f"{project}"
 autodoc_default_options = {'show-inheritance': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {
     "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
-    "networkx": ("https://networkx.org/documentation/stable", None)
+    "networkx": ("https://networkx.org/documentation/stable", None),
 }
+
 myst_url_schemes = ["http", "https", ]
 
-
+# -- HTML settings -------------------------------------------------------------
+copybutton_prompt_text = ">>> "
+copybutton_only_copy_prompt_lines = True
+html_title = f"{project}"
+html_theme = 'furo'
+pygments_style = "default"
 html_theme_options = {
     "footer_icons": [
         {

@@ -12,16 +12,14 @@ Introduction
         :target: CODE_OF_CONDUCT.md
         :alt: Contributor Covenant
 
-Although neuronal dendrites are known to greatly influence how single neurons
-process synaptic information, their role in network-level functions remain 
-largely unexplored. This is partly because existing tools do not allow the
-development of realistic and efficient network models that account for dendrites.
+Although neuronal dendrites greatly influence how single neurons process incoming
+information, their role in network-level functions remain largely unexplored.
 Current SNNs are usually quite simplistic, overlooking essential dendritic
 properties. Conversely, circuit models with morphologically detailed neuron
 models are computationally costly, thus impractical for large-network
 simulations.
 
-To bridge the gap between these two extremes, we introduce Dendrify, a free,
+To bridge the gap between these two , we introduce Dendrify, a free,
 open-source Python package compatible with the
 `Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify,
 through simple commands, automatically generates reduced compartmental neuron
@@ -33,20 +31,29 @@ contributions to network-level functions.
 .. image:: _static/intro.png
    :width: 75 %
    :align: center
+   :class: only-light
 
-.. note::
+.. image:: _static/intro_dark.png
+   :width: 75 %
+   :align: center
+   :class: only-dark
+
+.. tip::
    If you use Dendrify for your published research, we kindly ask you to cite our
    article:|br|
    **Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
    M Pagkalos, S Chavlis, P Poirazi |br|
    DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
 
+|
+
 **CONTENTS:**
 
 .. toctree::
    :maxdepth: 2
-   :caption: Quickstart
-
+   :caption: Getting started
+   
+   self
    installation
 
 
