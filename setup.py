@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = '1.0.4'
+VERSION = '1.0.5'
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 LONG_DESCRIPTION = 'A package for adding dendrites to SNNs in Brian 2'
 

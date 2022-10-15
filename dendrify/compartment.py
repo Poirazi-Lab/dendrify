@@ -10,7 +10,6 @@ from __future__ import annotations
 import sys
 from typing import Optional, Union
 
-import brian2
 import numpy as np
 from brian2.units import Quantity, ms, pA
 
@@ -30,16 +29,16 @@ class Compartment:
     name : str
         A unique name used to tag compartment-specific equations and parameters.
         It is also used to distinguish the various compartments belonging to the
-        same :class:`~dendrify.neuronmodel.NeuronModel`.
+        same :class:`.NeuronModel`.
     model : str, optional
         A keyword for accessing Dendrify's library models. Custom models can
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
-    kwargs : brian2.units.fundamentalunits.Quantity, optional
+    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For more information
-        see: :class:`~dendrify.ephysproperties.EphysProperties`.
+        see: :class:`.EphysProperties`.
 
     Examples
     --------
@@ -101,14 +100,14 @@ class Compartment:
         ----------
         other : Compartment
             Another compartment.
-        g : str | brian2.units.fundamentalunits.Quantity, optional
+        g : str or :class:`~brian2.units.fundamentalunits.Quantity`, optional
             The coupling conductance. It can be set explicitly or calculated
             automatically (provided all necessary parameters exist). 
             Available options: ``'half_cylinders'`` (default), 
             ``'cylinder_<compartment name>'``.
 
-        Note
-        ----
+        Warning
+        -------
         The automatic approaches require that both compartments to be connected 
         have specified **length**, **diameter** and **axial resistance**.
 
@@ -202,11 +201,11 @@ class Compartment:
         pre : str
             A unique name to distinguish synapses of the same type coming from
             different input sources, by default ``None``
-        g : brian2.units.fundamentalunits.Quantity
+        g : :class:`~brian2.units.fundamentalunits.Quantity`
             Maximum synaptic conductance, by default ``None``
-        t_rise : brian2.units.fundamentalunits.Quantity
+        t_rise : :class:`~brian2.units.fundamentalunits.Quantity`
             Rise time constant, by default ``None``
-        t_decay : brian2.units.fundamentalunits.Quantity
+        t_decay : :class:`~brian2.units.fundamentalunits.Quantity`
             Decay time constant, by default ``None``
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
@@ -270,12 +269,12 @@ class Compartment:
 
         Parameters
         ----------
-        tau : brian2.units.fundamentalunits.Quantity, optional
-            Time constant of the Gaussian noise, by default 20*ms
-        sigma : brian2.units.fundamentalunits.Quantity, optional
-            Standard deviation of the Gaussian noise, by default 3*pA
-        mean : brian2.units.fundamentalunits.Quantity, optional
-            Mean of the Gaussian noise, by default 0*pA
+        tau : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Time constant of the Gaussian noise, by default ``20*ms``
+        sigma : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Standard deviation of the Gaussian noise, by default ``3*pA``
+        mean : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Mean of the Gaussian noise, by default ``0*pA``
         """
         I_noise_name = f'I_noise_{self.name}'
         noise_eqs = library['noise'].format(self.name)
@@ -312,11 +311,11 @@ class Compartment:
     def area(self) -> Quantity:
         """
         A compartment's surface area (open cylinder) based on its length
-        and its diameter.
+        and diameter.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Quantity
+        :class:`~brian2.units.fundamentalunits.Quantity`
         """
         try:
             return self._ephys_object.area
@@ -329,11 +328,11 @@ class Compartment:
     def capacitance(self) -> Quantity:
         """
         A compartment's absolute capacitance based on its specific capacitance
-        (cm) and its surface area.
+        (cm) and surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Quantity
+        :class:`~brian2.units.fundamentalunits.Quantity`
         """
         try:
             return self._ephys_object.capacitance
@@ -345,12 +344,12 @@ class Compartment:
     @property
     def g_leakage(self) -> Quantity:
         """
-        A compartment's leakage conductance based on its specific leakage
-        conductance (gl) and its surface area.
+        A compartment's absolute leakage conductance based on its specific
+        leakage conductance (gl) and surface area.
 
         Returns
         -------
-        brian2.units.fundamentalunits.Quantity
+        :class:`~brian2.units.fundamentalunits.Quantity`
         """
         try:
             return self._ephys_object.g_leakage
@@ -413,27 +412,27 @@ class Soma(Compartment):
     and parameters needed to describe a somatic compartment and any currents
     (synaptic, dendritic, noise) passing through it.
 
-    Note
-    ----
-    Soma acts as a wrapper for Compartment with slight changes to account for
-    certain somatic properties. For a full list of its methods and attributes,
-    please see: :class:`~dendrify.compartment.Compartment`.
+    .. seealso::
+
+       Soma acts as a wrapper for Compartment with slight changes to account for
+       certain somatic properties. For a full list of its methods and attributes,
+       please see: :class:`.Compartment`.
 
     Parameters
     ----------
     name : str
         A unique name used to tag compartment-specific equations and parameters.
         It is also used to distinguish the various compartments belonging to the
-        same :class:`~dendrify.neuronmodel.NeuronModel`.
+        same :class:`.NeuronModel`.
     model : str, optional
         A keyword for accessing Dendrify's library models. Custom models can
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
-    kwargs : brian2.units.fundamentalunits.Quantity, optional
+    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For more information
-        see: :class:`~dendrify.ephysproperties.EphysProperties`.
+        see: :class:`.EphysProperties`.
 
     Examples
     --------
@@ -478,18 +477,17 @@ class Dendrite(Compartment):
     mechanisms, and any currents (synaptic, dendritic, ionic, noise) passing
     through it.
 
-    Note
-    ----
-    Dendrite inherits all the methods and attributes of its parent class
-    :class:`~dendrify.compartment.Compartment`. For a complete list, please refer
-    to the documentation of the latter.
+    .. seealso::
+       Dendrite inherits all the methods and attributes of its parent class
+       :class:`.Compartment`. For a complete list, please
+       refer to the documentation of the latter.
 
     Parameters
     ----------
     name : str
         A unique name used to tag compartment-specific equations and parameters.
         It is also used to distinguish the various compartments belonging to the
-        same :class:`~dendrify.neuronmodel.NeuronModel`.
+        same :class:`.NeuronModel`.
     model : str, optional
         A keyword for accessing Dendrify's library models. Dendritic compartments
         are by default set to ``'passive'``.
@@ -534,37 +532,38 @@ class Dendrite(Compartment):
         negative current (potassium-like current) when a specified dSpike
         threshold is crossed.
 
-        Note
-        ----
-        The dendritic spiking mechanism as implemented here has three distinct
-        phases.
+        .. hint::
 
-        **INACTIVE PHASE:**\n
-        When the dendritic voltage is subthreshold OR the simulation step is
-        within the refractory period. dSpikes cannot be generated during this
-        phase.
+           The dendritic spiking mechanism as implemented here has three
+           distinct phases.
 
-        **DEPOLARIZATION PHASE:**\n
-        When the dendritic voltage crosses the dSpike threshold AND the
-        refractory period has elapsed. This triggers the instant activation of a
-        positive current that enters the dendrite and then decays exponentially.
+           **INACTIVE PHASE:**\n
+           When the dendritic voltage is subthreshold OR the simulation step is
+           within the refractory period. dSpikes cannot be generated during this
+           phase.
 
-        **REPOLARIZATION PHASE:**\n
-        This phase starts automatically after a specified delay from the
-        initiation of the dSpike. A negative current is activated instantly and
-        then decays exponentially. Also a new refractory period begins.  
+           **DEPOLARIZATION PHASE:**\n
+           When the dendritic voltage crosses the dSpike threshold AND the
+           refractory period has elapsed. This triggers the instant activation
+           of a positive current that enters the dendrite and then decays
+           exponentially.
+
+           **REPOLARIZATION PHASE:**\n
+           This phase starts automatically after a specified delay from the
+           initiation of the dSpike. A negative current is activated instantly
+           and then decays exponentially. Also a new refractory period begins.  
 
         Parameters
         ----------
         channel : str
             Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon).
-        threshold : brian2.units.fundamentalunits.Quantity
+        threshold : :class:`~brian2.units.fundamentalunits.Quantity`
             The membrane voltage threshold for dendritic spiking, by default
             ``None``.
-        g_rise : brian2.units.fundamentalunits.Quantity
+        g_rise : :class:`~brian2.units.fundamentalunits.Quantity`
             The conductance of the current that is activated during the
             depolarization phase, by default ``None``.
-        g_fall : brian2.units.fundamentalunits.Quantity
+        g_fall : :class:`~brian2.units.fundamentalunits.Quantity`
             The conductance of the current that is activated during the
             repolarization phase, by default ``None``.
         """
