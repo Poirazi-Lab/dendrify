@@ -49,7 +49,7 @@ copybutton_prompt_text = ">>> "
 copybutton_only_copy_prompt_lines = True
 html_title = f"{project}"
 html_theme = 'furo'
-pygments_style = "default"
+pygments_style = "sphinx"
 html_theme_options = {
     "footer_icons": [
         {
