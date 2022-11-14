@@ -34,7 +34,7 @@ contributions to network-level functions.
    :width: 75 %
    :align: center
 
-.. tip::
+.. note::
    If you use Dendrify for your published research, we kindly ask you to cite our
    article:|br|
    **Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
