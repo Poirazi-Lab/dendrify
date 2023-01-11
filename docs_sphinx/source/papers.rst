@@ -4,9 +4,14 @@ Important literature
 
 .. list-table::
 
-   * - **Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
+   * - **Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
        M Pagkalos, S Chavlis, P Poirazi |br|
-       DOI: https://doi.org/10.1101/2022.05.03.490412
+       DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
+   
+   * - |br| 
+       **Brian 2, an intuitive and efficient neural simulator** |br|
+       M Stimberg, R Brette, D FM Goodman |br|
+       DOI: https://doi.org/10.7554/eLife.47314
 
    * - |br|
        **Contribution of sublinear and supralinear dendritic integration to neuronal computations** |br|
@@ -26,7 +31,12 @@ Important literature
    * - |br| 
        **Book | Mathematical Foundations of Neuroscience (chapters 1, 2 & 7)** |br|
        G B Ermentrout, D H Terman |br|
-       Publisher's website: https://link.springer.com/book/10.1007/978-0-387-87708-2 
+       Publisher's website: https://link.springer.com/book/10.1007/978-0-387-87708-2
+
+   * - |br| 
+       **Brian2CUDA: flexible and efficient simulation of spiking neural network models on GPUs** |br|
+       D Alevi, M Stimberg, H Sprekeler, K Obermayer, M Augustin |br|
+       DOI: https://doi.org/10.3389/fninf.2022.883700 
 
 
 .. |br| raw:: html

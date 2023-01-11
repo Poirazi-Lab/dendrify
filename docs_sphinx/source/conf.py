@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '1.0.6'
+release = '1.0.7'
 
 
 # -- General configuration -----------------------------------------------------
@@ -40,6 +40,7 @@ autodoc_typehints = "none"
 intersphinx_mapping = {
     "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
+    "brian2cuda": ("https://brian2cuda.readthedocs.io/en/latest/", None)
 }
 
 myst_url_schemes = ["http", "https", ]
