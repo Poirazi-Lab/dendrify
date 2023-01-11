@@ -2,8 +2,7 @@ from setuptools import find_packages, setup
 
 VERSION = '1.0.7'
 DESCRIPTION = 'A package for adding dendrites to SNNs'
-with open("README.rst") as f:
-    LONG_DESCRIPTION = f.read()
+LONG_DESCRIPTION = 'A package for adding dendrites to SNNs in Brian 2'
 
 # Setting up
 setup(
@@ -12,7 +11,7 @@ setup(
     author="Michalis Pagkalos",
     author_email="<mpagkalos93@gmail.com>",
     description=DESCRIPTION,
-    long_description_content_type="text/x-rst; charset=UTF-8",
+    long_description_content_type="text/markdown",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
     install_requires=['brian2==2.5.1'],
