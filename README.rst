@@ -34,15 +34,15 @@ contributions to network-level functions.
    :width: 75 %
    :align: center
 
-Note
-----
-If you use Dendrify for your published research, we kindly ask you to cite our
-article:|br|
-**Dendrify: a new framework for seamless incorporation of dendrites in Spiking Neural Networks** |br|
-M Pagkalos, S Chavlis, P Poirazi |br|
-DOI: https://doi.org/10.1101/2022.05.03.490412 |br|
+.. tip::
+   If you use Dendrify for your published research, we kindly ask you to cite our
+   article:|br|
+   **Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
+   M Pagkalos, S Chavlis, P Poirazi |br|
+   DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
 
-**Documentation** for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
+Documentation for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
+
 
 .. |br| raw:: html
 
