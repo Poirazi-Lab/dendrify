@@ -1,10 +1,12 @@
 Tutorial
 ========
 
+Coming soon
+
 |
 |
 |
 
 .. image:: ../_static/under-construction.png
-   :width: 25 %
+   :width: 20 %
    :align: center
