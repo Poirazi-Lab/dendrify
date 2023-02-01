@@ -15,17 +15,17 @@ copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
 release = '1.0.8'
 
-
 # -- General configuration -----------------------------------------------------
 extensions = [
-    "sphinx.ext.autodoc",
-    "sphinx.ext.napoleon",
+    'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.duration',
     'sphinx.ext.doctest',
     'sphinx.ext.autosummary',
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
+    'sphinx.ext.autosectionlabel',
     'nbsphinx',
     'autodocsumm',
     'sphinx_copybutton',
@@ -46,11 +46,13 @@ intersphinx_mapping = {
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
-copybutton_prompt_text = ">>> "
+copybutton_prompt_text = r">>> (?!#)"
+copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
 html_title = f"{project}"
 html_theme = 'furo'
-pygments_style = "sphinx"
+pygments_style = "default"
+pygments_dark_style = "material"
 html_theme_options = {
     "footer_icons": [
         {

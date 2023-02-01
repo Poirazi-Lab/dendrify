@@ -19,7 +19,7 @@ properties. Conversely, circuit models with morphologically detailed neuron
 models are computationally costly, thus impractical for large-network
 simulations.
 
-To bridge the gap between these two , we introduce Dendrify, a free,
+To bridge the gap between these two, we introduce Dendrify, a free,
 open-source Python package compatible with the
 `Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify,
 through simple commands, automatically generates reduced compartmental neuron
@@ -29,7 +29,7 @@ performance, and biological accuracy, allowing us to explore dendritic
 contributions to network-level functions.
 
 .. image:: _static/intro.png
-   :width: 80 %
+   :width: 75 %
    :align: center
    :class: only-light
 
@@ -81,6 +81,7 @@ contributions to network-level functions.
    papers
    changelog
    code_of_conduct
+
 
 .. |br| raw:: html
 
