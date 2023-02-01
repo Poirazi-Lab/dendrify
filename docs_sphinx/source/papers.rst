@@ -7,6 +7,7 @@ Important literature
    * - **Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
        M Pagkalos, S Chavlis, P Poirazi |br|
        DOI: https://doi.org/10.1038/s41467-022-35747-8 |br| |br|
+
    
    * - **Brian 2, an intuitive and efficient neural simulator** |br|
        M Stimberg, R Brette, D FM Goodman |br|
