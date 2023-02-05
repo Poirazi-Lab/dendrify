@@ -3,24 +3,8 @@ Examples
 Bellow you will find two model examples adopted from the `Dendrify paper`_.
 
 * :ref:`Example 1 | A basic compartmental model with passive dendrites <example 1>`
-  
-  In this example we show that even rudimentary models can reproduce essential
-  neuronal properties such as the electrical segmentation caused by dendrites.
-  This allows multiple integration sites to coexist within a neuron and dendrites
-  to operate semi-autonomously from the soma, while greatly affecting neuronal output.
-
 * :ref:`Example 2 | A reduced compartmental model capturing active dendritic properties <example 2>`
   
-  In this example we show that reduced compartmental I&F models, equipped with
-  event-driven dendritic spiking mechanisms can faithfully reproduce a broad range
-  of dendritic properties such as:
-
-  * Supralinear input integration
-  * Dendrite-specific spiking threshold
-  * Location-dependent filtering
-  * Backpropagation of somatic spikes
-
-
 .. tip::
    By clicking the "**Open in Colab**" button located under each example, you
    can run in your browser (without locally installing Dendrify or Brian) an
@@ -31,7 +15,12 @@ Bellow you will find two model examples adopted from the `Dendrify paper`_.
 
 .. _example 1:
 
-**Example 1 | A basic compartmental model with passive dendrites**
+**Example 1 | A basic compartmental model with passive dendrites.**
+
+In this example we show that even rudimentary models can reproduce essentia
+neuronal properties such as the electrical segmentation caused by dendrites
+This allows multiple integration sites to coexist within a neuron and dendrite
+to operate semi-autonomously from the soma, while greatly affecting neuronal output.
 
 .. image:: ../_static/Fig2.png
    :width: 80 %
@@ -56,7 +45,13 @@ to the sublinear mode when NMDARs are blocked.
 
 .. _example 2:
 
-**Example 2: A reduced compartmental model capturing active dendritic properties**
+**Example 2: A reduced compartmental model capturing active dendritic properties.**
+
+In this example we show that reduced compartmental I&F models, equipped with
+event-driven dendritic spiking mechanisms can faithfully reproduce a broad range
+of dendritic properties such as: i) Supralinear input integration, ii) dendrite-specific
+spiking threshold, iii) distance-dependent filtering, iv) backpropagation
+of somatic spikes.
 
 .. image:: ../_static/Fig3.png
    :width: 80 %
