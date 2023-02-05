@@ -46,6 +46,7 @@ intersphinx_mapping = {
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
+mathjax3_config = {'chtml': {'displayAlign': 'left'}}
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
