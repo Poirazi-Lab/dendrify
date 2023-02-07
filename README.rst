@@ -46,8 +46,8 @@ DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
 Documentation for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
 
 |br|
-The project presentaion for the INCF/OCNS Software Working Group is available here: https://docs.google.com/presentation/d/1LUUh2ja3YSHcmByU0Vyn7vcDEnDq6fWfVxFfuK8FzE0/edit?usp=sharing
-
+The project presentation for the INCF/OCNS Software Working Group is available `here <https://docs.google.com/presentation/d/1LUUh2ja3YSHcmByU0Vyn7vcDEnDq6fWfVxFfuK8FzE0/edit?usp=sharing>`_ 
+and an interactive notebook with a short demo `here <https://colab.research.google.com/drive/1-bGp15eWfjNuF7ETCNSsL3ovOanS_R_7?usp=sharing>`_.
 
 .. |br| raw:: html
 
