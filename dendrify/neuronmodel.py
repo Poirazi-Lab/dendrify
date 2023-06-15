@@ -306,7 +306,11 @@ class NeuronModel:
         """
         ng_name = self._linked_neurongroup[0]
         # Find all active _compartments:
-        active_comps = [i for i in self._compartments if i._events]
+        dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
+        active_comps = [i for i in dendrites if i._events]
+
+        # [i for i in self._compartments
+        #             if all(isinstance(i, Dendrite), i._events)]
         if active_comps == []:
             if verbose:
                 print("\n<No custom events found>")
@@ -443,8 +447,8 @@ class NeuronModel:
             All model custom events for dendritic spiking.
         """
         d_out = {}
-        all_events = [i._events for i in self._compartments
-                      if i._events and isinstance(i, Dendrite)]
+        dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
+        all_events = [i._events for i in dendrites if i._events]
         for d in all_events:
             d_out.update(d)
         return d_out
@@ -459,6 +463,6 @@ class NeuronModel:
         list
             All event actions for dendritic spiking
         """
-        all_actions = [i._event_actions for i in self._compartments
-                       if i._event_actions and isinstance(i, Dendrite)]
+        dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
+        all_actions = [i._event_actions for i in dendrites if i._event_actions]
         return all_actions

@@ -1,10 +1,3 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# conda version : 4.8.3
-# conda-build version : 3.18.12
-# python version : 3.7.6.final.0
-# brian2 version : 2.3 (py37hc9558a2_0)
-
 from __future__ import annotations
 
 import sys
@@ -444,10 +437,7 @@ class Soma(Compartment):
     """
 
     def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Quantity):
-
         super().__init__(name, model, **kwargs)
-        self._events = None
-        self._event_actions = None
 
     def __str__(self):
         ephys_dict = self._ephys_object.__dict__
