@@ -17,9 +17,14 @@ def get_logger(name):
     """
     logger = logging.getLogger(name)
     logger.setLevel(logging.INFO)
-    ch = logging.StreamHandler()
-    ch.setLevel(logging.ERROR)
-    formatter = logging.Formatter('%(levelname)s - %(name)s:  %(message)s')
-    ch.setFormatter(formatter)
-    logger.addHandler(ch)
+    handler = logging.StreamHandler()
+    handler.setLevel(logging.INFO)
+    formatter = logging.Formatter(
+        '%(levelname)s [%(name)s:%(lineno)d]\n%(message)s')
+    handler.setFormatter(formatter)
+    logger.addHandler(handler)
     return logger
+
+
+class ParametersError(Exception):
+    """Raise this when something is wrong with the parameters set by the user"""
