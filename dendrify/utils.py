@@ -20,11 +20,15 @@ def get_logger(name):
     handler = logging.StreamHandler()
     handler.setLevel(logging.INFO)
     formatter = logging.Formatter(
-        '%(levelname)s [%(name)s:%(lineno)d]\n%(message)s')
+        '%(levelname)s [%(name)s:%(lineno)d]\n%(message)s\n')
     handler.setFormatter(formatter)
     logger.addHandler(handler)
     return logger
 
 
-class ParametersError(Exception):
-    """Raise this when something is wrong with the parameters set by the user"""
+class DimensionlessCompartmentError(Exception):
+    """
+    Raise this error when an operation that is invalid for dimensionless
+    compartments is performed.
+    """
+    pass
