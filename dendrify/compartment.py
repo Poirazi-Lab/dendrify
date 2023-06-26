@@ -8,6 +8,9 @@ from brian2.units import Quantity, ms, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
+from .utils import DimensionlessCompartmentError, get_logger
+
+logger = get_logger(__name__)
 
 
 class Compartment:
@@ -54,20 +57,23 @@ class Compartment:
 
     def __str__(self):
         ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join([f"\u2192 {i}:\n  [{ephys_dict[i]}]\n"
-                           for i in ephys_dict])
+        ephys = '\n'.join(
+            [f"\u2192 {i}:\n  [{ephys_dict[i]}]\n" for i in ephys_dict]
+        )
         equations = self.equations.replace('\n', '\n   ')
 
-        parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()
-                                ]) if self.parameters else '   None'
+        parameters = '\n'.join(
+            [f"   '{i[0]}': {i[1]}"
+             for i in self.parameters.items()]
+        ) if self.parameters else '   None'
+
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}"
-               f"\n{'-'*45}\n\n"
                "PROPERTIES: \n\n"
                f"\u2192 equations:\n   {equations}\n\n"
-               f"\u2192 parameters:\n{parameters}\n")
+               f"\u2192 parameters:\n{parameters}\n\n"
+               f"{'-'*45}\n\n"
+               f"USER PARAMETERS:\n\n{ephys}")
         return msg
 
     def _add_equations(self, model: str):
@@ -84,7 +90,8 @@ class Compartment:
         else:
             self._equations = model.format('_'+self.name)
 
-    def connect(self, other: Compartment,
+    def connect(self,
+                other: Compartment,
                 g: Union[Quantity, str] = 'half_cylinders'):
         """
         Allows the connection (electrical coupling) of two compartments.
@@ -117,9 +124,8 @@ class Compartment:
 
         # Prohibit connecting compartments with the same name
         if self.name == other.name:
-            print(("ERROR: Cannot connect to compartments with the same name.\n"
-                   "Program exited"))
-            sys.exit()
+            raise ValueError(
+                "Cannot connect compartments with the same name.\n")
 
         # Current from Comp2 -> Comp1
         I_forward = 'I_{1}_{0} = (V_{1}-V_{0}) * g_{1}_{0}  :amp'.format(
@@ -168,10 +174,14 @@ class Compartment:
                 other._connections.append(
                     (g_to_other, ctype, comp._ephys_object))
         else:
-            print('Please select a valid conductance.')
+            raise ValueError(
+                "Please provide a valid conductance option."
+            )
 
-    def synapse(self, channel: Optional[str] = None,
-                pre: Optional[str] = None,
+        eval("self._g_couples")
+
+    def synapse(self, channel: str,
+                tag: str,
                 g: Optional[Quantity] = None,
                 t_rise: Optional[Quantity] = None,
                 t_decay: Optional[Quantity] = None,
@@ -190,10 +200,10 @@ class Compartment:
         ----------
         channel : str
             Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
-            ``'GABA'``, by default ``None``
-        pre : str
+            ``'GABA'``.
+        tag : str
             A unique name to distinguish synapses of the same type coming from
-            different input sources, by default ``None``
+            different input sources.
         g : :class:`~brian2.units.fundamentalunits.Quantity`
             Maximum synaptic conductance, by default ``None``
         t_rise : :class:`~brian2.units.fundamentalunits.Quantity`
@@ -210,27 +220,21 @@ class Compartment:
         --------
         >>> comp = Compartment('comp')
         >>> # adding an AMPA synapse with instant rise & exponential decay:
-        >>> comp.synapse('AMPA', g=1*nS, t_decay=5*ms, pre='X')
+        >>> comp.synapse('AMPA', tag='X', g=1*nS, t_decay=5*ms)
         >>> # same channel, different conductance & source:
-        >>> comp.synapse('AMPA', g=2*nS, t_decay=5*ms, pre='Y')
+        >>> comp.synapse('AMPA', tag='Y', g=2*nS, t_decay=5*ms)
         >>> # different channel with both rise & decay kinetics: 
-        >>> comp.synapse('NMDA', g=1*nS, t_rise=5*ms, t_decay=50*ms, pre='X')
+        >>> comp.synapse('NMDA', tag='X' g=1*nS, t_rise=5*ms, t_decay=50*ms)
         """
 
-        # Make sure that the user provides a synapse source
-        if not pre:
-            print((f"Warning: <pre> argument missing for '{channel}' "
-                   f"synapse @ '{self.name}'\n"
-                   "Program exited.\n"))
-            sys.exit()
         # Switch to rise/decay equations if t_rise & t_decay are provided
         if all([t_rise, t_decay]):
             key = f"{channel}_rd"
         else:
             key = channel
 
-        current_name = f'I_{channel}_{pre}_{self.name}'
-        current_eqs = library[key].format(self.name, pre)
+        current_name = f'I_{channel}_{tag}_{self.name}'
+        current_eqs = library[key].format(self.name, tag)
 
         to_replace = f'= I_ext_{self.name}'
         self._equations = self._equations.replace(
@@ -240,19 +244,20 @@ class Compartment:
         if not self._params:
             self._params = {}
 
-        weight = f"w_{channel}_{pre}_{self.name}"
-        self._params[weight] = 1
+        weight = f"w_{channel}_{tag}_{self.name}"
+        self._params[weight] = 1.0
+
         # If user provides a value for g, then add it to _params
         if g:
-            self._params[f'g_{channel}_{pre}_{self.name}'] = g
+            self._params[f'g_{channel}_{tag}_{self.name}'] = g
         if t_rise:
-            self._params[f't_{channel}_rise_{pre}_{self.name}'] = t_rise
+            self._params[f't_{channel}_rise_{tag}_{self.name}'] = t_rise
         if t_decay:
-            self._params[f't_{channel}_decay_{pre}_{self.name}'] = t_decay
+            self._params[f't_{channel}_decay_{tag}_{self.name}'] = t_decay
         if scale_g:
             if all([t_rise, t_decay, g]):
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
-                self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
+                self._params[f'g_{channel}_{tag}_{self.name}'] *= norm_factor
 
     def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA,
               mean: Quantity = 0*pA):

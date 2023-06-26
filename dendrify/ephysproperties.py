@@ -5,7 +5,7 @@ from typing import List, Optional, Tuple, Union
 
 from brian2.units import Quantity
 
-from .utils import *
+from .utils import DimensionlessCompartmentError, get_logger
 
 logger = get_logger(__name__)
 
