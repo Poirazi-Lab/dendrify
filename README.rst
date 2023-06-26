@@ -31,18 +31,23 @@ performance, and biological accuracy, allowing us to explore dendritic
 contributions to network-level functions.
 
 .. image:: docs_sphinx/source/_static/intro.png
-   :width: 75 %
+   :width: 70 %
    :align: center
 
-.. tip::
-   If you use Dendrify for your published research, we kindly ask you to cite our
-   article:|br|
-   **Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
-   M Pagkalos, S Chavlis, P Poirazi |br|
-   DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
+|br|
 
+If you use Dendrify for your published research, we kindly ask you to cite our
+article:|br|
+**Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
+M Pagkalos, S Chavlis, P Poirazi |br|
+DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
+
+|br|
 Documentation for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
 
+|br|
+The project presentation for the INCF/OCNS Software Working Group is available `here <https://docs.google.com/presentation/d/1LUUh2ja3YSHcmByU0Vyn7vcDEnDq6fWfVxFfuK8FzE0/edit?usp=sharing>`_ 
+and an interactive notebook with a short demo `here <https://colab.research.google.com/drive/1-bGp15eWfjNuF7ETCNSsL3ovOanS_R_7?usp=sharing>`_.
 
 .. |br| raw:: html
 
