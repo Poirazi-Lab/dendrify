@@ -309,8 +309,6 @@ class NeuronModel:
         dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
         active_comps = [i for i in dendrites if i._events]
 
-        # [i for i in self._compartments
-        #             if all(isinstance(i, Dendrite), i._events)]
         if active_comps == []:
             if verbose:
                 print("\n<No custom events found>")

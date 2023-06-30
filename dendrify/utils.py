@@ -32,3 +32,10 @@ class DimensionlessCompartmentError(Exception):
     compartments is performed.
     """
     pass
+
+
+class DuplicateEquationsError(Exception):
+    """
+    Raise this error when a user tries to add the same equations twice.
+    """
+    pass

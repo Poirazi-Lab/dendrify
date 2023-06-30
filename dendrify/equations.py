@@ -51,19 +51,5 @@ library = {
                 'ds_NMDA_{1}_{0}/dt = -s_NMDA_{1}_{0} / t_NMDA_rise_{1}_{0}  :1'),
 
     # Random white noise equations:
-    'noise': 'dI_noise_{0}/dt = (mean_noise_{0}-I_noise_{0}) / tau_noise_{0} + sigma_noise_{0} * (sqrt(2/(tau_noise_{0}*dt)) * randn()) :amp',
-
-    'condition_I_Na': 'V_{0} > Vth_Na_{0} and allow_I_Na_{0} and t > timer_Na_{0} + refractory_Na',
-
-    'condition_I_Kn': 't > (timer_Na_{0} + offset_Kn) and allow_I_Kn_{0}',
-
-    'condition_I_Ca': 'V_{0} > Vth_Ca_{0} and allow_I_Ca_{0} and t > timer_Ca_{0} + refractory_Ca',
-
-    'condition_I_Kc': 't > (timer_Ca_{0} + offset_Kc) and allow_I_Kc_{0}',
-
-    'run_on_Na_spike': ("run_on_event('activate_I_Na_{0}', 'g_Na_{0} += g_Na_{0}_max; allow_I_Na_{0}=False; allow_I_Kn_{0}=True; timer_Na_{0} = t') \n"
-                        "run_on_event('activate_I_Kn_{0}', 'g_Kn_{0} += g_Kn_{0}_max; allow_I_Kn_{0}=False; allow_I_Na_{0}=True')"),
-
-    'run_on_Ca_spike': ("run_on_event('activate_I_Ca_{0}', 'g_Ca_{0} += g_Ca_{0}_max; allow_I_Ca_{0}=False; allow_I_Kc_{0}=True; timer_Ca_{0} = t') \n"
-                        "run_on_event('activate_I_Kc_{0}', 'g_Kc_{0} += g_Kc_{0}_max; allow_I_Kc_{0}=False; allow_I_Ca_{0}=True')")
+    'noise': 'dI_noise_{0}/dt = (mean_noise_{0}-I_noise_{0}) / tau_noise_{0} + sigma_noise_{0} * (sqrt(2/(tau_noise_{0}*dt)) * randn()) :amp'
 }
