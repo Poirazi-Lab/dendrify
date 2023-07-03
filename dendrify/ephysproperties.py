@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+import pprint as pp
 from math import pi
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional
 
 from brian2.units import Quantity
 
@@ -76,11 +77,9 @@ class EphysProperties(object):
         self._check_dimensionless()
 
     def __str__(self):
-        attrs = self.__dict__
-        details = '\n'.join([f"\u2192 {i}: \n{attrs[i]}\n" for i in attrs])
+        attrs = pp.pformat(self.__dict__)
         msg = (f"OBJECT:\n{self.__class__}\n\n"
-               f"{'-'*55}\n\n"
-               f"ATTRIBUTES:\n{details}"
+               f"ATTRIBUTES:\n{attrs}"
                )
         return msg
 
@@ -173,8 +172,7 @@ class EphysProperties(object):
                 return self.area * self.cm
             except TypeError:
                 logger.warning(
-                    (f"Missing parameter [cm] for '{self.name}'."
-                     f"\nCould not calculate the capacitance of '{self.name}', "
+                    (f"Could not calculate the [capacitance] of '{self.name}', "
                      "returned None."
                      )
                 )
@@ -204,8 +202,7 @@ class EphysProperties(object):
                 return self.area * self.gl
             except TypeError:
                 logger.warning(
-                    (f"Missing parameter [gl] for '{self.name}'."
-                     f"\nCould not calculate the g_leakage of '{self.name}', "
+                    (f"Could not calculate the [g_leakage] of '{self.name}', "
                      "returned None."
                      )
                 )
@@ -226,7 +223,7 @@ class EphysProperties(object):
             if value:
                 d_out[f"{var}_{self.name}"] = value
             else:
-                logger.warning(
+                logger.error(
                     f"Could not resolve [{var}_{self.name}] for '{self.name}'."
                 )
         return d_out

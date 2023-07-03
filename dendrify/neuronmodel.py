@@ -1,3 +1,4 @@
+import pprint as pp
 import sys
 from typing import List, Optional, Tuple, Union
 
@@ -6,6 +7,9 @@ from brian2 import NeuronGroup
 from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma
+from .utils import DimensionlessCompartmentError, get_logger
+
+logger = get_logger(__name__)
 
 
 class NeuronModel:
@@ -69,8 +73,16 @@ class NeuronModel:
                 "beta": 3.57,
                 "gamma": 0}
 
-    def __init__(self, connections: List[
-            Tuple[Compartment, Compartment, Union[str, Quantity]]], **kwargs):
+    def __init__(
+        self,
+        connections: List[Tuple[Compartment, Compartment, Union[str, Quantity]]],
+        cm=None,
+        gl=None,
+        r_axial=None,
+        v_rest=None,
+        scale_factor=None,
+        spine_factor=None
+    ):
         self._namespace = None
         self._compartments = None
         self._linked_neurongroup = None
@@ -79,29 +91,34 @@ class NeuronModel:
         self._extra_params = None
         self._graph = None
         self._parse_compartments(connections)
-        self._set_properties(**kwargs)
+        self._set_properties(cm=cm, gl=gl,
+                             r_axial=r_axial,
+                             v_rest=v_rest,
+                             scale_factor=scale_factor,
+                             spine_factor=spine_factor)
+        self._connect_compartments(connections)
 
     def __str__(self):
-        equations = self.equations.replace('\n', '\n    ')
-        if self.parameters:
-            params_sorted = {key: self.parameters[key]
-                             for key in sorted(self.parameters)}
-            parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
-                                    for i in params_sorted.items()])
-        else:
-            parameters = '   None'
 
-        if self._extra_params:
-            extra_params_sorted = {key: self._extra_params[key]
-                                   for key in sorted(self._extra_params)}
-            extra_params = '\n'.join([f"    '{i[0]}': {i[1]}"
-                                      for i in extra_params_sorted.items()])
-        else:
-            extra_params = '   None'
+        # pp = .PrettyPrinter(sort_dicts=True)
+        return pp.pformat(self.parameters, sort_dicts=True)
+        # equations = self.equations.replace('\n', '\n    ')
 
-        events = '\n'.join([f"    '{key}': '{self.events[key]}'"
-                            for key in self.events
-                            ]) if self.events else '    None'
+        # parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
+        #                         for i in self.parameters.items()]
+        #                        ) if self.parameters else '   None'
+
+        # if self._extra_params:
+        #     extra_params_sorted = {key: self._extra_params[key]
+        #                            for key in sorted(self._extra_params)}
+        #     extra_params = '\n'.join([f"    '{i[0]}': {i[1]}"
+        #                               for i in extra_params_sorted.items()])
+        # else:
+        #     extra_params = '   None'
+
+        # events = '\n'.join([f"    '{key}': '{self.events[key]}'"
+        #                     for key in self.events
+        #                     ]) if self.events else '    None'
 
         msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
                f"{'-'*45}\n\n"
@@ -118,14 +135,14 @@ class NeuronModel:
 
     def _parse_compartments(self, comp_list):
         error_msg = (
-            "\nValid format: [*(x, y, z)] \n"
-            "- x -> Soma or Dendrite object\n"
-            "- y -> Soma or Dendrite object other than x\n"
-            "- z -> 'half_cylinders' or 'cylinder_ + name' or brian2.nS unit\n"
-            "       (default is 'half_cylinders' if left blank)\n\n"
+            "\n\nValid format: [*(x, y, z)] \n"
+            "- x -> Soma or Dendrite object.\n"
+            "- y -> Soma or Dendrite object other than x.\n"
+            "- z -> 'half_cylinders' or 'cylinder_ + name' or conductance unit\n"
+            "       (default: 'half_cylinders').\n\n"
             "Example:\n"
-            "[(comp1, comp2), (comp2, comp3, 10*nS), "
-            "(comp3, comp4, 'cylinder_c3')]\n")
+            "[(comp1, comp2), \n(comp2, comp3, 10*nS), \n"
+            "(comp3, comp4, 'cylinder_comp3')]\n")
 
         self._compartments = []
         self._graph = []
@@ -134,16 +151,16 @@ class NeuronModel:
 
             # Prohibit self connections
             if pre is post:
-                print(f"ERROR: Cannot connect '{pre.name}' to itself.")
-                print(error_msg)
-                sys.exit()
+                raise ValueError(
+                    f"ERROR: Cannot connect '{pre.name}' to itself. {error_msg}"
+                )
 
             # Ensure that users do not use objects that make no sense
             if not (isinstance(pre, Compartment) and
                     isinstance(post, Compartment)):
-                print(f"ERROR: Unknown compartment type provided.")
-                print(error_msg)
-                sys.exit()
+                raise TypeError(
+                    f"Invalid compartment type provided. {error_msg}"
+                )
 
             # Store graph-like representation for debugging or visualization
             self._graph.append((pre.name, post.name))
@@ -154,6 +171,10 @@ class NeuronModel:
             if post not in self._compartments:
                 self._compartments.append(post)
 
+    def _connect_compartments(self, comp_list):
+        for comp in comp_list:
+            pre, post = comp[0], comp[1]
+
             # Call the connect method from the Compartment class
             if len(comp) == 2:
                 pre.connect(post)
@@ -162,6 +183,7 @@ class NeuronModel:
 
     def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
                         scale_factor=None, spine_factor=None):
+
         for i in self._compartments:
             if cm and (not i._ephys_object.cm):
                 i._ephys_object.cm = cm
@@ -176,6 +198,40 @@ class NeuronModel:
             if spine_factor:
                 if isinstance(i, Dendrite):
                     i._ephys_object.spine_factor = spine_factor
+
+        # for comp in self._compartments:
+        #     if cm:
+        #         self._check_param(comp, 'cm')
+        #         comp._ephys_object.cm = cm
+
+        #     if gl:
+        #         self._check_param(comp, 'gl')
+        #         comp._ephys_object.gl = gl
+
+        #     if r_axial:
+        #         self._check_param(comp, 'r_axial')
+        #         comp._ephys_object.r_axial = r_axial
+
+        #     if v_rest:
+        #         self._check_param(comp, 'v_rest')
+        #         comp._ephys_object.v_rest = v_rest
+
+                # i._ephys_object.cm
+
+    def _check_param(self, comp: Compartment, param: str):
+        if comp.dimensionless and param != 'v_rest':
+            raise DimensionlessCompartmentError(
+                f"Since '{comp.name}' is a dimensionless compartment, "
+                f"it is \nnot allowed to have [{param}]. To resolve this issue, "
+                f"either omit [cm_abs, gl_abs] from \n'{comp.name}' or remove "
+                f"the [{param}] parameter from the NeuronModel."
+            )
+        elif getattr(comp._ephys_object, param):
+            logger.warning(
+                f"The parameter [{param}] for '{comp.name}' has been provided "
+                "twice. \nOnly the value that was added to the NeuronModel will "
+                "be used."
+            )
 
     def dspike_properties(self, channel: str = None,
                           tau_rise: Optional[Quantity] = None,

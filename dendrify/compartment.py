@@ -1,10 +1,9 @@
 from __future__ import annotations
 
-import sys
+import pprint as pp
 from typing import Optional, Union
 
 import numpy as np
-from brian2 import heaviside
 from brian2.units import Quantity, ms, pA
 
 from .ephysproperties import EphysProperties
@@ -58,23 +57,13 @@ class Compartment:
         self._ephys_object = EphysProperties(name=self.name, **kwargs)
 
     def __str__(self):
-        ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join(
-            [f"\u2192 {i}:\n  [{ephys_dict[i]}]\n" for i in ephys_dict]
-        )
-        equations = self.equations.replace('\n', '\n   ')
-
-        parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()]
-                               ) if self.parameters else '   None'
-
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               "PROPERTIES: \n\n"
-               f"\u2192 equations:\n   {equations}\n\n"
-               f"\u2192 parameters:\n{parameters}\n\n"
-               f"{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}")
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        user = pp.pformat(self._ephys_object.__dict__)
+        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user}")
         return msg
 
     def _add_equations(self, model: str):
@@ -295,6 +284,18 @@ class Compartment:
             Mean of the Gaussian noise, by default ``0*pA``
         """
         I_noise_name = f'I_noise_{self.name}'
+
+        if I_noise_name in self.equations:
+            raise DuplicateEquationsError(
+                f"The equations of '{I_noise_name}' have already been "
+                f"added to '{self.name}'. \nYou might be seeing this error if "
+                "you are using Jupyter/iPython "
+                "which store variable values \nin memory. Try cleaning all "
+                "variables or restart the kernel before running your "
+                "code. If this \nproblem persists, please report it "
+                "by creating a new issue here:\n"
+                "https://github.com/Poirazi-Lab/dendrify/issues."
+            )
         noise_eqs = library['noise'].format(self.name)
         to_change = f'= I_ext_{self.name}'
         self._equations = self._equations.replace(
@@ -410,6 +411,17 @@ class Compartment:
                   / ms)
         return 1/factor
 
+    @property
+    def dimensionless(self) -> bool:
+        """
+        Checks if a compartment has been flagged as dimensionless
+
+        Returns
+        -------
+        bool
+        """
+        return True if self._ephys_object._dimensionless else False
+
 
 class Soma(Compartment):
     """
@@ -481,25 +493,15 @@ class Dendrite(Compartment):
         self._event_actions = None
 
     def __str__(self):
-        ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join([f"\u2192 {i}:\n    [{ephys_dict[i]}]\n"
-                           for i in ephys_dict])
-        equations = self.equations.replace('\n', '\n    ')
-        events = '\n'.join([f"    '{key}': '{self.events[key]}'"
-                            for key in self.events
-                            ]) if self.events else '    None'
-        parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()
-                                ]) if self.parameters else '    None'
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               "PROPERTIES: \n\n"
-               f"\u2192 equations:\n    {equations}\n\n"
-               f"\u2192 events:\n{events}\n\n"
-               f"\u2192 parameters:\n{parameters}\n"
-               f"\n{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}"
-               )
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        events = pp.pformat(self.events, width=120)
+        user = pp.pformat(self._ephys_object.__dict__)
+        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"EVENTS\n{6*'-'}\n{events}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user}")
         return msg
 
     def dspikes_dev(self, tag: str,
@@ -517,6 +519,26 @@ class Dendrite(Compartment):
         # The following code creates all necessary equations for dspikes:
         comp = self.name
         ID = f"{tag}_{comp}"
+        event_name = f"spike_{ID}"
+
+        if self._events:
+            # Check if this synapse already exists
+            if event_name in self._events:
+                raise DuplicateEquationsError(
+                    f"The equations for '{event_name}' have already been "
+                    f"added to '{self.name}'. \nPlease use a different "
+                    f"[tag] when adding multiple dSpike mechanisms to "
+                    " a single compartment. \nYou might"
+                    " also see this error if you are using Jupyter/iPython "
+                    "which store variable values in \nmemory. Try cleaning all "
+                    "variables or restart the kernel before running your "
+                    "code. If this \nproblem persists, please report it "
+                    "by creating a new issue here: \n"
+                    "https://github.com/Poirazi-Lab/dendrify/issues."
+                )
+        else:
+            self._events = {}
+
         dspike_currents = f"I_rise_{ID} + I_fall_{ID}"
 
         # Both currents take into account the reversal potential of Na/K
@@ -555,8 +577,6 @@ class Dendrite(Compartment):
         event_name = f"spike_{ID}"
         condition = f"V_{comp} >= Vth_{ID} and t >= spiketime_{ID} + refractory_{ID}"
 
-        if not self._events:
-            self._events = {}
         self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
