@@ -45,7 +45,21 @@ class Compartment:
     >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
+    def __init__(
+        self,
+        name: str,
+        model: str = 'passive',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
         self.name = name
         self._equations = None
         self._params = None
@@ -54,7 +68,19 @@ class Compartment:
         # Add membrane equations:
         self._add_equations(model)
         # Keep track of electrophysiological properties:
-        self._ephys_object = EphysProperties(name=self.name, **kwargs)
+        self._ephys_object = EphysProperties(
+            name=self.name,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
 
     def __str__(self):
         equations = self.equations
@@ -365,6 +391,18 @@ class Compartment:
         return self._ephys_object.g_leakage
 
     @property
+    def g_leakage(self) -> Quantity:
+        """
+        A compartment's absolute leakage conductance based on its specific
+        leakage conductance (gl) and surface area.
+
+        Returns
+        -------
+        :class:`~brian2.units.fundamentalunits.Quantity`
+        """
+        return self._ephys_object.g_leakage
+
+    @property
     def equations(self) -> str:
         """
         All differential equations that have been generated for a single
@@ -460,8 +498,35 @@ class Soma(Compartment):
     >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
     """
 
-    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Quantity):
-        super().__init__(name, model, **kwargs)
+    def __init__(
+        self,
+        name: str,
+        model: str = 'leakyIF',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
+        super().__init__(
+            name=name,
+            model=model,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
 
 
 class Dendrite(Compartment):
@@ -487,8 +552,35 @@ class Dendrite(Compartment):
         are by default set to ``'passive'``.
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
-        super().__init__(name, model, **kwargs)
+    def __init__(
+        self,
+        name: str,
+        model: str = 'passive',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
+        super().__init__(
+            name=name,
+            model=model,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
         self._events = None
         self._event_actions = None
 
@@ -504,17 +596,17 @@ class Dendrite(Compartment):
                f"USER PARAMETERS\n{15*'-'}\n{user}")
         return msg
 
-    def dspikes_dev(self, tag: str,
-                    threshold: Optional[Quantity] = None,
-                    g_rise: Optional[Quantity] = None,
-                    g_fall: Optional[Quantity] = None,
-                    duration_rise: Optional[Quantity] = None,
-                    duration_fall: Optional[Quantity] = None,
-                    reversal_rise: Optional[Quantity] = None,
-                    reversal_fall: Optional[Quantity] = None,
-                    offset_fall: Optional[Quantity] = None,
-                    refractory: Optional[Quantity] = None
-                    ):
+    def dspikes(self, tag: str,
+                threshold: Optional[Quantity] = None,
+                g_rise: Optional[Quantity] = None,
+                g_fall: Optional[Quantity] = None,
+                duration_rise: Optional[Quantity] = None,
+                duration_fall: Optional[Quantity] = None,
+                reversal_rise: Optional[Quantity] = None,
+                reversal_fall: Optional[Quantity] = None,
+                offset_fall: Optional[Quantity] = None,
+                refractory: Optional[Quantity] = None
+                ):
 
         # The following code creates all necessary equations for dspikes:
         comp = self.name
@@ -522,7 +614,7 @@ class Dendrite(Compartment):
         event_name = f"spike_{ID}"
 
         if self._events:
-            # Check if this synapse already exists
+            # Check if this event already exists
             if event_name in self._events:
                 raise DuplicateEquationsError(
                     f"The equations for '{event_name}' have already been "
@@ -580,12 +672,10 @@ class Dendrite(Compartment):
         self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
-        run_on_dspike = f"run_on_event('spike_{ID}', 'spiketime_{ID} = t')"
-
         if not self._event_actions:
-            self._event_actions = run_on_dspike
+            self._event_actions = {f"spike_{ID}": f"spiketime_{ID} = t"}
         else:
-            self._event_actions += "\n" + run_on_dspike
+            self._event_actions.update({f"spike_{ID}": f"spiketime_{ID} = t"})
 
         # Include params needed
         if not self._params:
@@ -616,7 +706,7 @@ class Dendrite(Compartment):
         return self._events
 
     @ property
-    def event_actions(self) -> str:
+    def event_actions(self) -> dict:
         """
         A string that is used to tell Brian how to handle the dSpike events.
 

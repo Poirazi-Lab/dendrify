@@ -100,40 +100,17 @@ class NeuronModel:
 
     def __str__(self):
 
-        # pp = .PrettyPrinter(sort_dicts=True)
-        return pp.pformat(self.parameters, sort_dicts=True)
-        # equations = self.equations.replace('\n', '\n    ')
-
-        # parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
-        #                         for i in self.parameters.items()]
-        #                        ) if self.parameters else '   None'
-
-        # if self._extra_params:
-        #     extra_params_sorted = {key: self._extra_params[key]
-        #                            for key in sorted(self._extra_params)}
-        #     extra_params = '\n'.join([f"    '{i[0]}': {i[1]}"
-        #                               for i in extra_params_sorted.items()])
-        # else:
-        #     extra_params = '   None'
-
-        # events = '\n'.join([f"    '{key}': '{self.events[key]}'"
-        #                     for key in self.events
-        #                     ]) if self.events else '    None'
-
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               "PROPERTIES (type): \n\n"
-               f"\u2192 equations (str):\n    {equations}\n\n"
-               f"\u2192 parameters (dict):\n{parameters}\n\n"
-               f"\u2192 events (dict):\n{events}\n"
-               f"\n{'-'*45}\n\n"
-               f"USEFUL ATTRIBUTES:\n\n"
-               f"\u2192 _linked_neurongroup:\n    {self._linked_neurongroup}\n\n"
-               f"\u2192 _extra_equations:\n    {self._extra_equations}\n\n"
-               f"\u2192 _extra_params:\n{extra_params}\n")
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        events = pp.pformat(self.events, width=120)
+        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"EVENTS\n{6*'-'}\n{events}\n")
         return msg
 
     def _parse_compartments(self, comp_list):
+
         error_msg = (
             "\n\nValid format: [*(x, y, z)] \n"
             "- x -> Soma or Dendrite object.\n"
@@ -171,6 +148,20 @@ class NeuronModel:
             if post not in self._compartments:
                 self._compartments.append(post)
 
+            is_dimensionless = [i.dimensionless for i in self._compartments]
+            if True in is_dimensionless and False in is_dimensionless:
+                raise DimensionlessCompartmentError(
+                    "When creating a NeuronModel, either all of its\n"
+                    "compartments must be dimensionless or none of them. "
+                    "To resolve this issue, you\n"
+                    "can perform one of the following:\n\n"
+                    "1. Discard these parameters [length, diameter, cm,"
+                    "gl, r_axial]\n   if you want to create dimensionless "
+                    "compartments.\n\n"
+                    "2. Discard these parameters [cm_abs, gl_abs] if you want to\n"
+                    "   create compartments with physical dimensions."
+                )
+
     def _connect_compartments(self, comp_list):
         for comp in comp_list:
             pre, post = comp[0], comp[1]
@@ -182,98 +173,53 @@ class NeuronModel:
                 pre.connect(post, g=comp[2])
 
     def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
-                        scale_factor=None, spine_factor=None):
+                        scale_factor=1.0, spine_factor=1.0):
 
-        for i in self._compartments:
-            if cm and (not i._ephys_object.cm):
-                i._ephys_object.cm = cm
-            if gl and (not i._ephys_object.gl):
-                i._ephys_object.gl = gl
-            if r_axial and (not i._ephys_object.r_axial):
-                i._ephys_object.r_axial = r_axial
-            if v_rest and (not i._ephys_object.v_rest):
-                i._ephys_object.v_rest = v_rest
-            if scale_factor:
-                i._ephys_object.scale_factor = scale_factor
-            if spine_factor:
-                if isinstance(i, Dendrite):
-                    i._ephys_object.spine_factor = spine_factor
+        params = {'cm': cm, 'gl': gl, 'r_axial': r_axial,
+                  'scale_factor': scale_factor, 'spine_factor': spine_factor}
 
-        # for comp in self._compartments:
-        #     if cm:
-        #         self._check_param(comp, 'cm')
-        #         comp._ephys_object.cm = cm
+        for comp in self._compartments:
+            if v_rest:
+                comp._ephys_object.v_rest = v_rest
+            if not comp.dimensionless and any(params.values()):
+                for param, value in params.items():
+                    setattr(comp._ephys_object, param, value)
+            elif comp.dimensionless and any(params.values()):
+                raise DimensionlessCompartmentError(
+                    f"The dimensionless compartment '{comp.name}' cannot take "
+                    "the \nfollowing parameters: "
+                    "[cm, gl, r_axial, scale_factor, spine_factor]."
+                )
 
-        #     if gl:
-        #         self._check_param(comp, 'gl')
-        #         comp._ephys_object.gl = gl
-
-        #     if r_axial:
-        #         self._check_param(comp, 'r_axial')
-        #         comp._ephys_object.r_axial = r_axial
-
-        #     if v_rest:
-        #         self._check_param(comp, 'v_rest')
-        #         comp._ephys_object.v_rest = v_rest
-
-                # i._ephys_object.cm
-
-    def _check_param(self, comp: Compartment, param: str):
-        if comp.dimensionless and param != 'v_rest':
-            raise DimensionlessCompartmentError(
-                f"Since '{comp.name}' is a dimensionless compartment, "
-                f"it is \nnot allowed to have [{param}]. To resolve this issue, "
-                f"either omit [cm_abs, gl_abs] from \n'{comp.name}' or remove "
-                f"the [{param}] parameter from the NeuronModel."
-            )
-        elif getattr(comp._ephys_object, param):
-            logger.warning(
-                f"The parameter [{param}] for '{comp.name}' has been provided "
-                "twice. \nOnly the value that was added to the NeuronModel will "
-                "be used."
-            )
-
-    def dspike_properties(self, channel: str = None,
-                          tau_rise: Optional[Quantity] = None,
-                          tau_fall: Optional[Quantity] = None,
-                          offset_fall: Optional[Quantity] = None,
-                          refractory: Optional[Quantity] = None):
+    def config_dspikes(self):
+        # TODO
         """
-        Allows specifying essential dSpike properties affecting all compartments.
-
-        Parameters
-        ----------
-        channel : str
-            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming
-            soon).
-        tau_rise : :class:`~brian2.units.fundamentalunits.Quantity`
-            The decay time constant of the current causing the dSpike's
-            **depolarization** phase, by default ``None``.
-        tau_fall : :class:`~brian2.units.fundamentalunits.Quantity`
-            The decay time constant of the current causing the dSpike's
-            **repolarization** phase, by default ``None``.
-        offset_fall : :class:`~brian2.units.fundamentalunits.Quantity`
-            The delay for starting the dSpike repolarization phase, by default
-            ``None``.
-        refractory : :class:`~brian2.units.fundamentalunits.Quantity`
-            The duration of the dSpike inactive period, by default ``None``.
+        Configures dendritic spiking properties for all compartments.
         """
-        # Make sure user provides a valid option:
-        if channel not in ['Na', 'Ca']:
-            print("Please select a valid dendritic spike type ('Na' or 'Ca')")
-            sys.exit()
-        # Choose param names based on user input:
-        if channel == 'Na':
-            dspike_params = {'refractory_Na': refractory,
-                             'offset_Kn': offset_fall,
-                             'tau_Na': tau_rise,
-                             'tau_Kn': tau_fall}
-        else:
-            dspike_params = {'refractory_Ca': refractory,
-                             'offset_Kc': offset_fall,
-                             'tau_Ca': tau_rise,
-                             'tau_Kc': tau_fall}
-        self.add_params(dspike_params)
+        pass
+
+    def make_neurongroup(self,
+                         N: int,
+                         init_rest: bool = True,
+                         init_events: bool = True,
+                         *args, **kwargs
+                         ) -> NeuronGroup:
+
+        group = NeuronGroup(N, model=self.equations,
+                            events=self.events,
+                            namespace=self.parameters,
+                            *args, **kwargs)
+
+        if init_rest:
+            for comp in self._compartments:
+                setattr(group, f'V_{comp.name}', comp._ephys_object.v_rest)
+
+        if init_events:
+            if self.event_actions:
+                for event, action in self.event_actions.items():
+                    group.run_on_event(event, action)
+
+        return group
 
     def add_params(self, params_dict: dict):
         """
@@ -301,96 +247,6 @@ class NeuronModel:
             self._extra_equations = f"{eqs}"
         else:
             self._extra_equations += f"\n{eqs}"
-
-    def link(self, ng: NeuronGroup, automate: str = 'all',
-             verbose: bool = False):
-        """
-        Links a NeuronModel to a
-        :doc:`NeuronGroup <brian2:reference/brian2.groups.neurongroup.NeuronGroup>`.
-        This allows dendrify to automatically handle the initialization of
-        important simulation parameters.
-
-        Parameters
-        ----------
-        ng : brian2.NeuronGroup
-            A NeuronGroup that was created using a NeuronModel.
-        automate : str, optional
-            What to automate. Available options: ``'all'`` (default),
-            ``'v_rest'``, ``'events'``.
-        verbose : bool, optional
-            If ``True`` it prints all the code that was created and run in the 
-            background by dendrify, by default ``False``
-        """
-        self._namespace = ng.namespace
-        self._varscope = main.__dict__
-        items = main.__dict__.items()
-        ng_name = [k for k, v in items if v is ng][0]
-        self._linked_neurongroup = ng_name, ng
-
-        if automate == 'all':
-            self._set_rest(verbose)
-            self._handle_events(verbose)
-
-        elif automate == 'v_rest':
-            self._set_rest(verbose)
-
-        elif automate == 'events':
-            self._handle_events(verbose)
-
-    def _set_rest(self, verbose=False):
-        """
-        Creates and runs executable code that initialises V rest across all
-        NeuronModel _compartments.
-        """
-        command = '{0}.V_{1} = {2}'
-
-        # When model parameters are passed as dict to the NeuronGroup:
-        if self._namespace:
-            commands = [command.format(self._linked_neurongroup[0], i.name,
-                                       repr(self._namespace['EL_'+i.name]))
-                        for i in self._compartments]
-        executable = '\n'.join(commands)
-        if verbose:
-            print(executable)
-        exec(executable, self._varscope)
-
-    def _handle_events(self, verbose=False):
-        """
-        Creates and runs executable code that:
-        a) Initializes custom event checkpoint variables.
-        b) Specifies what happens during custom events.
-        """
-        ng_name = self._linked_neurongroup[0]
-        # Find all active _compartments:
-        dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
-        active_comps = [i for i in dendrites if i._events]
-
-        if active_comps == []:
-            if verbose:
-                print("\n<No custom events found>")
-            return
-        # Na spike vs Ca spike branches
-        comps_Na = filter(lambda x: '_I_Na_' in x.event_actions, active_comps)
-        comps_Ca = filter(lambda x: '_I_Ca_' in x.event_actions, active_comps)
-        # Initial compditions for the custom events needed for dspikes:
-        checks_Na = ('{0}.allow_I_Na_{1} = True \n'
-                     '{0}.allow_I_Kn_{1} = False')
-        checks_Ca = ('{0}.allow_I_Ca_{1} = True \n'
-                     '{0}.allow_I_Kc_{1} = False')
-        # Compartment specific initial compditions:
-        checks_Na_comp = [checks_Na.format(ng_name, i.name) for i in comps_Na]
-        checks_Ca_comp = [checks_Ca.format(ng_name, i.name) for i in comps_Ca]
-        # All initial compditions and actions needed for dspikes:
-        all_checks = checks_Na_comp + checks_Ca_comp
-        all_actions = [i.event_actions for i in active_comps]
-        # Megrge all actions and checks into a single string:
-        commands = '\n'.join(all_checks + all_actions)
-
-        executable = commands.replace('run_on_event',
-                                      f'{ng_name}.run_on_event')
-        if verbose:
-            print(executable)
-        exec(executable, self._varscope)
 
     def as_graph(self, fontsize: int = 10, fontcolor: str = 'white',
                  scale_nodes: float = 1, color_soma: str = '#4C6C92',
@@ -508,7 +364,7 @@ class NeuronModel:
         return d_out
 
     @property
-    def event_actions(self) -> list:
+    def event_actions(self) -> dict:
         """
         Creates a list of all event actions for dendritic spiking.
 
@@ -517,6 +373,9 @@ class NeuronModel:
         list
             All event actions for dendritic spiking
         """
+        d_out = {}
         dendrites = [i for i in self._compartments if isinstance(i, Dendrite)]
         all_actions = [i._event_actions for i in dendrites if i._event_actions]
-        return all_actions
+        for d in all_actions:
+            d_out.update(d)
+        return d_out

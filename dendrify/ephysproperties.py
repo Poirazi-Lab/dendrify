@@ -50,7 +50,8 @@ class EphysProperties(object):
     """
 
     def __init__(
-        self, name: Optional[str] = None,
+        self,
+        name: Optional[str] = None,
         length: Optional[Quantity] = None,
         diameter: Optional[Quantity] = None,
         cm: Optional[Quantity] = None,
@@ -71,8 +72,8 @@ class EphysProperties(object):
         self.gl_abs = gl_abs
         self.r_axial = r_axial
         self.v_rest = v_rest
-        self.scale_factor = scale_factor
-        self.spine_factor = spine_factor
+        self.scale_factor = scale_factor if not any([cm_abs, gl_abs]) else None
+        self.spine_factor = spine_factor if not any([cm_abs, gl_abs]) else None
         self._dimensionless = True if any([cm_abs, gl_abs]) else False
         self._check_dimensionless()
 
