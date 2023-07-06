@@ -61,21 +61,11 @@ class NeuronModel:
     >>> model = NeuronModel(connections)
     """
 
-    # Default values for key ionic mechanisms
-    DEFAULTS = {"E_AMPA": 0 * mV,
-                "E_NMDA": 0 * mV,
-                "E_GABA": -80 * mV,
-                "E_Na": 70 * mV,
-                "E_K": -89 * mV,
-                "E_Ca": 136 * mV,
-                "Mg": 1.0,
-                "alpha": 0.062,
-                "beta": 3.57,
-                "gamma": 0}
-
     def __init__(
         self,
-        connections: List[Tuple[Compartment, Compartment, Union[str, Quantity]]],
+        connections: List[Tuple[Compartment,
+                                Compartment,
+                                Union[str, Quantity, None]]],
         cm=None,
         gl=None,
         r_axial=None,
@@ -83,10 +73,7 @@ class NeuronModel:
         scale_factor=None,
         spine_factor=None
     ):
-        self._namespace = None
         self._compartments = None
-        self._linked_neurongroup = None
-        self._varscope = None
         self._extra_equations = None
         self._extra_params = None
         self._graph = None
@@ -99,15 +86,17 @@ class NeuronModel:
         self._connect_compartments(connections)
 
     def __str__(self):
-
         equations = self.equations
         parameters = pp.pformat(self.parameters)
         events = pp.pformat(self.events, width=120)
-        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+        event_names = pp.pformat(self.event_names)
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
                f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
                f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
-               f"EVENTS\n{6*'-'}\n{events}\n")
-        return msg
+               f"EVENTS\n{6*'-'}\n{event_names}\n\n\n"
+               f"EVENT CONDITIONS\n{16*'-'}\n{events}\n\n\n"
+               )
+        return txt
 
     def _parse_compartments(self, comp_list):
 
@@ -202,6 +191,7 @@ class NeuronModel:
                          N: int,
                          init_rest: bool = True,
                          init_events: bool = True,
+                         show: bool = False,
                          *args, **kwargs
                          ) -> NeuronGroup:
 
@@ -212,11 +202,16 @@ class NeuronModel:
 
         if init_rest:
             for comp in self._compartments:
+                if show:
+                    print(
+                        f"Setting V_{comp.name} = {comp._ephys_object.v_rest}")
                 setattr(group, f'V_{comp.name}', comp._ephys_object.v_rest)
 
         if init_events:
             if self.event_actions:
                 for event, action in self.event_actions.items():
+                    if show:
+                        print(f"Setting run_on_event('{event}', '{action}')")
                     group.run_on_event(event, action)
 
         return group
@@ -341,7 +336,6 @@ class NeuronModel:
         d = {}
         for i in self._compartments:
             d.update(i.parameters)
-        d.update(self.DEFAULTS)
         if self._extra_params:
             d.update(self._extra_params)
         return d
@@ -362,6 +356,18 @@ class NeuronModel:
         for d in all_events:
             d_out.update(d)
         return d_out
+
+    @property
+    def event_names(self) -> list:
+        """
+        Creates a list of all event names for dendritic spiking.
+
+        Returns
+        -------
+        list
+            All event names for dendritic spiking
+        """
+        return list(self.events.keys())
 
     @property
     def event_actions(self) -> dict:

@@ -42,11 +42,11 @@ library = {
                 'ds_GABA_{1}_{0}/dt = -s_GABA_{1}_{0} / t_GABA_rise_{1}_{0}  :1'),
 
     # NMDA equations with rise and decay kinetics:
-    'NMDA': ('I_NMDA_{1}_{0} = g_NMDA_{1}_{0} * (E_NMDA-V_{0}) * s_NMDA_{1}_{0} / (1 + Mg * exp(-alpha*(V_{0}/mV+gamma)) / beta) * w_NMDA_{1}_{0}  :amp\n'
+    'NMDA': ('I_NMDA_{1}_{0} = g_NMDA_{1}_{0} * (E_NMDA-V_{0}) * s_NMDA_{1}_{0} / (1 + Mg_con * exp(-Alpha_NMDA*(V_{0}/mV+Gamma_NMDA)) / Beta_NMDA) * w_NMDA_{1}_{0}  :amp\n'
              'ds_NMDA_{1}_{0}/dt = -s_NMDA_{1}_{0}/t_NMDA_decay_{1}_{0}  :1'),
 
     # NMDA equations with rise and decay kinetics:
-    'NMDA_rd': ('I_NMDA_{1}_{0} = g_NMDA_{1}_{0} * (E_NMDA-V_{0}) * x_NMDA_{1}_{0} / (1 + Mg * exp(-alpha*(V_{0}/mV+gamma)) / beta) * w_NMDA_{1}_{0}  :amp\n'
+    'NMDA_rd': ('I_NMDA_{1}_{0} = g_NMDA_{1}_{0} * (E_NMDA-V_{0}) * x_NMDA_{1}_{0} / (1 + Mg_con * exp(-Alpha_NMDA*(V_{0}/mV+Gamma_NMDA)) / Beta_NMDA) * w_NMDA_{1}_{0}  :amp\n'
                 'dx_NMDA_{1}_{0}/dt = (-x_NMDA_{1}_{0}/t_NMDA_decay_{1}_{0}) + s_NMDA_{1}_{0}/ms  :1\n'
                 'ds_NMDA_{1}_{0}/dt = -s_NMDA_{1}_{0} / t_NMDA_rise_{1}_{0}  :1'),
 

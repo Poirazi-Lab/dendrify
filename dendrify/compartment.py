@@ -4,7 +4,7 @@ import pprint as pp
 from typing import Optional, Union
 
 import numpy as np
-from brian2.units import Quantity, ms, pA
+from brian2.units import Quantity, ms, mV, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
@@ -86,11 +86,11 @@ class Compartment:
         equations = self.equations
         parameters = pp.pformat(self.parameters)
         user = pp.pformat(self._ephys_object.__dict__)
-        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
                f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
                f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
                f"USER PARAMETERS\n{15*'-'}\n{user}")
-        return msg
+        return txt
 
     def _add_equations(self, model: str):
         """
@@ -415,7 +415,7 @@ class Compartment:
         return self._equations
 
     @property
-    def _g_couples(self) -> dict:
+    def _g_couples(self) -> Union[dict, None]:
         # If not _connections have been specified yet
         if not self._connections:
             return None
@@ -583,18 +583,22 @@ class Dendrite(Compartment):
         )
         self._events = None
         self._event_actions = None
+        self._dspike_params = None
 
     def __str__(self):
         equations = self.equations
         parameters = pp.pformat(self.parameters)
         events = pp.pformat(self.events, width=120)
-        user = pp.pformat(self._ephys_object.__dict__)
-        msg = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+        event_names = pp.pformat(self.event_names)
+        user = self._ephys_object.__dict__
+        user_clean = pp.pformat({k: v for k, v in user.items() if v})
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
                f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
                f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
-               f"EVENTS\n{6*'-'}\n{events}\n\n\n"
-               f"USER PARAMETERS\n{15*'-'}\n{user}")
-        return msg
+               f"EVENTS\n{6*'-'}\n{event_names}\n\n\n"
+               f"EVENT CONDITIONS\n{16*'-'}\n{events}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user_clean}")
+        return txt
 
     def dspikes(self, tag: str,
                 threshold: Optional[Quantity] = None,
@@ -602,8 +606,8 @@ class Dendrite(Compartment):
                 g_fall: Optional[Quantity] = None,
                 duration_rise: Optional[Quantity] = None,
                 duration_fall: Optional[Quantity] = None,
-                reversal_rise: Optional[Quantity] = None,
-                reversal_fall: Optional[Quantity] = None,
+                reversal_rise: Union[Quantity, str, None] = None,
+                reversal_fall: Union[Quantity, str, None] = None,
                 offset_fall: Optional[Quantity] = None,
                 refractory: Optional[Quantity] = None
                 ):
@@ -657,9 +661,10 @@ class Dendrite(Compartment):
 
         # Add equations to a compartment
         to_replace = f'= I_ext_{comp}'
-        self._equations = self._equations.replace(to_replace,
-                                                  f'{to_replace} + {dspike_currents}'
-                                                  )
+        self._equations = self._equations.replace(
+            to_replace,
+            f'{to_replace} + {dspike_currents}'
+        )
         self._equations += '\n'.join(['', I_rise_eqs, I_fall_eqs,
                                       g_rise_eqs, g_fall_eqs,
                                       spiketime]
@@ -678,22 +683,79 @@ class Dendrite(Compartment):
             self._event_actions.update({f"spike_{ID}": f"spiketime_{ID} = t"})
 
         # Include params needed
-        if not self._params:
-            self._params = {}
+        if not self._dspike_params:
+            self._dspike_params = {}
 
-        params = [threshold, g_rise, g_fall, duration_rise, duration_fall,
-                  reversal_rise, reversal_fall, offset_fall, refractory]
+        params = [threshold,
+                  g_rise,
+                  g_fall,
+                  duration_rise,
+                  duration_fall,
+                  self._ionic_param(reversal_rise, self),
+                  self._ionic_param(reversal_fall, self),
+                  offset_fall,
+                  refractory]
 
-        vars = [f"Vth_{ID}", f"g_rise_max_{ID}", f"g_fall_max_{ID}",
-                f"duration_rise_{ID}", f"duration_fall_{ID}",
-                f"E_rise_{tag}", f"E_fall_{tag}",
-                f"offset_fall_{ID}", f"refractory_{ID}"]
+        vars = [f"Vth_{ID}",
+                f"g_rise_max_{ID}",
+                f"g_fall_max_{ID}",
+                f"duration_rise_{ID}",
+                f"duration_fall_{ID}",
+                f"E_rise_{tag}",
+                f"E_fall_{tag}",
+                f"offset_fall_{ID}",
+                f"refractory_{ID}"]
 
-        for p, v in zip(params, vars):
-            if p:
-                self._params[v] = p
+        d = dict(zip(vars, params))
+        self._dspike_params[ID] = d
 
-    @ property
+    def _ionic_param(self,
+                     param: Union[str, Quantity, None],
+                     comp: Compartment
+                     ) -> Union[Quantity, None]:
+        DEFAULT_PARAMS = EphysProperties.DEFAULT_PARAMS
+        valid_params = {k: v for k, v in DEFAULT_PARAMS.items() if k[0] == 'E'}
+        if not param:
+            return None
+        if isinstance(param, Quantity):
+            return param
+        elif isinstance(param, str):
+            try:
+                return DEFAULT_PARAMS[param]
+            except KeyError:
+                raise ValueError(
+                    f"Please provide a valid ionic parameter for '{comp.name}'."
+                    " Available options:\n"
+                    f"{pp.pformat(valid_params)}"
+                )
+        else:
+            raise ValueError(
+                f"Please provide a valid ionic parameter for '{comp.name}'."
+                " Available options:\n"
+                f"{pp.pformat(valid_params)}"
+            )
+
+    @property
+    def parameters(self) -> dict:
+        """
+        All parameters that have been generated for a single compartment.
+
+        Returns
+        -------
+        dict
+        """
+        d_out = {}
+        for i in [self._params, self._g_couples]:
+            if i:
+                d_out.update(i)
+        if self._dspike_params:
+            for d in self._dspike_params.values():
+                d_out.update(d)
+        if self._ephys_object:
+            d_out.update(self._ephys_object.parameters)
+        return d_out
+
+    @property
     def events(self) -> dict:
         """
         A dictionary of all dSpike events created for a single dendrite.
@@ -703,9 +765,22 @@ class Dendrite(Compartment):
         dict
             Keys: event names, values: events conditions.
         """
-        return self._events
+        return self._events if self._events else {}
 
-    @ property
+    @property
+    def event_names(self) -> list:
+        """
+        A list of all dSpike event names created for a single dendrite.
+
+        Returns
+        -------
+        list
+        """
+        if not self._events:
+            return []
+        return list(self._events.keys())
+
+    @property
     def event_actions(self) -> dict:
         """
         A string that is used to tell Brian how to handle the dSpike events.
@@ -715,4 +790,4 @@ class Dendrite(Compartment):
         str
             Executable code that runs automatically in the background.
         """
-        return self._event_actions
+        return self._event_actions if self._event_actions else {}

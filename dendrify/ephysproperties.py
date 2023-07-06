@@ -4,11 +4,23 @@ import pprint as pp
 from math import pi
 from typing import List, Optional
 
-from brian2.units import Quantity
+from brian2.units import *
 
 from .utils import DimensionlessCompartmentError, get_logger
 
 logger = get_logger(__name__)
+
+
+def default_params(params: dict) -> None:
+    """
+    Set the default ephys parameters for the :class:`.EphysProperties` class.
+
+    Parameters
+    ----------
+    params : dict
+        A dictionary of ionic parameters
+    """
+    EphysProperties.DEFAULT_PARAMS.update(params)
 
 
 class EphysProperties(object):
@@ -49,6 +61,19 @@ class EphysProperties(object):
         A dendritic area scale factor to account for spines, by default ``1.0``
     """
 
+    DEFAULT_PARAMS = {
+        "E_AMPA": 0 * mV,
+        "E_NMDA": 0 * mV,
+        "E_GABA": -80 * mV,
+        "E_Na": 70 * mV,
+        "E_K": -89 * mV,
+        "E_Ca": 136 * mV,
+        "Mg_con": 1.0,
+        "Alpha_NMDA": 0.062,
+        "Beta_NMDA": 3.57,
+        "Gamma_NMDA": 0
+    }
+
     def __init__(
         self,
         name: Optional[str] = None,
@@ -79,10 +104,10 @@ class EphysProperties(object):
 
     def __str__(self):
         attrs = pp.pformat(self.__dict__)
-        msg = (f"OBJECT:\n{self.__class__}\n\n"
+        txt = (f"OBJECT:\n{self.__class__}\n\n"
                f"ATTRIBUTES:\n{attrs}"
                )
-        return msg
+        return txt
 
     def _check_dimensionless(self):
         """
@@ -227,6 +252,7 @@ class EphysProperties(object):
                 logger.error(
                     f"Could not resolve [{var}_{self.name}] for '{self.name}'."
                 )
+        d_out.update(self.DEFAULT_PARAMS)
         return d_out
 
     @property
