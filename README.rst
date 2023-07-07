@@ -18,7 +18,7 @@ Although neuronal dendrites greatly influence how single neurons process incomin
 
 To bridge the gap between these two, we introduce Dendrify, a free, open-source Python package compatible with the `Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify, through simple commands, automatically generates reduced compartmental neuron models with simplified yet biologically relevant dendritic and synaptic integrative properties. Such models strike a good balance between flexibility, performance, and biological accuracy, allowing us to explore dendritic contributions to network-level functions.
 
-.. image:: docs_sphinx/source/_static/intro.png
+.. image:: https://github.com/Poirazi-Lab/dendrify/blob/main/docs_sphinx/source/_static/intro.png
    :width: 70 %
    :align: center
 
