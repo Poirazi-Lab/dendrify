@@ -3,7 +3,7 @@ from typing import List, Optional, Tuple, Union
 
 import __main__ as main
 from brian2 import NeuronGroup
-from brian2.units import Quantity, mV
+from brian2.units import Quantity, mV, mvolt
 
 from .compartment import Compartment, Dendrite, Soma
 
