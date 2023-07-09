@@ -2,7 +2,6 @@ import pprint as pp
 from typing import List, Optional, Tuple, Union
 
 from brian2 import NeuronGroup, defaultclock
-from brian2.core.functions import timestep
 from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma

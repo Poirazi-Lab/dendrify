@@ -675,7 +675,9 @@ class Dendrite(Compartment):
 
         # Create and add custom dspike event
         event_name = f"spike_{ID}"
-        condition = f"V_{comp} >= Vth_{ID} and t_in_timesteps >= spiketime_{ID} + refractory_{ID} * gate_{ID}"
+        condition = (f"V_{comp} >= Vth_{ID} and "
+                     f"t_in_timesteps >= spiketime_{ID} + refractory_{ID} * gate_{ID}"
+                     )
 
         self._events[event_name] = condition
 
@@ -752,7 +754,7 @@ class Dendrite(Compartment):
                 f"{pp.pformat(valid_params)}"
             )
 
-    @property
+    @ property
     def parameters(self) -> dict:
         """
         All parameters that have been generated for a single compartment.
@@ -772,7 +774,7 @@ class Dendrite(Compartment):
             d_out.update(self._ephys_object.parameters)
         return d_out
 
-    @property
+    @ property
     def events(self) -> dict:
         """
         A dictionary of all dSpike events created for a single dendrite.
@@ -784,7 +786,7 @@ class Dendrite(Compartment):
         """
         return self._events if self._events else {}
 
-    @property
+    @ property
     def event_names(self) -> list:
         """
         A list of all dSpike event names created for a single dendrite.
@@ -797,7 +799,7 @@ class Dendrite(Compartment):
             return []
         return list(self._events.keys())
 
-    @property
+    @ property
     def event_actions(self) -> dict:
         """
         A string that is used to tell Brian how to handle the dSpike events.
