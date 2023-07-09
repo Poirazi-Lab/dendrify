@@ -135,3 +135,7 @@ test.py
 test.ipynb
 test2.ipynb
 minitest.ipynb
+dspikes_benchmarks.ipynb
+dspikes.ipynb
+nikos.ipynb
+viz.py
