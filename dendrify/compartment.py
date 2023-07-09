@@ -4,6 +4,8 @@ import pprint as pp
 from typing import Optional, Union
 
 import numpy as np
+from brian2 import defaultclock
+from brian2.core.functions import timestep
 from brian2.units import Quantity, ms, mV, pA
 
 from .ephysproperties import EphysProperties
@@ -645,19 +647,20 @@ class Dendrite(Compartment):
         g_rise_eqs = (
             f"g_rise_{ID} = "
             f"g_rise_max_{ID} * "
-            f"int(t <= spiketime_{ID} + duration_rise_{ID}) * "
-            f"int(spiketime_{ID} != 0*ms) "
+            f"int(t_in_timesteps <= spiketime_{ID} + duration_rise_{ID}) * "
+            f"gate_{ID} "
             ":siemens"
         )
         g_fall_eqs = (
             f"g_fall_{ID} = "
             f"g_fall_max_{ID} * "
-            f"int(t <= spiketime_{ID} + offset_fall_{ID} + duration_fall_{ID}) * "
-            f"int(t >= spiketime_{ID} + offset_fall_{ID}) *  "
-            f"int(spiketime_{ID} != 0*ms) "
+            f"int(t_in_timesteps <= spiketime_{ID} + offset_fall_{ID} + duration_fall_{ID}) * "
+            f"int(t_in_timesteps >= spiketime_{ID} + offset_fall_{ID}) *  "
+            f"gate_{ID} "
             ":siemens"
         )
-        spiketime = f'spiketime_{ID}  :second'
+        spiketime = f'spiketime_{ID}  :1'  # in units of timestep
+        gate = f'gate_{ID}  :1'  # zero or one
 
         # Add equations to a compartment
         to_replace = f'= I_ext_{comp}'
@@ -667,47 +670,62 @@ class Dendrite(Compartment):
         )
         self._equations += '\n'.join(['', I_rise_eqs, I_fall_eqs,
                                       g_rise_eqs, g_fall_eqs,
-                                      spiketime]
+                                      spiketime, gate]
                                      )
 
         # Create and add custom dspike event
         event_name = f"spike_{ID}"
-        condition = f"V_{comp} >= Vth_{ID} and t >= spiketime_{ID} + refractory_{ID} * int(spiketime_{ID} != 0*ms)"
+        condition = f"V_{comp} >= Vth_{ID} and t_in_timesteps >= spiketime_{ID} + refractory_{ID} * gate_{ID}"
 
         self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
+        action = {f"spike_{ID}": f"spiketime_{ID} = t_in_timesteps; gate_{ID} = 1"}
         if not self._event_actions:
-            self._event_actions = {f"spike_{ID}": f"spiketime_{ID} = t"}
+            self._event_actions = action
         else:
-            self._event_actions.update({f"spike_{ID}": f"spiketime_{ID} = t"})
+            self._event_actions.update(action)
 
         # Include params needed
         if not self._dspike_params:
             self._dspike_params = {}
 
+        dt = defaultclock.dt
+
         params = [threshold,
                   g_rise,
                   g_fall,
-                  duration_rise,
-                  duration_fall,
                   self._ionic_param(reversal_rise),
                   self._ionic_param(reversal_fall),
-                  offset_fall,
-                  refractory]
+                  self._timestep(duration_rise, dt),
+                  self._timestep(duration_fall, dt),
+                  self._timestep(offset_fall, dt),
+                  self._timestep(refractory, dt)]
 
         vars = [f"Vth_{ID}",
                 f"g_rise_max_{ID}",
                 f"g_fall_max_{ID}",
-                f"duration_rise_{ID}",
-                f"duration_fall_{ID}",
                 f"E_rise_{name}",
                 f"E_fall_{name}",
+                f"duration_rise_{ID}",
+                f"duration_fall_{ID}",
                 f"offset_fall_{ID}",
                 f"refractory_{ID}"]
 
         d = dict(zip(vars, params))
         self._dspike_params[ID] = d
+
+    def _timestep(self,
+                  param: Union[Quantity, None], dt
+                  ) -> Union[int, None]:
+        if not param:
+            return None
+        if isinstance(param, Quantity):
+            return timestep(param, dt)
+        else:
+            raise ValueError(
+                f"Please provide a valid time parameter for '{self.name}'."
+            )
 
     def _ionic_param(self,
                      param: Union[str, Quantity, None],

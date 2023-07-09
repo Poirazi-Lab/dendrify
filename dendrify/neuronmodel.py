@@ -1,9 +1,8 @@
 import pprint as pp
-import sys
 from typing import List, Optional, Tuple, Union
 
-import __main__ as main
-from brian2 import NeuronGroup
+from brian2 import NeuronGroup, defaultclock
+from brian2.core.functions import timestep
 from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma
@@ -190,27 +189,17 @@ class NeuronModel:
                        refractory: Union[Quantity, None] = None
                        ):
 
-        keys = ["Vth_{ID}"
-                "duration_rise_{ID}",
-                "duration_fall_{ID}",
-                f"E_rise_{event_name}",
-                f"E_fall_{event_name}",
-                "offset_fall_{ID}",
-                "refractory_{ID}"]
-
-        params = [threshold, duration_rise, duration_fall, reversal_rise,
-                  reversal_fall, offset_fall, refractory]
-
         for comp in self._compartments:
             if isinstance(comp, Dendrite) and comp._dspike_params:
                 ID = f"{event_name}_{comp.name}"
+                dt = defaultclock.dt
                 d = {f"Vth_{ID}": threshold,
-                     f"duration_rise_{ID}": duration_rise,
-                     f"duration_fall_{ID}": duration_fall,
+                     f"duration_rise_{ID}": comp._timestep(duration_rise, dt),
+                     f"duration_fall_{ID}": comp._timestep(duration_fall, dt),
                      f"E_rise_{event_name}": comp._ionic_param(reversal_rise),
                      f"E_fall_{event_name}": comp._ionic_param(reversal_fall),
-                     f"offset_fall_{ID}": offset_fall,
-                     f"refractory_{ID}": refractory}
+                     f"offset_fall_{ID}": comp._timestep(offset_fall, dt),
+                     f"refractory_{ID}": comp._timestep(refractory, dt)}
                 comp._dspike_params[ID].update(d)
 
     def make_neurongroup(self,
