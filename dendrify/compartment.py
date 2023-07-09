@@ -600,7 +600,7 @@ class Dendrite(Compartment):
                f"USER PARAMETERS\n{15*'-'}\n{user_clean}")
         return txt
 
-    def dspikes(self, tag: str,
+    def dspikes(self, name: str,
                 threshold: Optional[Quantity] = None,
                 g_rise: Optional[Quantity] = None,
                 g_fall: Optional[Quantity] = None,
@@ -614,7 +614,7 @@ class Dendrite(Compartment):
 
         # The following code creates all necessary equations for dspikes:
         comp = self.name
-        ID = f"{tag}_{comp}"
+        ID = f"{name}_{comp}"
         event_name = f"spike_{ID}"
 
         if self._events:
@@ -623,7 +623,7 @@ class Dendrite(Compartment):
                 raise DuplicateEquationsError(
                     f"The equations for '{event_name}' have already been "
                     f"added to '{self.name}'. \nPlease use a different "
-                    f"[tag] when adding multiple dSpike mechanisms to "
+                    f"[name] when adding multiple dSpike mechanisms to "
                     " a single compartment. \nYou might"
                     " also see this error if you are using Jupyter/iPython "
                     "which store variable values in \nmemory. Try cleaning all "
@@ -638,8 +638,8 @@ class Dendrite(Compartment):
         dspike_currents = f"I_rise_{ID} + I_fall_{ID}"
 
         # Both currents take into account the reversal potential of Na/K
-        I_rise_eqs = f"I_rise_{ID} = g_rise_{ID} * (E_rise_{tag}-V_{comp})  :amp"
-        I_fall_eqs = f"I_fall_{ID} = g_fall_{ID} * (E_fall_{tag}-V_{comp})  :amp"
+        I_rise_eqs = f"I_rise_{ID} = g_rise_{ID} * (E_rise_{name}-V_{comp})  :amp"
+        I_fall_eqs = f"I_fall_{ID} = g_fall_{ID} * (E_fall_{name}-V_{comp})  :amp"
 
         # Ion conductances
         g_rise_eqs = (
@@ -672,7 +672,7 @@ class Dendrite(Compartment):
 
         # Create and add custom dspike event
         event_name = f"spike_{ID}"
-        condition = f"V_{comp} >= Vth_{ID} and t >= spiketime_{ID} + refractory_{ID}"
+        condition = f"V_{comp} >= Vth_{ID} and t >= spiketime_{ID} + refractory_{ID} * int(spiketime_{ID} != 0*ms)"
 
         self._events[event_name] = condition
 
@@ -691,8 +691,8 @@ class Dendrite(Compartment):
                   g_fall,
                   duration_rise,
                   duration_fall,
-                  self._ionic_param(reversal_rise, self),
-                  self._ionic_param(reversal_fall, self),
+                  self._ionic_param(reversal_rise),
+                  self._ionic_param(reversal_fall),
                   offset_fall,
                   refractory]
 
@@ -701,8 +701,8 @@ class Dendrite(Compartment):
                 f"g_fall_max_{ID}",
                 f"duration_rise_{ID}",
                 f"duration_fall_{ID}",
-                f"E_rise_{tag}",
-                f"E_fall_{tag}",
+                f"E_rise_{name}",
+                f"E_fall_{name}",
                 f"offset_fall_{ID}",
                 f"refractory_{ID}"]
 
@@ -711,7 +711,6 @@ class Dendrite(Compartment):
 
     def _ionic_param(self,
                      param: Union[str, Quantity, None],
-                     comp: Compartment
                      ) -> Union[Quantity, None]:
         DEFAULT_PARAMS = EphysProperties.DEFAULT_PARAMS
         valid_params = {k: v for k, v in DEFAULT_PARAMS.items() if k[0] == 'E'}
@@ -724,13 +723,13 @@ class Dendrite(Compartment):
                 return DEFAULT_PARAMS[param]
             except KeyError:
                 raise ValueError(
-                    f"Please provide a valid ionic parameter for '{comp.name}'."
+                    f"Please provide a valid ionic parameter for '{self.name}'."
                     " Available options:\n"
                     f"{pp.pformat(valid_params)}"
                 )
         else:
             raise ValueError(
-                f"Please provide a valid ionic parameter for '{comp.name}'."
+                f"Please provide a valid ionic parameter for '{self.name}'."
                 " Available options:\n"
                 f"{pp.pformat(valid_params)}"
             )

@@ -29,7 +29,7 @@ class NeuronModel:
        substitute morphologically and biophysically detailed neuron models,
        commonly used for highly-accurate, single-cell simulations. If you are
        interested in the latter category of models, please see Brian's
-       :doc:`SpatialNeuron 
+       :doc:`SpatialNeuron
        <brian2:reference/brian2.spatialneuron.spatialneuron.SpatialNeuron>`.
 
     Parameters
@@ -40,12 +40,12 @@ class NeuronModel:
     kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
         Kwargs are used to specify important electrophysiological properties,
         such as the specific capacitance or resistance. For all available options
-        see: :class:`.EphysProperties`. 
+        see: :class:`.EphysProperties`.
 
     Warning
     -------
     Parameters set here affect all model compartments and can override any
-    compartment-specific parameters. 
+    compartment-specific parameters.
 
     Example
     -------
@@ -180,12 +180,38 @@ class NeuronModel:
                     "[cm, gl, r_axial, scale_factor, spine_factor]."
                 )
 
-    def config_dspikes(self):
-        # TODO
-        """
-        Configures dendritic spiking properties for all compartments.
-        """
-        pass
+    def config_dspikes(self, event_name: str,
+                       threshold: Union[Quantity, None] = None,
+                       duration_rise: Union[Quantity, None] = None,
+                       duration_fall: Union[Quantity, None] = None,
+                       reversal_rise: Union[Quantity, str, None] = None,
+                       reversal_fall: Union[Quantity, str, None] = None,
+                       offset_fall: Union[Quantity, None] = None,
+                       refractory: Union[Quantity, None] = None
+                       ):
+
+        keys = ["Vth_{ID}"
+                "duration_rise_{ID}",
+                "duration_fall_{ID}",
+                f"E_rise_{event_name}",
+                f"E_fall_{event_name}",
+                "offset_fall_{ID}",
+                "refractory_{ID}"]
+
+        params = [threshold, duration_rise, duration_fall, reversal_rise,
+                  reversal_fall, offset_fall, refractory]
+
+        for comp in self._compartments:
+            if isinstance(comp, Dendrite) and comp._dspike_params:
+                ID = f"{event_name}_{comp.name}"
+                d = {f"Vth_{ID}": threshold,
+                     f"duration_rise_{ID}": duration_rise,
+                     f"duration_fall_{ID}": duration_fall,
+                     f"E_rise_{event_name}": comp._ionic_param(reversal_rise),
+                     f"E_fall_{event_name}": comp._ionic_param(reversal_fall),
+                     f"offset_fall_{ID}": offset_fall,
+                     f"refractory_{ID}": refractory}
+                comp._dspike_params[ID].update(d)
 
     def make_neurongroup(self,
                          N: int,

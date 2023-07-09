@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import pprint as pp
 from math import pi
-from typing import List, Optional
+from typing import Optional
 
 from brian2.units import *
 
