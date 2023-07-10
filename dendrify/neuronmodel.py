@@ -429,5 +429,45 @@ class PointNeuronModel(Compartment):
 
     def connect(self):
         raise NotImplementedError(
-            "Point neurons do not comprise compartments that must be connected."
+            "Point neurons do not have compartments that need to be connected."
         )
+
+    def make_neurongroup(self,
+                         N: int,
+                         show: bool = False,
+                         *args, **kwargs
+                         ) -> NeuronGroup:
+
+        group = NeuronGroup(N, model=self.equations,
+                            events=self.events,
+                            namespace=self.parameters,
+                            *args, **kwargs)
+        setattr(group, f'V_{self.name}', self._ephys_object.v_rest)
+        return group
+
+    def add_params(self, params_dict: dict):
+        """
+        Allows specifying extra/custom parameters.
+
+        Parameters
+        ----------
+        params_dict : dict
+            A dictionary of parameters.
+        """
+        if not self._extra_params:
+            self._extra_params = {}
+        self._extra_params.update(params_dict)
+
+    def add_equations(self, eqs: str):
+        """
+        Allows adding custom equations.
+
+        Parameters
+        ----------
+        eqs : str
+            A string of Brian-compatible equations.
+        """
+        if not self._extra_equations:
+            self._extra_equations = f"{eqs}"
+        else:
+            self._extra_equations += f"\n{eqs}"
