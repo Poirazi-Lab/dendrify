@@ -152,9 +152,6 @@ class Compartment:
         I_backward = 'I_{0}_{1} = (V_{0}-V_{1}) * g_{0}_{1}  :amp'.format(
                      self.name, other.name)
 
-        if I_forward in self._equations or I_backward in other._equations:
-            return None
-
         # Add them to their respective compartments:
         self._equations += '\n'+I_forward
         other._equations += '\n'+I_backward

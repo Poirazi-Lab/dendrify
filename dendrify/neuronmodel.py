@@ -1,4 +1,5 @@
 import pprint as pp
+from copy import deepcopy
 from typing import List, Optional, Tuple, Union
 
 from brian2 import NeuronGroup, defaultclock
@@ -81,7 +82,6 @@ class NeuronModel:
                              v_rest=v_rest,
                              scale_factor=scale_factor,
                              spine_factor=spine_factor)
-        self._connect_compartments(connections)
 
     def __str__(self):
         equations = self.equations
@@ -110,9 +110,9 @@ class NeuronModel:
 
         self._compartments = []
         self._graph = []
-        for comp in comp_list:
-            pre, post = comp[0], comp[1]
-
+        copied_list = self._copy_compartments(comp_list)
+        for tup in copied_list:
+            pre, post = tup[0], tup[1]
             # Prohibit self connections
             if pre is post:
                 raise ValueError(
@@ -127,13 +127,19 @@ class NeuronModel:
                 )
 
             # Store graph-like representation for debugging or visualization
-            self._graph.append((pre.name, post.name))
+            self._graph.append((pre.name, post.name, ))
 
             # Include all compartments in a list for easy access
             if pre not in self._compartments:
                 self._compartments.append(pre)
             if post not in self._compartments:
                 self._compartments.append(post)
+
+             # Call the connect method from the Compartment class
+            if len(tup) == 2:
+                pre.connect(post)
+            else:
+                pre.connect(post, g=tup[2])
 
             is_dimensionless = [i.dimensionless for i in self._compartments]
             if True in is_dimensionless and False in is_dimensionless:
@@ -149,15 +155,36 @@ class NeuronModel:
                     "   create compartments with physical dimensions."
                 )
 
-    def _connect_compartments(self, comp_list):
-        for comp in comp_list:
-            pre, post = comp[0], comp[1]
-
-            # Call the connect method from the Compartment class
-            if len(comp) == 2:
-                pre.connect(post)
+    def _copy_compartments(self, comp_list):
+        used = {}
+        new_list = []
+        for tup in comp_list:
+            if tup[0].name in used:
+                pre = used[tup[0].name]
             else:
-                pre.connect(post, g=comp[2])
+                pre = deepcopy(tup[0])
+                used[pre.name] = pre
+            if tup[1].name in used:
+                post = used[tup[1].name]
+            else:
+                post = deepcopy(tup[1])
+                used[post.name] = post
+            if len(tup) == 2:
+                new_tup = (pre, post)
+            elif len(tup) == 3:
+                new_tup = (pre, post, tup[2])
+            new_list.append(new_tup)
+        return new_list
+
+    # def _connect_compartments(self, comp1, comp2):
+    #     for comp in self._compartments:
+    #         pre, post = comp[0], comp[1]
+
+    #         # Call the connect method from the Compartment class
+    #         if len(comp) == 2:
+    #             comp1.connect(comp2)
+    #         else:
+    #             comp1.connect(comp2, g=comp[2])
 
     def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
                         scale_factor=1.0, spine_factor=1.0):
