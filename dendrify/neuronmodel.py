@@ -399,3 +399,35 @@ class NeuronModel:
         for d in all_actions:
             d_out.update(d)
         return d_out
+
+
+class PointNeuronModel(Compartment):
+    def __init__(
+        self,
+        name: str,
+        model: str = 'leakyIF',
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+
+    ):
+        super().__init__(
+            name=name,
+            model=model,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            v_rest=v_rest,
+        )
+
+    def connect(self):
+        raise NotImplementedError(
+            "Point neurons do not comprise compartments that must be connected."
+        )
