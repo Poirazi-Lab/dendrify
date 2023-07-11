@@ -11,9 +11,20 @@ from .utils import DimensionlessCompartmentError, get_logger
 logger = get_logger(__name__)
 
 
-def default_params(params: dict) -> None:
+def default_params() -> dict:
     """
-    Set the default ephys parameters for the :class:`.EphysProperties` class.
+    Returns the default ephys parameters.
+
+    Returns
+    -------
+    dict
+    """
+    return EphysProperties.DEFAULT_PARAMS
+
+
+def update_default_params(params: dict) -> None:
+    """
+    Sets the default ephys parameters.
 
     Parameters
     ----------
