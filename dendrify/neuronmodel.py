@@ -97,50 +97,38 @@ class NeuronModel:
         return txt
 
     def _parse_compartments(self, comp_list):
-
-        error_msg = (
-            "\n\nValid format: [*(x, y, z)] \n"
-            "- x -> Soma or Dendrite object.\n"
-            "- y -> Soma or Dendrite object other than x.\n"
-            "- z -> 'half_cylinders' or 'cylinder_ + name' or conductance unit\n"
-            "       (default: 'half_cylinders').\n\n"
-            "Example:\n"
-            "[(comp1, comp2), \n(comp2, comp3, 10*nS), \n"
-            "(comp3, comp4, 'cylinder_comp3')]\n")
-
+        # Ensure that all compartments have a unique names
+        ids, names = [], []
+        for tup in comp_list:
+            for i in tup:
+                if isinstance(i, Compartment):
+                    ids.append(id(i))
+                    names.append(i.name)
+        if len(set(ids)) != len(set(names)):
+            raise ValueError(
+                ("Please make sure that all compartments included to a single  "
+                 "NeuronModel have unique names.")
+            )
+        # Start parsing
         self._compartments = []
         self._graph = []
+        # Copy compartments to avoid modifying the original objects
         copied_list = self._copy_compartments(comp_list)
         for tup in copied_list:
             pre, post = tup[0], tup[1]
-            # Prohibit self connections
-            if pre is post:
-                raise ValueError(
-                    f"ERROR: Cannot connect '{pre.name}' to itself. {error_msg}"
-                )
-
-            # Ensure that users do not use objects that make no sense
-            if not (isinstance(pre, Compartment) and
-                    isinstance(post, Compartment)):
-                raise TypeError(
-                    f"Invalid compartment type provided. {error_msg}"
-                )
-
             # Store graph-like representation for debugging or visualization
-            self._graph.append((pre.name, post.name, ))
-
+            self._graph.append((pre.name, post.name))
             # Include all compartments in a list for easy access
             if pre not in self._compartments:
                 self._compartments.append(pre)
             if post not in self._compartments:
                 self._compartments.append(post)
-
              # Call the connect method from the Compartment class
             if len(tup) == 2:
                 pre.connect(post)
             else:
                 pre.connect(post, g=tup[2])
-
+            # Check if all compartments are dimensionless or not
             is_dimensionless = [i.dimensionless for i in self._compartments]
             if True in is_dimensionless and False in is_dimensionless:
                 raise DimensionlessCompartmentError(
@@ -156,9 +144,37 @@ class NeuronModel:
                 )
 
     def _copy_compartments(self, comp_list):
-        used = {}
+        error_msg = (
+            "\n\nValid format: [*(x, y, z)]\n"
+            f"{26*'-'}\n"
+            "x -> Soma or Dendrite object.\n"
+            "y -> Soma or Dendrite object other than x.\n"
+            "z -> 'half_cylinders' or 'cylinder_ + name' or conductance unit.\n"
+            "     (default: 'half_cylinders' if left blank).\n\n"
+            "Example:\n"
+            "[(comp1, comp2), (comp2, comp3, 10*nS)] \n"
+        )
+        used = {}  # Keep track of copied compartments to avoid duplicates
         new_list = []
         for tup in comp_list:
+            # Ensure that users provide correct format
+            if len(tup) < 2 or len(tup) > 3:
+                raise ValueError(
+                    f"Invalid number of arguments provided. {error_msg}"
+                )
+            # Ensure that users do not use objects that make no sense
+            if not (isinstance(tup[0], Compartment) and
+                    isinstance(tup[1], Compartment)):
+                raise TypeError(
+                    f"Invalid compartment type provided. {error_msg}"
+                )
+            # Prohibit self connections
+            if tup[0] is tup[1]:
+                raise ValueError(
+                    f"ERROR: Cannot connect '{tup[0].name}' to itself. "
+                    f"{error_msg}"
+                )
+
             if tup[0].name in used:
                 pre = used[tup[0].name]
             else:
@@ -175,16 +191,6 @@ class NeuronModel:
                 new_tup = (pre, post, tup[2])
             new_list.append(new_tup)
         return new_list
-
-    # def _connect_compartments(self, comp1, comp2):
-    #     for comp in self._compartments:
-    #         pre, post = comp[0], comp[1]
-
-    #         # Call the connect method from the Compartment class
-    #         if len(comp) == 2:
-    #             comp1.connect(comp2)
-    #         else:
-    #             comp1.connect(comp2, g=comp[2])
 
     def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
                         scale_factor=1.0, spine_factor=1.0):
