@@ -460,19 +460,8 @@ class PointNeuronModel(Compartment):
             v_rest=v_rest,
         )
 
-    def connect(self):
-        raise NotImplementedError(
-            "Point neurons do not have compartments that need to be connected."
-        )
-
-    def make_neurongroup(self,
-                         N: int,
-                         show: bool = False,
-                         *args, **kwargs
-                         ) -> NeuronGroup:
-
+    def make_neurongroup(self, N: int, *args, **kwargs) -> NeuronGroup:
         group = NeuronGroup(N, model=self.equations,
-                            events=self.events,
                             namespace=self.parameters,
                             *args, **kwargs)
         setattr(group, f'V_{self.name}', self._ephys_object.v_rest)
@@ -504,3 +493,13 @@ class PointNeuronModel(Compartment):
             self._extra_equations = f"{eqs}"
         else:
             self._extra_equations += f"\n{eqs}"
+
+    def connect(self):
+        raise NotImplementedError(
+            "Point neurons do not have compartments that need to be connected."
+        )
+
+    def dspikes(self):
+        raise NotImplementedError(
+            "Dendritic spikes have not been implemented fot point-neuron models."
+        )
