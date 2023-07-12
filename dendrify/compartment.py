@@ -145,25 +145,6 @@ class Compartment:
             raise ValueError(
                 "Cannot connect compartments with the same name.\n")
 
-        # Current from Comp2 -> Comp1
-        I_forward = 'I_{1}_{0} = (V_{1}-V_{0}) * g_{1}_{0}  :amp'.format(
-            self.name, other.name)
-        # Current from Comp1 -> Comp2
-        I_backward = 'I_{0}_{1} = (V_{0}-V_{1}) * g_{0}_{1}  :amp'.format(
-                     self.name, other.name)
-
-        # Add them to their respective compartments:
-        self._equations += '\n'+I_forward
-        other._equations += '\n'+I_backward
-
-        # Include them to the I variable (I_ext -> Inj + new_current):
-        self_change = f'= I_ext_{self.name}'
-        other_change = f'= I_ext_{other.name}'
-        self._equations = self._equations.replace(
-            self_change, self_change + ' + ' + I_forward.split('=')[0])
-        other._equations = other._equations.replace(
-            other_change, other_change + ' + ' + I_backward.split('=')[0])
-
         # add them to connected comps
         if not self._connections:
             self._connections = []
@@ -195,6 +176,25 @@ class Compartment:
             raise ValueError(
                 "Please provide a valid conductance option."
             )
+
+        # Current from Comp2 -> Comp1
+        I_forward = 'I_{1}_{0} = (V_{1}-V_{0}) * g_{1}_{0}  :amp'.format(
+            self.name, other.name)
+        # Current from Comp1 -> Comp2
+        I_backward = 'I_{0}_{1} = (V_{0}-V_{1}) * g_{0}_{1}  :amp'.format(
+                     self.name, other.name)
+
+        # Add them to their respective compartments:
+        self._equations += '\n'+I_forward
+        other._equations += '\n'+I_backward
+
+        # Include them to the I variable (I_ext -> Inj + new_current):
+        self_change = f'= I_ext_{self.name}'
+        other_change = f'= I_ext_{other.name}'
+        self._equations = self._equations.replace(
+            self_change, self_change + ' + ' + I_forward.split('=')[0])
+        other._equations = other._equations.replace(
+            other_change, other_change + ' + ' + I_backward.split('=')[0])
 
         eval("self._g_couples")
 
