@@ -290,7 +290,7 @@ class NeuronModel:
         else:
             self._extra_equations += f"\n{eqs}"
 
-    def as_graph(self, fontsize: int = 10, fontcolor: str = 'white',
+    def as_graph(self, figsize: list = [6, 4], fontsize: int = 10, fontcolor: str = 'white',
                  scale_nodes: float = 1, color_soma: str = '#4C6C92',
                  color_dendrites: str = '#A7361C', alpha: float = 1,
                  scale_edges: float = 1, seed: Optional[int] = None):
@@ -336,7 +336,7 @@ class NeuronModel:
         G.add_edges_from(self._graph)
 
         # Visualize it
-        fig, ax = plt.subplots()
+        fig, ax = plt.subplots(figsize=figsize)
         for d in ['right', 'top', 'left', 'bottom']:
             ax.spines[d].set_visible(False)
         pos = nx.spring_layout(G, fixed=soma, pos={soma[0]: (0, 0)},
