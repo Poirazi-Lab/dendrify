@@ -10,7 +10,8 @@ from brian2.units import Quantity, ms, mV, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
-from .utils import DuplicateEquationsError, get_logger
+from .utils import (DimensionlessCompartmentError, DuplicateEquationsError,
+                    get_logger)
 
 logger = get_logger(__name__)
 
@@ -144,40 +145,17 @@ class Compartment:
         if self.name == other.name:
             raise ValueError(
                 "Cannot connect compartments with the same name.\n")
-
-        # add them to connected comps
-        if not self._connections:
-            self._connections = []
-        if not other._connections:
-            other._connections = []
-
-        g_to_self = f'g_{other.name}_{self.name}'
-        g_to_other = f'g_{self.name}_{other.name}'
-
-        # when g is specified by user
-        if isinstance(g, Quantity):
-            self._connections.append((g_to_self, 'user', g))
-            other._connections.append((g_to_other, 'user', g))
-
-        # when g is a string
-        elif isinstance(g, str):
-            if not any([self.dimensionless, other.dimensionless]):
-                if g == 'half_cylinders':
-                    self._connections.append(
-                        (g_to_self, g, other._ephys_object))
-                    other._connections.append(
-                        (g_to_other, g, self._ephys_object))
-
-                elif g.split('_')[0] == "cylinder":
-                    ctype, name = g.split('_')
-                    comp = self if self.name == name else other
-                    self._connections.append(
-                        (g_to_self, ctype, comp._ephys_object))
-                    other._connections.append(
-                        (g_to_other, ctype, comp._ephys_object))
-        else:
-            raise ValueError(
-                "Please provide a valid conductance option."
+        if (self.dimensionless or other.dimensionless) and type(g) == str:
+            raise DimensionlessCompartmentError(
+                ("Cannot automatically calculate the coupling \nconductance of "
+                 "dimensionless compartments. To resolve this error, perform\n"
+                 "one of the following:\n\n"
+                 f"1. Provide [length, diameter, r_axial] for both '{self.name}'"
+                 f" and '{other.name}'.\n\n"
+                 f"2. Turn both compartment into dimensionless by providing only"
+                 " values for \n   [cm_abs, gl_abs] and then connect them using "
+                 "an exact coupling conductance."
+                 )
             )
 
         # Current from Comp2 -> Comp1
@@ -198,6 +176,38 @@ class Compartment:
             self_change, self_change + ' + ' + I_forward.split('=')[0])
         other._equations = other._equations.replace(
             other_change, other_change + ' + ' + I_backward.split('=')[0])
+
+        # add them to connected comps
+        if not self._connections:
+            self._connections = []
+        if not other._connections:
+            other._connections = []
+
+        g_to_self = f'g_{other.name}_{self.name}'
+        g_to_other = f'g_{self.name}_{other.name}'
+
+        # when g is specified by user
+        if isinstance(g, Quantity):
+            self._connections.append((g_to_self, 'user', g))
+            other._connections.append((g_to_other, 'user', g))
+
+        # when g is a string
+        elif isinstance(g, str):
+            if g == 'half_cylinders':
+                self._connections.append((g_to_self, g, other._ephys_object))
+                other._connections.append((g_to_other, g, self._ephys_object))
+
+            elif g.split('_')[0] == "cylinder":
+                ctype, name = g.split('_')
+                comp = self if self.name == name else other
+                self._connections.append(
+                    (g_to_self, ctype, comp._ephys_object))
+                other._connections.append(
+                    (g_to_other, ctype, comp._ephys_object))
+        else:
+            raise ValueError(
+                "Please provide a valid conductance option."
+            )
 
         eval("self._g_couples")
 
