@@ -161,17 +161,20 @@ class Compartment:
 
         # when g is a string
         elif isinstance(g, str):
-            if g == 'half_cylinders':
-                self._connections.append((g_to_self, g, other._ephys_object))
-                other._connections.append((g_to_other, g, self._ephys_object))
+            if not any([self.dimensionless, other.dimensionless]):
+                if g == 'half_cylinders':
+                    self._connections.append(
+                        (g_to_self, g, other._ephys_object))
+                    other._connections.append(
+                        (g_to_other, g, self._ephys_object))
 
-            elif g.split('_')[0] == "cylinder":
-                ctype, name = g.split('_')
-                comp = self if self.name == name else other
-                self._connections.append(
-                    (g_to_self, ctype, comp._ephys_object))
-                other._connections.append(
-                    (g_to_other, ctype, comp._ephys_object))
+                elif g.split('_')[0] == "cylinder":
+                    ctype, name = g.split('_')
+                    comp = self if self.name == name else other
+                    self._connections.append(
+                        (g_to_self, ctype, comp._ephys_object))
+                    other._connections.append(
+                        (g_to_other, ctype, comp._ephys_object))
         else:
             raise ValueError(
                 "Please provide a valid conductance option."
