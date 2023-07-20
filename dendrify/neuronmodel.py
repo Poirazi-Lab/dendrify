@@ -2,7 +2,7 @@ import pprint as pp
 from copy import deepcopy
 from typing import List, Optional, Tuple, Union
 
-from brian2 import NeuronGroup, defaultclock
+from brian2 import NeuronGroup, Synapses, defaultclock
 from brian2.units import Quantity, mV
 
 from .compartment import Compartment, Dendrite, Soma
@@ -239,12 +239,14 @@ class NeuronModel:
                          method: str = 'euler',
                          threshold: Optional[str] = None,
                          reset: Optional[str] = None,
+                         second_reset: Optional[str] = None,
+                         spike_width: Optional[Quantity] = None,
                          refractory: Union[Quantity, str, bool] = False,
                          init_rest: bool = True,
                          init_events: bool = True,
                          show: bool = False,
                          *args, **kwargs
-                         ) -> NeuronGroup:
+                         ) -> Union[NeuronGroup, Tuple]:
 
         group = NeuronGroup(N,
                             method=method,
@@ -270,7 +272,25 @@ class NeuronModel:
                         print(f"Setting run_on_event('{event}', '{action}')")
                     group.run_on_event(event, action)
 
-        return group
+        ap_reset = None
+        if any([second_reset, spike_width]):
+            txt = (
+                "If you wish to have a more realistic action potential shape, "
+                "please provide \nvalid values for both [second_reset] and "
+                "[spike_width]."
+            )
+            if not all([second_reset, spike_width]):
+                raise ValueError(txt)
+            try:
+                ap_reset = Synapses(group, group,
+                                    on_pre=second_reset,
+                                    delay=spike_width)
+                ap_reset.connect(j='i')
+
+            except Exception:
+                raise ValueError(txt)
+
+        return group, ap_reset if ap_reset else group
 
     def add_params(self, params_dict: dict):
         """
@@ -364,7 +384,7 @@ class NeuronModel:
         fig.tight_layout()
         plt.show()
 
-    @property
+    @ property
     def equations(self) -> str:
         """
         Merges all compartments' equations into a single string.
@@ -379,7 +399,7 @@ class NeuronModel:
             all_eqs.append(self._extra_equations)
         return '\n\n'.join(all_eqs)
 
-    @property
+    @ property
     def parameters(self) -> dict:
         """
         Merges all compartments' parameters into a dictionary.
@@ -396,7 +416,7 @@ class NeuronModel:
             d.update(self._extra_params)
         return d
 
-    @property
+    @ property
     def events(self) -> dict:
         """
         Organizes all custom events for dendritic spiking into a dictionary.
@@ -413,7 +433,7 @@ class NeuronModel:
             d_out.update(d)
         return d_out
 
-    @property
+    @ property
     def event_names(self) -> list:
         """
         Creates a list of all event names for dendritic spiking.
@@ -425,7 +445,7 @@ class NeuronModel:
         """
         return list(self.events.keys())
 
-    @property
+    @ property
     def event_actions(self) -> dict:
         """
         Creates a list of all event actions for dendritic spiking.
