@@ -236,13 +236,22 @@ class NeuronModel:
 
     def make_neurongroup(self,
                          N: int,
+                         method: str = 'euler',
+                         threshold: Optional[str] = None,
+                         reset: Optional[str] = None,
+                         refractory: Union[Quantity, str, bool] = False,
                          init_rest: bool = True,
                          init_events: bool = True,
                          show: bool = False,
                          *args, **kwargs
                          ) -> NeuronGroup:
 
-        group = NeuronGroup(N, model=self.equations,
+        group = NeuronGroup(N,
+                            method=method,
+                            threshold=threshold,
+                            reset=reset,
+                            refractory=refractory,
+                            model=self.equations,
                             events=self.events,
                             namespace=self.parameters,
                             *args, **kwargs)
