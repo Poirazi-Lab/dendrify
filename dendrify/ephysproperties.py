@@ -24,7 +24,7 @@ def default_params() -> dict:
 
 def update_default_params(params: dict) -> None:
     """
-    Sets the default ephys parameters.
+    Updates the default ephys parameters.
 
     Parameters
     ----------
@@ -42,8 +42,7 @@ class EphysProperties(object):
     Note
     ----
     An EphysProperties object is automatically created and linked to a
-    :class:`.Compartment`, :class:`.Soma`, or :class:`.Dendrite` object
-    during the instantiation of the latter.
+    single compartment during the initialization of the latter.
 
     Parameters
     ----------
@@ -159,8 +158,8 @@ class EphysProperties(object):
     @property
     def area(self) -> Quantity | None:
         """
-        A compartment's surface area (open cylinder) based on its length and
-        diameter.
+        Returns  compartment's surface area (open cylinder) based on its length
+        and diameter.
 
         Returns
         -------
@@ -189,7 +188,7 @@ class EphysProperties(object):
     def capacitance(self) -> Quantity | None:
         """
         Returns a compartment's capacitance based on its specific capacitance
-        (cm) and surface area. If the absolute capacitance (cm_abs) has been
+        (cm) and surface area. If an absolute capacitance (cm_abs) has been
         provided by the user, it returns this value instead.
 
         Returns
@@ -217,10 +216,10 @@ class EphysProperties(object):
     @property
     def g_leakage(self) -> Quantity:
         """
-        A compartment's absolute leakage conductance based on its specific
-        leakage conductance (gl) and surface area. If the absolute leakage
-        conductance (gl_abs) has been provided by the user, it returns this
-        value instead.
+        Returns a compartment's absolute leakage conductance based on its 
+        specific leakage conductance (gl) and surface area. If an absolute
+        leakage conductance (gl_abs) has been provided by the user, it returns
+        this value instead.
 
         Returns
         -------
@@ -247,7 +246,8 @@ class EphysProperties(object):
     @property
     def parameters(self) -> dict:
         """
-        Returns a dictionary of all major electrophysiological parameters.
+        Returns a dictionary of all the major electrophysiological parameters
+        that describe a single compartment.
 
         Returns
         -------
