@@ -35,21 +35,21 @@ class Compartment:
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length, by default ``None``
+        A compartment's length
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter, by default ``None``
+        A compartment's diameter
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2), by default ``None``
+        Specific capacitance (usually μF / cm^2)
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2), by default ``None``
+        Specific leakage conductance (usually μS / cm^2)
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF), by default ``None``
+        Absolute capacitance (usually pF)
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS), by default ``None``
+        Absolute leakage conductance (usually nS)
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm), by default ``None``
+        Axial resistance (usually Ohm * cm)
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage, by default ``None``
+        Resting membrane voltage
     scale_factor : float, optional
         A global area scale factor, by default ``1.0``
     spine_factor : float, optional
@@ -253,11 +253,11 @@ class Compartment:
         tag : str
             A unique name to distinguish synapses of the same type.
         g : :class:`~brian2.units.fundamentalunits.Quantity`
-            Maximum synaptic conductance, by default ``None``
+            Maximum synaptic conductance
         t_rise : :class:`~brian2.units.fundamentalunits.Quantity`
-            Rise time constant, by default ``None``
+            Rise time constant
         t_decay : :class:`~brian2.units.fundamentalunits.Quantity`
-            Decay time constant, by default ``None``
+            Decay time constant
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
             conductance at 1 when synapses are modelled as a difference of
@@ -505,21 +505,21 @@ class Soma(Compartment):
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length, by default ``None``
+        A compartment's length
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter, by default ``None``
+        A compartment's diameter
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2), by default ``None``
+        Specific capacitance (usually μF / cm^2)
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2), by default ``None``
+        Specific leakage conductance (usually μS / cm^2)
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF), by default ``None``
+        Absolute capacitance (usually pF)
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS), by default ``None``
+        Absolute leakage conductance (usually nS)
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm), by default ``None``
+        Axial resistance (usually Ohm * cm)
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage, by default ``None``
+        Resting membrane voltage
     scale_factor : float, optional
         A global area scale factor, by default ``1.0``
     spine_factor : float, optional
@@ -589,21 +589,21 @@ class Dendrite(Compartment):
         A keyword for accessing Dendrify's library models. Dendritic compartments
         are by default set to ``'passive'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length, by default ``None``
+        A compartment's length
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter, by default ``None``
+        A compartment's diameter
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2), by default ``None``
+        Specific capacitance (usually μF / cm^2)
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2), by default ``None``
+        Specific leakage conductance (usually μS / cm^2)
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF), by default ``None``
+        Absolute capacitance (usually pF)
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS), by default ``None``
+        Absolute leakage conductance (usually nS)
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm), by default ``None``
+        Axial resistance (usually Ohm * cm)
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage, by default ``None``
+        Resting membrane voltage
     scale_factor : float, optional
         A global area scale factor, by default ``1.0``
     spine_factor : float, optional
@@ -713,29 +713,29 @@ class Dendrite(Compartment):
         ----------
         name : str
             A unique name to describe a single dSpike type.
-        threshold : Optional[Quantity], optional
-            The membrane voltage threshold for dendritic spiking, by default ``None``
-        g_rise : Optional[Quantity], optional
+        threshold : ~brian2.units.fundamentalunits.Quantity, optional
+            The membrane voltage threshold for dendritic spiking
+        g_rise : ~brian2.units.fundamentalunits.Quantity, optional
             The max conductance of the channel that is activated during the rise
-            (depolarization phase), by default ``None``
-        g_fall : Optional[Quantity], optional
+            (depolarization phase)
+        g_fall : ~brian2.units.fundamentalunits.Quantity, optional
             The max conductance of the channel that is activated during the fall
-            (repolarization phase), by default ``None``
-        duration_rise : Optional[Quantity], optional
-            The amount of time that g_rise stays ON, by default ``None``
-        duration_fall : Optional[Quantity], optional
-            The amount of time that g_fall stays ON, by default ``None``
-        reversal_rise : Union[Quantity, str, None], optional
+            (repolarization phase)
+        duration_rise : ~brian2.units.fundamentalunits.Quantity, optional
+            The amount of time that g_rise stays ON
+        duration_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The amount of time that g_fall stays ON
+        reversal_rise : (~brian2.units.fundamentalunits.Quantity, str), optional
             The reversal potential of the channel that is activated during the rise
-            (depolarization phase), by default ``None``
-        reversal_fall : Union[Quantity, str, None], optional
+            (depolarization) phase
+        reversal_fall : (~brian2.units.fundamentalunits.Quantity, str), optional
             The reversal potential of the channel that is activated during the fall
-            (repolarization phase), by default ``None``
-        offset_fall : Optional[Quantity], optional
-            The delay for the initiation of the fall phase, by default ``None``
-        refractory : Optional[Quantity], optional
+            (repolarization) phase
+        offset_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The delay for the initiation of the fall phase
+        refractory : ~brian2.units.fundamentalunits.Quantity, optional
             The amount of time after dSpike activation until the dSpike
-            mechanism can be activated again, by default ``None``
+            mechanism can be activated again
         """
 
         # The following code creates all necessary equations for dspikes:

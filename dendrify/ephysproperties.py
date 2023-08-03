@@ -48,23 +48,23 @@ class EphysProperties(object):
     ----------
 
     name : str, optional
-        A compartment's name, by default ``None``
+        A compartment's name
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length, by default ``None``
+        A compartment's length
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter, by default ``None``
+        A compartment's diameter
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2), by default ``None``
+        Specific capacitance (usually μF / cm^2)
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2), by default ``None``
+        Specific leakage conductance (usually μS / cm^2)
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF), by default ``None``
+        Absolute capacitance (usually pF)
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS), by default ``None``
+        Absolute leakage conductance (usually nS)
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm), by default ``None``
+        Axial resistance (usually Ohm * cm)
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage, by default ``None``
+        Resting membrane voltage
     scale_factor : float, optional
         A global area scale factor, by default ``1.0``
     spine_factor : float, optional
