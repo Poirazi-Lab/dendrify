@@ -34,10 +34,26 @@ class Compartment:
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
-    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
-        Kwargs are used to specify important electrophysiological properties,
-        such as the specific capacitance or resistance. For more information
-        see: :class:`.EphysProperties`.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length, by default ``None``
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter, by default ``None``
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2), by default ``None``
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2), by default ``None``
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF), by default ``None``
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS), by default ``None``
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm), by default ``None``
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage, by default ``None``
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``
 
     Examples
     --------
@@ -46,6 +62,8 @@ class Compartment:
     >>> # specifying equations and ephys properties:
     >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
     >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Compartment('nameZ', 'adaptiveIF', cm_abs=100*pF, gl_abs=20*nS)
     """
 
     def __init__(
@@ -113,7 +131,7 @@ class Compartment:
                 other: Compartment,
                 g: Union[Quantity, str] = 'half_cylinders'):
         """
-        Allows the connection (electrical coupling) of two compartments.
+        Connects two compartments (electrical coupling).
 
         Parameters
         ----------
@@ -355,7 +373,8 @@ class Compartment:
     @property
     def parameters(self) -> dict:
         """
-        All parameters that have been generated for a single compartment.
+        Returns all the parameters that have been generated for a single
+        compartment.
 
         Returns
         -------
@@ -372,7 +391,7 @@ class Compartment:
     @property
     def area(self) -> Quantity:
         """
-        A compartment's surface area (open cylinder) based on its length
+        Returns a compartment's surface area (open cylinder) based on its length
         and diameter.
 
         Returns
@@ -384,8 +403,7 @@ class Compartment:
     @property
     def capacitance(self) -> Quantity:
         """
-        A compartment's absolute capacitance based on its specific capacitance
-        (cm) and surface area.
+        Returns a compartment's absolute capacitance.
 
         Returns
         -------
@@ -396,20 +414,7 @@ class Compartment:
     @property
     def g_leakage(self) -> Quantity:
         """
-        A compartment's absolute leakage conductance based on its specific
-        leakage conductance (gl) and surface area.
-
-        Returns
-        -------
-        :class:`~brian2.units.fundamentalunits.Quantity`
-        """
-        return self._ephys_object.g_leakage
-
-    @property
-    def g_leakage(self) -> Quantity:
-        """
-        A compartment's absolute leakage conductance based on its specific
-        leakage conductance (gl) and surface area.
+        A compartment's absolute leakage conductance.
 
         Returns
         -------
@@ -420,8 +425,8 @@ class Compartment:
     @property
     def equations(self) -> str:
         """
-        All differential equations that have been generated for a single
-        compartment.
+        Returns all differential equations that describe a single compartment
+        and the mechanisms that have been added to it.
 
         Returns
         -------
@@ -467,7 +472,7 @@ class Compartment:
     @property
     def dimensionless(self) -> bool:
         """
-        Checks if a compartment has been flagged as dimensionless
+        Checks if a compartment has been flagged as dimensionless.
 
         Returns
         -------
@@ -499,18 +504,36 @@ class Soma(Compartment):
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
-    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
-        Kwargs are used to specify important electrophysiological properties,
-        such as the specific capacitance or resistance. For more information
-        see: :class:`.EphysProperties`.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length, by default ``None``
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter, by default ``None``
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2), by default ``None``
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2), by default ``None``
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF), by default ``None``
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS), by default ``None``
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm), by default ``None``
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage, by default ``None``
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``
 
     Examples
     --------
     >>> # specifying equations only:
-    >>> somaX = Soma('nameX', 'leakyIF')
+    >>> compX = Soma('nameX', 'leakyIF')
     >>> # specifying equations and ephys properties:
-    >>> somaY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
-    >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> compY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Soma('nameZ', 'adaptiveIF', cm_abs=100*pF, gl_abs=20*nS)
     """
 
     def __init__(
@@ -565,6 +588,36 @@ class Dendrite(Compartment):
     model : str, optional
         A keyword for accessing Dendrify's library models. Dendritic compartments
         are by default set to ``'passive'``.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length, by default ``None``
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter, by default ``None``
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2), by default ``None``
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2), by default ``None``
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF), by default ``None``
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS), by default ``None``
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm), by default ``None``
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage, by default ``None``
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``
+
+    Examples
+    --------
+    >>> # specifying equations only:
+    >>> compX = Dendrite('nameX')
+    >>> # specifying equations and ephys properties:
+    >>> compY = Dendrite('nameY', length=100*um, diameter=1*um,
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Dendrite('nameZ', cm_abs=100*pF, gl_abs=20*nS)
     """
 
     def __init__(
@@ -626,6 +679,64 @@ class Dendrite(Compartment):
                 offset_fall: Optional[Quantity] = None,
                 refractory: Optional[Quantity] = None
                 ):
+        """
+        Adds the ionic mechanisms and parameters needed for dendritic spiking.
+        Under the hood, this method creates the equations, conditions and
+        actions to take advantage of Brian's custom events. dSpikes are
+        generated through the sequential activation of a positive (sodium or
+        calcium-like) and a negative current (potassium-like current) when a
+        specified dSpike threshold is crossed.
+
+        .. hint::
+
+           The dendritic spiking mechanism as implemented here has three
+           distinct phases.
+
+           **INACTIVE PHASE:**\n
+           When the dendritic voltage is subthreshold OR the simulation step is
+           within the refractory period. dSpikes cannot be generated during this
+           phase.
+
+           **RISE PHASE:**\n
+           When the dendritic voltage crosses the dSpike threshold AND the
+           refractory period has elapsed. This triggers the instant activation
+           of a positive current that is deactivated after a specified amount
+           of time (``duration_rise``).
+
+           **FALL PHASE:**\n
+           This phase starts automatically with a delay (``offset_fall``) after
+           the dSpike threshold is crossed. A negative current is activated
+           instantly and then is deactivated after a specified amount of time
+           (``duration_fall``). Also a new refractory period begins. 
+
+        Parameters
+        ----------
+        name : str
+            A unique name to describe a single dSpike type.
+        threshold : Optional[Quantity], optional
+            The membrane voltage threshold for dendritic spiking, by default ``None``
+        g_rise : Optional[Quantity], optional
+            The max conductance of the channel that is activated during the rise
+            (depolarization phase), by default ``None``
+        g_fall : Optional[Quantity], optional
+            The max conductance of the channel that is activated during the fall
+            (repolarization phase), by default ``None``
+        duration_rise : Optional[Quantity], optional
+            The amount of time that g_rise stays ON, by default ``None``
+        duration_fall : Optional[Quantity], optional
+            The amount of time that g_fall stays ON, by default ``None``
+        reversal_rise : Union[Quantity, str, None], optional
+            The reversal potential of the channel that is activated during the rise
+            (depolarization phase), by default ``None``
+        reversal_fall : Union[Quantity, str, None], optional
+            The reversal potential of the channel that is activated during the fall
+            (repolarization phase), by default ``None``
+        offset_fall : Optional[Quantity], optional
+            The delay for the initiation of the fall phase, by default ``None``
+        refractory : Optional[Quantity], optional
+            The amount of time after dSpike activation until the dSpike
+            mechanism can be activated again, by default ``None``
+        """
 
         # The following code creates all necessary equations for dspikes:
         comp = self.name
@@ -770,7 +881,8 @@ class Dendrite(Compartment):
     @property
     def parameters(self) -> dict:
         """
-        All parameters that have been generated for a single compartment.
+        Returns a dictionary of all parameters that have been generated for a
+        single compartment.
 
         Returns
         -------
@@ -790,7 +902,7 @@ class Dendrite(Compartment):
     @property
     def events(self) -> dict:
         """
-        A dictionary of all dSpike events created for a single dendrite.
+        Returns a dictionary of all dSpike events created for a single dendrite.
 
         Returns
         -------
@@ -802,7 +914,7 @@ class Dendrite(Compartment):
     @property
     def event_names(self) -> list:
         """
-        A list of all dSpike event names created for a single dendrite.
+        Returns a list of all dSpike event names created for a single dendrite.
 
         Returns
         -------
@@ -811,15 +923,3 @@ class Dendrite(Compartment):
         if not self._events:
             return []
         return list(self._events.keys())
-
-    @property
-    def event_actions(self) -> dict:
-        """
-        A string that is used to tell Brian how to handle the dSpike events.
-
-        Returns
-        -------
-        str
-            Executable code that runs automatically in the background.
-        """
-        return self._event_actions if self._event_actions else {}
