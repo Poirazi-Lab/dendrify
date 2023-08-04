@@ -6,6 +6,13 @@ The easiest way to install it is through ``pip``, using the command::
   
   pip install dendrify
 
+The above command will automatically install Brian 2.5.4, if it is not already
+installed. If you wish to work with a different version of Brian, you can do so
+using the command::
+
+  pip install dendrify --no-deps
+
+and then install the desired version of Brian separately (see bellow).
 
 Dependencies
 ------------
@@ -17,7 +24,7 @@ Dependencies
   
   * :doc:`How to install Brian 2 <brian2:introduction/install>`
   
-* `Netwokx <https://networkx.org/>`_ (optional) is a Python package for the creation,
+* `Networkx <https://networkx.org/>`_ (optional) is a Python package for the creation,
   manipulation, and study of the structure, dynamics, and functions of complex
   networks. If you wish Dendrify to have access to certain experimental model
   visualization features, you can install it using the command::
