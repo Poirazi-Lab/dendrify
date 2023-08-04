@@ -59,10 +59,10 @@ contributions to network-level functions.
 
 .. toctree::
    :maxdepth: 2
-   :caption: Using Dendrify
+   :caption: Tutorials
    
-   usage/tutorial
-   usage/examples
+   tutorials/Dendrify_101
+   tutorials/Dendrify_simulations
 
 
 .. toctree::
