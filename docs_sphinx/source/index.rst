@@ -58,7 +58,7 @@ contributions to network-level functions.
 
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
    :caption: Tutorials
    
    tutorials/Dendrify_101
