@@ -7,8 +7,8 @@ The easiest way to install it is through ``pip``, using the command::
   pip install dendrify
 
 The above command will automatically install Brian 2.5.4, if it is not already
-installed. If you wish to work with a different version of Brian, you can do so
-using the command::
+installed. If you wish to work with a different Brian version, you can install
+Dendrify without its dependencies using the command::
 
   pip install dendrify --no-deps
 
@@ -37,8 +37,8 @@ GPU support
 Dendrify is compatible with `Brian2CUDA <https://brian2cuda.readthedocs.io/>`_,
 a Python package for simulating spiking neural networks on graphics processing
 units (GPUs). Brian2CUDA is an extension of Brian2 that uses the code generation
-system of the latter to generate simulation code in C++/CUDA, which is then executed
-on NVIDIA GPUs.
+system of the latter to generate simulation code in C++/CUDA, which is then
+executed on NVIDIA GPUs.
 
 * :doc:`How to install Brian2CUDA <brian2cuda:introduction/install>`
 
