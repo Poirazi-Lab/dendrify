@@ -35,25 +35,25 @@ class Compartment:
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length
+        A compartment's length.
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter
+        A compartment's diameter.
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2)
+        Specific capacitance (usually μF / cm^2).
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2)
+        Specific leakage conductance (usually μS / cm^2).
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF)
+        Absolute capacitance (usually pF).
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS)
+        Absolute leakage conductance (usually nS).
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm)
+        Axial resistance (usually Ohm * cm).
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage
+        Resting membrane voltage.
     scale_factor : float, optional
-        A global area scale factor, by default ``1.0``
+        A global area scale factor, by default ``1.0``.
     spine_factor : float, optional
-        A dendritic area scale factor to account for spines, by default ``1.0``
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Examples
     --------
@@ -505,25 +505,25 @@ class Soma(Compartment):
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length
+        A compartment's length.
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter
+        A compartment's diameter.
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2)
+        Specific capacitance (usually μF / cm^2).
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2)
+        Specific leakage conductance (usually μS / cm^2).
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF)
+        Absolute capacitance (usually pF).
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS)
+        Absolute leakage conductance (usually nS).
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm)
+        Axial resistance (usually Ohm * cm).
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage
+        Resting membrane voltage.
     scale_factor : float, optional
-        A global area scale factor, by default ``1.0``
+        A global area scale factor, by default ``1.0``.
     spine_factor : float, optional
-        A dendritic area scale factor to account for spines, by default ``1.0``
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Examples
     --------
@@ -589,25 +589,25 @@ class Dendrite(Compartment):
         A keyword for accessing Dendrify's library models. Dendritic compartments
         are by default set to ``'passive'``.
     length : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's length
+        A compartment's length.
     diameter : ~brian2.units.fundamentalunits.Quantity, optional
-        A compartment's diameter
+        A compartment's diameter.
     cm : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific capacitance (usually μF / cm^2)
+        Specific capacitance (usually μF / cm^2).
     gl : ~brian2.units.fundamentalunits.Quantity, optional
-        Specific leakage conductance (usually μS / cm^2)
+        Specific leakage conductance (usually μS / cm^2).
     cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute capacitance (usually pF)
+        Absolute capacitance (usually pF).
     gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
-        Absolute leakage conductance (usually nS)
+        Absolute leakage conductance (usually nS).
     r_axial : ~brian2.units.fundamentalunits.Quantity, optional
-        Axial resistance (usually Ohm * cm)
+        Axial resistance (usually Ohm * cm).
     v_rest : ~brian2.units.fundamentalunits.Quantity, optional
-        Resting membrane voltage
+        Resting membrane voltage.
     scale_factor : float, optional
-        A global area scale factor, by default ``1.0``
+        A global area scale factor, by default ``1.0``.
     spine_factor : float, optional
-        A dendritic area scale factor to account for spines, by default ``1.0``
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Examples
     --------
@@ -714,28 +714,27 @@ class Dendrite(Compartment):
         name : str
             A unique name to describe a single dSpike type.
         threshold : ~brian2.units.fundamentalunits.Quantity, optional
-            The membrane voltage threshold for dendritic spiking
+            The membrane voltage threshold for dendritic spiking.
         g_rise : ~brian2.units.fundamentalunits.Quantity, optional
             The max conductance of the channel that is activated during the rise
-            (depolarization phase)
+            (depolarization phase).
         g_fall : ~brian2.units.fundamentalunits.Quantity, optional
             The max conductance of the channel that is activated during the fall
-            (repolarization phase)
+            (repolarization phase).
         duration_rise : ~brian2.units.fundamentalunits.Quantity, optional
-            The amount of time that g_rise stays ON
+            The duration of g_rise staying open.
         duration_fall : ~brian2.units.fundamentalunits.Quantity, optional
-            The amount of time that g_fall stays ON
+            The duration of g_fall staying open.
         reversal_rise : (~brian2.units.fundamentalunits.Quantity, str), optional
             The reversal potential of the channel that is activated during the rise
-            (depolarization) phase
+            (depolarization) phase.
         reversal_fall : (~brian2.units.fundamentalunits.Quantity, str), optional
             The reversal potential of the channel that is activated during the fall
-            (repolarization) phase
+            (repolarization) phase.
         offset_fall : ~brian2.units.fundamentalunits.Quantity, optional
-            The delay for the initiation of the fall phase
+            The delay for the activation of g_rise.
         refractory : ~brian2.units.fundamentalunits.Quantity, optional
-            The amount of time after dSpike activation until the dSpike
-            mechanism can be activated again
+            The time interval required before dSpike can be activated again.
         """
 
         # The following code creates all necessary equations for dspikes:

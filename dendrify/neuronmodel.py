@@ -36,10 +36,18 @@ class NeuronModel:
     connections : list[tuple[Compartment, Compartment, str  | Quantity]]
         A description of how the various compartments belonging to the same
         neuron model should be connected.
-    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
-        Kwargs are used to specify important electrophysiological properties,
-        such as the specific capacitance or resistance. For all available options
-        see: :class:`.EphysProperties`.
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2).
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2).
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm).
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage.
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``.
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Warning
     -------
@@ -53,9 +61,9 @@ class NeuronModel:
     >>> # y -> Soma or Dendrite object other than x
     >>> # z -> 'half_cylinders' or 'cylinder_ + name' or brian2.nS unit
     >>> #      (by default 'half_cylinders')
-    >>> soma = Soma('s', ...)
-    >>> prox = Dendrite('p', ...)
-    >>> dist = Dendrite('d', ...)
+    >>> soma = Soma(...)
+    >>> prox = Dendrite(...)
+    >>> dist = Dendrite(...)
     >>> connections = [(soma, prox, 15*nS), (prox, dist, 10*nS)]
     >>> model = NeuronModel(connections)
     """
@@ -65,12 +73,12 @@ class NeuronModel:
         connections: List[Tuple[Compartment,
                                 Compartment,
                                 Union[str, Quantity, None]]],
-        cm=None,
-        gl=None,
-        r_axial=None,
-        v_rest=None,
-        scale_factor=None,
-        spine_factor=None
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
     ):
         self._compartments = None
         self._extra_equations = None
@@ -220,6 +228,30 @@ class NeuronModel:
                        offset_fall: Union[Quantity, None] = None,
                        refractory: Union[Quantity, None] = None
                        ):
+        """
+        Configure the parameters for dendritic spiking.
+
+        Parameters
+        ----------
+        event_name : str
+            A unique name referring to a specific dSpike type.
+        threshold : ~brian2.units.fundamentalunits.Quantity, optional
+            The membrane voltage threshold for dendritic spiking.
+        duration_rise : ~brian2.units.fundamentalunits.Quantity, optional
+            The duration of g_rise staying open.
+        duration_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The duration of g_fall staying open.
+        reversal_rise : (~brian2.units.fundamentalunits.Quantity, str), optional
+            The reversal potential of the channel that is activated during the rise
+            (depolarization) phase.
+        reversal_fall : (~brian2.units.fundamentalunits.Quantity, str), optional
+            The reversal potential of the channel that is activated during the fall
+            (repolarization) phase.
+        offset_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The delay for the activation of g_rise.
+        refractory : ~brian2.units.fundamentalunits.Quantity, optional
+            The time interval required before dSpike can be activated again.
+        """
 
         for comp in self._compartments:
             if isinstance(comp, Dendrite) and comp._dspike_params:
@@ -245,8 +277,58 @@ class NeuronModel:
                          init_rest: bool = True,
                          init_events: bool = True,
                          show: bool = False,
-                         *args, **kwargs
+                         **kwargs
                          ) -> Union[NeuronGroup, Tuple]:
+        """
+        Returns a Brian2 NeuronGroup object from a NeuronModel. If a second
+        reset is provided, it also returns a Synapses object to implement
+        somatic action potentials with a more realistic shape which also unlocks 
+        dendritic backpropagation. This method can also take all parameters that
+        are accepted by Brian's
+        :doc:`NeuronGroup <brian2:reference/brian2.groups.neurongroup.NeuronGroup>`.
+
+        Parameters
+        ----------
+        N : int
+            The number of neurons in the group.
+        method : str, optional
+            The numerical integration method. Either a string with the name of a
+            registered method (e.g. "euler") or a function that receives an
+            `Equations` object and returns the corresponding abstract code, by
+            default ``'euler'``.
+        threshold : str, optional
+            The condition which produces spikes. Should be a single line boolean
+            expression.
+        reset : str, optional
+            The (possibly multi-line) string with the code to execute on reset.
+        refractory : (Quantity, str), optional
+            Either the length of the refractory period (e.g. ``2*ms``), a string
+            expression that evaluates to the length of the refractory period
+            after each spike (e.g. ``'(1 + rand())*ms'``), or a string expression
+            evaluating to a boolean value, given the condition under which the
+            neuron stays refractory after a spike (e.g. ``'v > -20*mV'``).
+        second_reset : str, optional
+            Option to include a second reset for more realistic somatic spikes.
+        spike_width : Quantity, optional
+            The time interval between the two resets.
+        init_rest : bool, optional
+            Option to automatically initialize the voltages of all compartments
+            at the specified resting potentials, by default True.
+        init_events : bool, optional
+            Option to automatically initialize all custom events that required
+            for dendritic spiking, by default True.
+        show : bool, optional
+            Option to print the automatically initialized parameters, by default
+            False.
+        **kwargs: optional
+            All other parameters accepted by Brian's NeuronGroup.
+
+        Returns
+        -------
+        Union[NeuronGroup, Tuple]
+            If no second reset is added, it returns a NeuronGroup object.
+            Otherwise, it returns a tuple of (NeuronGroup, Synapses) objects.
+        """
 
         group = NeuronGroup(N,
                             method=method,
@@ -256,7 +338,7 @@ class NeuronModel:
                             model=self.equations,
                             events=self.events,
                             namespace=self.parameters,
-                            *args, **kwargs)
+                            **kwargs)
 
         if init_rest:
             for comp in self._compartments:
@@ -387,7 +469,7 @@ class NeuronModel:
     @ property
     def equations(self) -> str:
         """
-        Merges all compartments' equations into a single string.
+        Returns a string containing all model equations.
 
         Returns
         -------
@@ -402,7 +484,7 @@ class NeuronModel:
     @ property
     def parameters(self) -> dict:
         """
-        Merges all compartments' parameters into a dictionary.
+        Returns a dictionary containing all model parameters.
 
         Returns
         -------
@@ -419,7 +501,8 @@ class NeuronModel:
     @ property
     def events(self) -> dict:
         """
-        Organizes all custom events for dendritic spiking into a dictionary.
+        Returns a dictionary containing all model custom events for dendritic
+        spiking.
 
         Returns
         -------
@@ -436,7 +519,7 @@ class NeuronModel:
     @ property
     def event_names(self) -> list:
         """
-        Creates a list of all event names for dendritic spiking.
+        Returns a list of all event names for dendritic spiking.
 
         Returns
         -------
@@ -448,7 +531,8 @@ class NeuronModel:
     @ property
     def event_actions(self) -> dict:
         """
-        Creates a list of all event actions for dendritic spiking.
+        Returns a dictionary containing all event actions for dendritic
+        spiking.
 
         Returns
         -------
@@ -464,6 +548,35 @@ class NeuronModel:
 
 
 class PointNeuronModel(Compartment):
+    """
+    Like a :class:`.NeuronModel` but for point-neuron (single-compartment)
+    models.
+
+    Parameters
+    ----------
+    name : str
+        A name used to tag all equations and parameters.
+    model : str, optional
+        A keyword for accessing Dendrify's library models. Custom models can
+        also be provided but they should be in the same formattable structure as
+        the library models. Available options: ``'leakyIF'`` (default),
+        ``'adaptiveIF'``, ``'adex'``.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        The point neuron's length.
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        The point neuron's diameter.
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2).
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2).
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF).
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS).
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage.
+    """
+
     def __init__(
         self,
         name: str,
@@ -489,10 +602,10 @@ class PointNeuronModel(Compartment):
             v_rest=v_rest,
         )
 
-    def make_neurongroup(self, N: int, *args, **kwargs) -> NeuronGroup:
+    def make_neurongroup(self, N: int, **kwargs) -> NeuronGroup:
         group = NeuronGroup(N, model=self.equations,
                             namespace=self.parameters,
-                            *args, **kwargs)
+                            **kwargs)
         setattr(group, f'V_{self.name}', self._ephys_object.v_rest)
         return group
 
