@@ -35,6 +35,8 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
 html_static_path = ['_static']
 autosummary_generate = True
+nbsphinx_input_prompt = "%.0s"
+nbsphinx_output_prompt = "%.0s"
 autodoc_default_options = {'show-inheritance': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {
@@ -52,7 +54,7 @@ copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
 html_title = f"{project}"
 html_theme = 'furo'
-pygments_style = "default"
+pygments_style = "sphinx"
 pygments_dark_style = "material"
 html_theme_options = {
     "footer_icons": [
