@@ -372,7 +372,7 @@ class NeuronModel:
             except Exception:
                 raise ValueError(txt)
 
-        return group, ap_reset if ap_reset else group
+        return (group, ap_reset) if ap_reset else group
 
     def add_params(self, params_dict: dict):
         """
