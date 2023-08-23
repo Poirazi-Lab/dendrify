@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '1.0.8'
+release = '2.0'
 
 # -- General configuration -----------------------------------------------------
 extensions = [
@@ -54,8 +54,8 @@ copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
 html_title = f"{project}"
 html_theme = 'furo'
-pygments_style = "sphinx"
-pygments_dark_style = "material"
+pygments_style = "default"
+pygments_dark_style = "lightbulb"
 html_theme_options = {
     "footer_icons": [
         {
