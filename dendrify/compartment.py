@@ -227,8 +227,6 @@ class Compartment:
                 "Please provide a valid conductance option."
             )
 
-        eval("self._g_couples")
-
     def synapse(self, channel: str,
                 tag: str,
                 g: Optional[Quantity] = None,
