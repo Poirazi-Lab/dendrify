@@ -125,7 +125,9 @@ class Compartment:
         if model in library:
             self._equations = library[model].format('_'+self.name)
         else:
-            self._equations = model.format('_'+self.name)
+            logger.warning(("The model you provided is not found. The default " 
+                            "'passive' membrane model will be used instead."))
+            self._equations = library['passive'].format('_'+self.name)
 
     def connect(self,
                 other: Compartment,

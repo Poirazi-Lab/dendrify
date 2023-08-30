@@ -2,11 +2,15 @@ import pprint as pp
 from copy import deepcopy
 from typing import List, Optional, Tuple, Union
 
+import numpy as np
 from brian2 import NeuronGroup, Synapses, defaultclock
-from brian2.units import Quantity, mV
+from brian2.units import Quantity, ms, pA
 
 from .compartment import Compartment, Dendrite, Soma
-from .utils import DimensionlessCompartmentError, get_logger
+from .ephysproperties import EphysProperties
+from .equations import library_point
+from .utils import (DimensionlessCompartmentError, DuplicateEquationsError,
+                    get_logger)
 
 logger = get_logger(__name__)
 
@@ -466,7 +470,7 @@ class NeuronModel:
         fig.tight_layout()
         plt.show()
 
-    @ property
+    @property
     def equations(self) -> str:
         """
         Returns a string containing all model equations.
@@ -481,7 +485,7 @@ class NeuronModel:
             all_eqs.append(self._extra_equations)
         return '\n\n'.join(all_eqs)
 
-    @ property
+    @property
     def parameters(self) -> dict:
         """
         Returns a dictionary containing all model parameters.
@@ -498,7 +502,7 @@ class NeuronModel:
             d.update(self._extra_params)
         return d
 
-    @ property
+    @property
     def events(self) -> dict:
         """
         Returns a dictionary containing all model custom events for dendritic
@@ -516,7 +520,7 @@ class NeuronModel:
             d_out.update(d)
         return d_out
 
-    @ property
+    @property
     def event_names(self) -> list:
         """
         Returns a list of all event names for dendritic spiking.
@@ -528,7 +532,7 @@ class NeuronModel:
         """
         return list(self.events.keys())
 
-    @ property
+    @property
     def event_actions(self) -> dict:
         """
         Returns a dictionary containing all event actions for dendritic
@@ -547,15 +551,13 @@ class NeuronModel:
         return d_out
 
 
-class PointNeuronModel(Compartment):
+class PointNeuronModel:
     """
     Like a :class:`.NeuronModel` but for point-neuron (single-compartment)
     models.
 
     Parameters
     ----------
-    name : str
-        A name used to tag all equations and parameters.
     model : str, optional
         A keyword for accessing Dendrify's library models. Custom models can
         also be provided but they should be in the same formattable structure as
@@ -579,20 +581,25 @@ class PointNeuronModel(Compartment):
 
     def __init__(
         self,
-        name: str,
         model: str = 'leakyIF',
-        cm_abs: Optional[Quantity] = None,
-        gl_abs: Optional[Quantity] = None,
-        v_rest: Optional[Quantity] = None,
         length: Optional[Quantity] = None,
         diameter: Optional[Quantity] = None,
         cm: Optional[Quantity] = None,
         gl: Optional[Quantity] = None,
-
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
     ):
-        super().__init__(
-            name=name,
-            model=model,
+        self._equations = None
+        self._params = None
+        self._synapses = None
+        self._extra_equations = None
+        self._extra_params = None
+        # Add membrane equations:
+        self._add_equations(model)
+        # Keep track of electrophysiological properties:
+        self._ephys_object = EphysProperties(
+            name=None,
             length=length,
             diameter=diameter,
             cm=cm,
@@ -602,11 +609,180 @@ class PointNeuronModel(Compartment):
             v_rest=v_rest,
         )
 
+    def __str__(self):
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        user = pp.pformat(self._ephys_object.__dict__)
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user}")
+        return txt
+
+    def _add_equations(self, model: str):
+        """
+        Adds equations to a compartment.
+
+        Parameters
+        ----------
+        model : str
+        """
+        # Pick a model template or provide a custom model:
+        if model in library_point:
+            self._equations = library_point[model]
+        else:
+            logger.warning(("The model you provided is not found. The default " 
+                            "'passive' membrane model will be used instead."))
+            self._equations = library_point['passive']
+
+    def synapse(self,
+                channel: str,
+                tag: str,
+                g: Optional[Quantity] = None,
+                t_rise: Optional[Quantity] = None,
+                t_decay: Optional[Quantity] = None,
+                scale_g: bool = False):
+        """
+        Adds synaptic currents equations and parameters. When only the decay
+        time constant ``t_decay`` is provided, the synaptic model assumes an
+        instantaneous rise of the synaptic conductance followed by an exponential
+        decay. When both the  rise ``t_rise`` and decay ``t_decay`` constants are
+        provided, synapses are modelled as a sum of two exponentials. For more
+        information see:
+        `Modeling Synapses by Arnd Roth & Mark C. W. van Rossum
+        <https://doi.org/10.7551/mitpress/9780262013277.003.0007>`_
+
+        Parameters
+        ----------
+        channel : str
+            Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
+            ``'GABA'``.
+        tag : str
+            A unique name to distinguish synapses of the same type.
+        g : :class:`~brian2.units.fundamentalunits.Quantity`
+            Maximum synaptic conductance
+        t_rise : :class:`~brian2.units.fundamentalunits.Quantity`
+            Rise time constant
+        t_decay : :class:`~brian2.units.fundamentalunits.Quantity`
+            Decay time constant
+        scale_g : bool, optional
+            Option to add a normalization factor to scale the maximum
+            conductance at 1 when synapses are modelled as a difference of
+            exponentials (have both rise and decay kinetics), by default
+            ``False``.
+
+        Examples
+        --------
+        >>> neuron = PointNeuronModel(...)
+        >>> # adding an AMPA synapse with instant rise & exponential decay:
+        >>> neuron.synapse('AMPA', tag='X', g=1*nS, t_decay=5*ms)
+        >>> # same channel, different conductance & source:
+        >>> neuron.synapse('AMPA', tag='Y', g=2*nS, t_decay=5*ms)
+        >>> # different channel with both rise & decay kinetics:
+        >>> neuron.synapse('NMDA', tag='X' g=1*nS, t_rise=5*ms, t_decay=50*ms)
+        """
+
+        synapse_id = "_".join([channel, tag])
+
+        if self._synapses:
+            # Check if this synapse already exists
+            if synapse_id in self._synapses:
+                raise DuplicateEquationsError(
+                    f"The equations of '{channel}_{tag}' have already been "
+                    f"added. \nPlease use a different "
+                    f"combination of [channel, tag] when calling the synapse() "
+                    "method \nmultiple times on a single compartment. You might"
+                    " also see this error if you are using \nJupyter/iPython "
+                    "which store variable values in memory. Try cleaning all "
+                    "variables or \nrestart the kernel before running your "
+                    "code. If this problem persists, please report it \n"
+                    "by creating a new issue here: "
+                    "https://github.com/Poirazi-Lab/dendrify/issues."
+                )
+        else:
+            self._synapses = []
+
+        # Switch to rise/decay equations if t_rise & t_decay are provided
+        key = f"{channel}_rd" if all([t_rise, t_decay]) else channel
+        current_name = f'I_{channel}_{tag}'
+        current_eqs = library_point[key].format(tag)
+
+        to_replace = f'= I_ext'
+        self._equations = self._equations.replace(
+            to_replace,
+            f'{to_replace} + {current_name}'
+        )
+        self._equations += '\n'+current_eqs
+
+        if not self._params:
+            self._params = {}
+
+        weight = f"w_{channel}_{tag}"
+        self._params[weight] = 1.0
+
+        # If user provides a value for g, then add it to _params
+        if g:
+            self._params[f'g_{channel}_{tag}'] = g
+        if t_rise:
+            self._params[f't_{channel}_rise_{tag}'] = t_rise
+        if t_decay:
+            self._params[f't_{channel}_decay_{tag}'] = t_decay
+        if scale_g:
+            if all([t_rise, t_decay, g]):
+                norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
+                self._params[f'g_{channel}_{tag}'] *= norm_factor
+
+        self._synapses.append(synapse_id)
+
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 1*pA,
+              mean: Quantity = 0*pA):
+        """
+        Adds a stochastic noise current. For more information see the Noise
+        section: of :doc:`brian2:user/models`
+
+        Parameters
+        ----------
+        tau : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Time constant of the Gaussian noise, by default ``20*ms``
+        sigma : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Standard deviation of the Gaussian noise, by default ``3*pA``
+        mean : :class:`~brian2.units.fundamentalunits.Quantity`, optional
+            Mean of the Gaussian noise, by default ``0*pA``
+        """
+        I_noise_name = f'I_noise'
+
+        if I_noise_name in self.equations:
+            raise DuplicateEquationsError(
+                f"The equations of '{I_noise_name}' have already been "
+                f"added to the model. \nYou might be seeing this error if "
+                "you are using Jupyter/iPython "
+                "which store variable values \nin memory. Try cleaning all "
+                "variables or restart the kernel before running your "
+                "code. If this \nproblem persists, please report it "
+                "by creating a new issue here:\n"
+                "https://github.com/Poirazi-Lab/dendrify/issues."
+            )
+        noise_eqs = library_point['noise']
+        to_change = f'= I_ext'
+        self._equations = self._equations.replace(
+            to_change,
+            f'{to_change} + {I_noise_name}'
+        )
+        self._equations = f"{self._equations}\n{noise_eqs}"
+
+        # Add _params:
+        if not self._params:
+            self._params = {}
+        self._params[f'tau_noise'] = tau
+        self._params[f'sigma_noise'] = sigma
+        self._params[f'mean_noise'] = mean
+
+
     def make_neurongroup(self, N: int, **kwargs) -> NeuronGroup:
         group = NeuronGroup(N, model=self.equations,
                             namespace=self.parameters,
                             **kwargs)
-        setattr(group, f'V_{self.name}', self._ephys_object.v_rest)
+        setattr(group, 'V', self._ephys_object.v_rest)
         return group
 
     def add_params(self, params_dict: dict):
@@ -636,12 +812,88 @@ class PointNeuronModel(Compartment):
         else:
             self._extra_equations += f"\n{eqs}"
 
-    def connect(self):
-        raise NotImplementedError(
-            "Point neurons do not have compartments that need to be connected."
-        )
+    @property
+    def parameters(self) -> dict:
+        """
+        Returns all the parameters that have been generated for a single
+        compartment.
 
-    def dspikes(self):
-        raise NotImplementedError(
-            "Dendritic spikes have not been implemented fot point-neuron models."
-        )
+        Returns
+        -------
+        dict
+        """
+        d_out = {}
+        if self._params:
+            d_out.update(self._params)
+        if self._extra_params:
+            d_out.update(self._extra_params)
+        if self._ephys_object:
+            d_out.update(self._ephys_object.parameters)
+        return d_out
+
+    @property
+    def area(self) -> Quantity:
+        """
+        Returns a compartment's surface area (open cylinder) based on its length
+        and diameter.
+
+        Returns
+        -------
+        :class:`~brian2.units.fundamentalunits.Quantity`
+        """
+        return self._ephys_object.area
+
+    @property
+    def capacitance(self) -> Quantity:
+        """
+        Returns a compartment's absolute capacitance.
+
+        Returns
+        -------
+        :class:`~brian2.units.fundamentalunits.Quantity`
+        """
+        return self._ephys_object.capacitance
+
+    @property
+    def g_leakage(self) -> Quantity:
+        """
+        A compartment's absolute leakage conductance.
+
+        Returns
+        -------
+        :class:`~brian2.units.fundamentalunits.Quantity`
+        """
+        return self._ephys_object.g_leakage
+
+    @property
+    def equations(self) -> str:
+        """
+        Returns all differential equations that describe a single compartment
+        and the mechanisms that have been added to it.
+
+        Returns
+        -------
+        str
+        """
+        if self._extra_equations:
+            return f"{self._equations}\n\n{self._extra_equations}"
+        return self._equations
+
+    @staticmethod
+    def g_norm_factor(trise: Quantity, tdecay: Quantity):
+        tpeak = (tdecay*trise / (tdecay-trise)) * np.log(tdecay/trise)
+        factor = (((tdecay*trise) / (tdecay-trise))
+                  * (-np.exp(-tpeak/trise) + np.exp(-tpeak/tdecay))
+                  / ms)
+        return 1/factor
+
+    @property
+    def dimensionless(self) -> bool:
+        """
+        Checks if a compartment has been flagged as dimensionless.
+
+        Returns
+        -------
+        bool
+        """
+        return True if self._ephys_object._dimensionless else False

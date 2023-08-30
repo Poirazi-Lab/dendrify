@@ -258,7 +258,10 @@ class EphysProperties(object):
 
         for value, var in zip([EL, C, gL], ['EL', 'C', 'gL']):
             if value:
-                d_out[f"{var}_{self.name}"] = value
+                if self.name:
+                    d_out[f"{var}_{self.name}"] = value
+                else:
+                    d_out[f"{var}"] = value
             else:
                 logger.error(
                     f"Could not resolve [{var}_{self.name}] for '{self.name}'."
