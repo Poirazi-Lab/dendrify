@@ -66,6 +66,15 @@ contributions to network-level functions.
 
 
 .. toctree::
+   :maxdepth: 1
+   :caption: Examples
+   
+   examples/compartmental
+   examples/point_models
+
+
+
+.. toctree::
    :maxdepth: 2
    :caption: Reference documentation
 
