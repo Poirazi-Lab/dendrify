@@ -54,4 +54,5 @@ ax.plot(time, v2, label='dend')
 ax.set_xlabel('Time (ms)')
 ax.set_ylabel('Voltage (mV)')
 ax.legend(loc='best')
-fig.tight_layout();
+fig.tight_layout()
+b.show()
