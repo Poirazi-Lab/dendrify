@@ -70,7 +70,7 @@ contributions to network-level functions.
    :caption: Examples
    
    examples/compartmental
-   examples/point_models
+   examples/point
 
 
 

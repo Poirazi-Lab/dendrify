@@ -1,4 +1,0 @@
-Point-neuron models
-===================
-
-
