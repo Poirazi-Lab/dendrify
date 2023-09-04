@@ -205,7 +205,7 @@ class NeuronModel:
         return new_list
 
     def _set_properties(self, cm=None, gl=None, r_axial=None, v_rest=None,
-                        scale_factor=1.0, spine_factor=1.0):
+                        scale_factor=None, spine_factor=None):
 
         params = {'cm': cm, 'gl': gl, 'r_axial': r_axial,
                   'scale_factor': scale_factor, 'spine_factor': spine_factor}
