@@ -1,4 +1,4 @@
-from os import getcwd, listdir, path
+from os import listdir, path
 
 
 class Parser:
@@ -64,17 +64,16 @@ class Parser:
         return '\n\n\n'.join(content)
     
 
+if __name__ == '__main__':
+    # Get the path to the directory that is one level up
+    root = path.abspath(path.join(path.dirname(__file__), '..'))
+    docs = path.join(root, 'docs_sphinx')
+    examples = path.join(root, 'examples_new')
+    files = listdir(examples)
 
-# Get the path to the directory that is one level up
-root = path.abspath(path.join(path.dirname(__file__), '..'))
-docs = path.join(root, 'docs_sphinx')
-examples = path.join(root, 'examples_new')
-files = listdir(examples)
-filename = path.join(examples, files[0])
-
-test = Parser(filename, docs)
-# print(test.title)
-# print(test.filename)
-test.run_code()
-test.write_rst()
-
+    for file in files:
+        filename = path.join(examples, file)
+        test = Parser(filename, docs)
+        # print(test.rst_code)
+        test.run_code()
+        test.write_rst()

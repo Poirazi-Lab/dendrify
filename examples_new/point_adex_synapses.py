@@ -1,10 +1,22 @@
 """
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+Title
+-----
+AdEx network + synapses
+
+Description
+-----------
+The Dendrify implementation of the Adaptive exponential integrate-and-fire model
+(adapted from `Brian's examples <https://brian2.readthedocs.io/en/stable/examples/frompapers.Brette_Gerstner_2005.html>`_).
+
+In this example, we also explore:
+
+- How to add random Poisson synaptic input.
+- How to create a basic network model.
+
+Resources:
+
+- http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
+- https://pubmed.ncbi.nlm.nih.gov/16014787/
 """
 
 import brian2 as b
@@ -67,9 +79,5 @@ ax2.set_xlabel('Time (ms)')
 ax2.set_ylabel('Neuron index')
 ax2.legend()
 fig.tight_layout()
-
-if __name__ == '__main__':
-    fig.show()
-else:
-    fig.savefig('point_adex_synapses.png', dpi=300)
+b.show()
 

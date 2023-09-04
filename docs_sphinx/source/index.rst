@@ -69,6 +69,7 @@ contributions to network-level functions.
    :maxdepth: 1
    :caption: Examples
    
+   examples/mechanisms
    examples/compartmental
    examples/point
 

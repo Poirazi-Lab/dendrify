@@ -1,16 +1,17 @@
 """
 Title
 -----
-Point AdEx neuron
+AdEx neuron
 
 Description
 -----------
-Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor
-incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis
-nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.
-Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu
-fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in
-culpa qui officia deserunt mollit anim id est laborum.
+The Dendrify implementation of the Adaptive exponential integrate-and-fire model
+(adapted from `Brian's examples <https://brian2.readthedocs.io/en/stable/examples/frompapers.Brette_Gerstner_2005.html>`_).
+
+Resources:
+
+- http://www.scholarpedia.org/article/Adaptive_exponential_integrate-and-fire_model
+- https://pubmed.ncbi.nlm.nih.gov/16014787/
 """
 
 import brian2 as b
