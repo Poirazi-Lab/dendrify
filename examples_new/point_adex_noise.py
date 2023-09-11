@@ -10,8 +10,8 @@ The Dendrify implementation of the Adaptive exponential integrate-and-fire model
 
 In this example, we also explore:
 
-- How to add gaussian noise to a neuron model.
-- How to create neuron models with different properties using a single PointNeuronModel.
+- How to add gaussian noise.
+- How to create NeuronGroups with different properties using a single PointNeuronModel.
 
 Resources:
 

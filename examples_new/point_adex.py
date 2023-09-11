@@ -15,7 +15,7 @@ Resources:
 """
 
 import brian2 as b
-from brian2.units import ms, mV, nA, nS, pA, pF
+from brian2.units import ms, mV, nA, nS, pF
 
 from dendrify import PointNeuronModel
 

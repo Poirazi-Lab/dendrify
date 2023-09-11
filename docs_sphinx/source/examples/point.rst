@@ -1,5 +1,5 @@
-Point neurons
-=============
+Point-neuron models
+===================
 
 .. toctree::
    :maxdepth: 1
@@ -8,3 +8,4 @@ Point neurons
    point_adex
    point_adex_noise
    point_adex_synapses
+   point_lif_inhibition

@@ -1,2 +1,2 @@
-Compartmental
-=============
+Compartmental models
+====================

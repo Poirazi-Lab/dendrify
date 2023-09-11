@@ -1,3 +1,18 @@
+"""
+Title
+-----
+Active vs passive dendrites
+
+Description
+-----------
+
+This examples shows:
+
+- How to create a compartmental model with active or passive dendrites.
+
+
+"""
+
 import brian2 as b
 from brian2.units import Hz, cm, ms, mV, nS, ohm, pA, pF, uF, um, uS
 
