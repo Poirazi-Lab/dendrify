@@ -1,5 +1,32 @@
 from os import listdir, path
 
+import brian2 as b  # needed for exec
+import matplotlib.pyplot as plt
+from brian2.units import *  # needed for exec
+from scipy.optimize import curve_fit  # needed for exec
+
+
+# Analysis code
+def func(t, a, tau):
+    """Exponential decay function"""
+    return a * b.exp(-t / tau)
+
+def get_tau(trace, t0):
+    dt = b.defaultclock.dt
+    Vmin = min(trace)
+    time_to_peak = list(trace).index(Vmin)
+
+    # Find voltage from current-start to min value
+    voltages = trace[int(t0/dt): time_to_peak] / mV
+
+    # Min-max normalize voltages
+    v_norm = (voltages - voltages.min()) / (voltages.max() - voltages.min())
+
+    # Fit exp decay function to normalized data
+    X = b.arange(0, len(v_norm)) * dt / ms
+    popt, _ = curve_fit(func, X, v_norm)
+
+    return popt, X, v_norm
 
 class Parser:
     def __init__(self, file, docs_path):
@@ -19,7 +46,7 @@ class Parser:
     def run_code(self):
         figname = self.filename.replace('.py', '.png')
         fig_path = path.join(self.figs_path, figname)
-        exec(self.code.replace('show()', f'savefig("{fig_path}", dpi=300)'))
+        exec(self.code.replace('show()', f'savefig("{fig_path}", dpi=300)'), locals())
 
     def write_rst(self):
         filename = path.join(self.docs_path, 'source', 'examples',
@@ -74,6 +101,7 @@ if __name__ == '__main__':
     for file in files:
         filename = path.join(examples, file)
         test = Parser(filename, docs)
-        # print(test.rst_code)
+        print(test.rst_code)
         test.run_code()
         test.write_rst()
+        plt.close('all')
