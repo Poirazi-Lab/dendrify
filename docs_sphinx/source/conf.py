@@ -54,7 +54,7 @@ copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
 html_title = f"{project} {release}"
 html_theme = 'furo'
-pygments_style = "sphinx"
+pygments_style = "default"
 pygments_dark_style = "material"
 html_theme_options = {
     "footer_icons": [
