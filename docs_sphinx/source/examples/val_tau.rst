@@ -32,16 +32,13 @@ current.
     b.prefs.codegen.target = 'numpy'  # faster for simple simulations
     
     # Create neuron models
-    g_leakage = 20*nS  # membrane leak conductance
-    capacitance = 250*pF  # membrane capacitance
+    GL = 20*nS  # membrane leak conductance
+    CM = 250*pF  # membrane capacitance
     EL = -70*mV  # resting potential
-    tau_theory = capacitance / g_leakage  # theoretical membrane time constant
+    tau_theory = CM / GL  # theoretical membrane time constant
     
-    lif = PointNeuronModel(model='leakyIF', cm_abs=capacitance, 
-                           gl_abs=g_leakage, v_rest=EL)
-    
-    aif = PointNeuronModel(model='adaptiveIF', cm_abs=capacitance,
-                             gl_abs=g_leakage, v_rest=EL)
+    lif = PointNeuronModel(model='leakyIF', cm_abs=CM, gl_abs=GL, v_rest=EL)
+    aif = PointNeuronModel(model='adaptiveIF', cm_abs=CM, gl_abs=GL, v_rest=EL)
     aif.add_params({'tauw': 100*ms, 'a': 2*nS})
     
     # Create NeuronGroups (no threshold or reset conditions for simplicity)
@@ -72,17 +69,13 @@ current.
         dt = b.defaultclock.dt
         Vmin = min(trace)
         time_to_peak = list(trace).index(Vmin)
-    
         # Find voltage from current-start to min value
         voltages = trace[int(t0/dt): time_to_peak] / mV
-    
         # Min-max normalize voltages
         v_norm = (voltages - voltages.min()) / (voltages.max() - voltages.min())
-    
         # Fit exp decay function to normalized data
         X = b.arange(0, len(v_norm)) * dt / ms
         popt, _ = curve_fit(func, X, v_norm)
-    
         return popt, X, v_norm
     
     # Plot results
@@ -109,6 +102,7 @@ current.
     ax2.legend()
     for ax in axes.values():
         ax.set_xlabel('Time (ms)')
+    fig.tight_layout()
     b.show()
 
 
