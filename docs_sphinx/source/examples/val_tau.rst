@@ -10,15 +10,16 @@ resistance ``R``. However, in neurons, ``τm`` is also affected by voltage-gated
 conductances or other non-linearities.
 
 
-Experimentally, ``τm`` can be calculated as the time for the potential ``V`` to
-fall from its resting  value to a fraction (1-l/e), or 63%, of its final value
-during the application of a small negative current pulse. In other words, it is
-the time constant of the exponential decay of the membrane potential in response
-to a small hyperpolarizing current pulse.
+Experimentally, ``τm`` is often calculated by fitting an exponential function to
+the membrane potential ``V`` trace after applying a small negative current pulse
+at rest.
 
-Here we show how to calculate ``τm`` for a neuron model experimentally and how it
-is affected by the presence of voltage-gated conductances, such as an adaptation
-current.
+
+Here we explore:
+
+- How to calculate ``τm`` for a neuron model experimentally.
+- How ``τm`` is affected by the presence of voltage-gated conductances, such as
+  an adaptation current.
 
 
 .. code-block:: python

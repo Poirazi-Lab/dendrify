@@ -10,8 +10,10 @@ In this example, we show how to estimate a neuron model's input resistance
 current pulse ``I`` into the neuron and measuring the steady-state change in its
 membrane potential ``ΔV``. Using Ohm's law, ``Rin`` can be estimated as
 ``Rin = ΔV/I``. Bellow, we show how ``Rin`` is affected by changes in the neuron's
-membrane leak conductance ``gl``. We also scale the neuron's membrane
-capacitance ``cm`` to maintain a constant membrane time constant (τm = cm/gl).
+membrane leak conductance ``gl``. 
+
+Note: We also scale the neuron's membrane capacitance ``cm`` to maintain a
+constant membrane time constant (``τm = cm/gl``).
 """
 
 import brian2 as b

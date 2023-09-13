@@ -71,7 +71,7 @@ contributions to network-level functions.
    
    examples/compartmental
    examples/point
-   examples/validation_tests
+   examples/validation
 
 
 

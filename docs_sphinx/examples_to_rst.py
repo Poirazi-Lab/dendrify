@@ -100,8 +100,8 @@ if __name__ == '__main__':
 
     for file in files:
         filename = path.join(examples, file)
-        test = Parser(filename, docs)
-        print(test.rst_code)
-        test.run_code()
-        test.write_rst()
+        example = Parser(filename, docs)
+        print(example.title)
+        example.run_code()
+        example.write_rst()
         plt.close('all')
