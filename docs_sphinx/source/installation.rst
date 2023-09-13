@@ -22,11 +22,11 @@ Dependencies
   on almost all platforms. Brian is designed to be easy to learn and use, highly
   flexible and easily extensible.
   
-  * :doc:`How to install Brian 2 <brian2:introduction/install>`
+  * :doc:`Brian 2 installation guidelines <brian2:introduction/install>`
   
 * `Networkx <https://networkx.org/>`_ (optional) is a Python package for the creation,
   manipulation, and study of the structure, dynamics, and functions of complex
-  networks. If you wish Dendrify to have access to certain experimental model
+  networks. If you wish Dendrify to have access to some experimental model
   visualization features, you can install it using the command::
 
     pip install networkx
@@ -40,5 +40,4 @@ units (GPUs). Brian2CUDA is an extension of Brian2 that uses the code generation
 system of the latter to generate simulation code in C++/CUDA, which is then
 executed on NVIDIA GPUs.
 
-* :doc:`How to install Brian2CUDA <brian2cuda:introduction/install>`
-
+* :doc:`Brian2CUDA installation guidelines <brian2cuda:introduction/install>`
