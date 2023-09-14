@@ -57,6 +57,7 @@ html_theme = 'furo'
 pygments_style = "default"
 pygments_dark_style = "material"
 html_theme_options = {
+    "navigation_with_keys": True,
     "footer_icons": [
         {
             "name": "GitHub",
