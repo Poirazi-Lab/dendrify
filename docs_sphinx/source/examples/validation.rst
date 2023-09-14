@@ -9,3 +9,4 @@ Validation tests
    val_fi_curve
    val_tau
    val_dendritic_io
+   val_dendritic attenuation

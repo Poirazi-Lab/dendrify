@@ -20,7 +20,7 @@ In this example, we show:
 .. code-block:: python
 
     import brian2 as b
-    from brian2.units import ms, mV, nS, pA, pF
+    from brian2.units import ms, mV, nS, pF
     
     from dendrify import Dendrite, NeuronModel, Soma
     
