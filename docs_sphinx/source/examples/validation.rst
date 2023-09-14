@@ -8,3 +8,4 @@ Validation tests
    val_rinput
    val_fi_curve
    val_tau
+   val_dendritic_io

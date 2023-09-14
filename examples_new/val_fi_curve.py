@@ -15,7 +15,7 @@ In this example we show:
 """
 
 import brian2 as b
-from brian2.units import Hz, cm, ms, mV, nS, ohm, pA, pF, uF, um, uS
+from brian2.units import ms, mV, nS, pA, pF
 
 from dendrify import Dendrite, NeuronModel, Soma
 
