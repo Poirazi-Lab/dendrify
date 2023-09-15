@@ -34,10 +34,10 @@ dist = Dendrite('dist', length=100*um, diameter=0.8*um)
 connections = [(soma, trunk), (trunk, prox), (prox, dist)]
 model = NeuronModel(connections, cm=1*uF/(cm**2), gl=40*uS/(cm**2),
                     v_rest=-70*mV, r_axial=150*ohm*cm)
-neuron = model.make_neurongroup(1, method='euler')
+# neuron = model.make_neurongroup(1, method='euler')
 
 # Monitor voltages
 
-M = b.StateMonitor(neuron, ['V_soma', 'V_trunk', 'V_prox', 'V_dist'], record=True)
+# M = b.StateMonitor(neuron, ['V_soma', 'V_trunk', 'V_prox', 'V_dist'], record=True)
 
 # Run simulation
