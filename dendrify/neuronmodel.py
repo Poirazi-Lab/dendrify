@@ -81,8 +81,8 @@ class NeuronModel:
         gl: Optional[Quantity] = None,
         r_axial: Optional[Quantity] = None,
         v_rest: Optional[Quantity] = None,
-        scale_factor: Optional[float] = None,
-        spine_factor: Optional[float] = None
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0,
     ):
         self._compartments = None
         self._extra_equations = None
