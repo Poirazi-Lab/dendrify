@@ -81,8 +81,8 @@ class NeuronModel:
         gl: Optional[Quantity] = None,
         r_axial: Optional[Quantity] = None,
         v_rest: Optional[Quantity] = None,
-        scale_factor: Optional[float] = 1.0,
-        spine_factor: Optional[float] = 1.0,
+        scale_factor: Optional[float] = None,
+        spine_factor: Optional[float] = None,
     ):
         self._compartments = None
         self._extra_equations = None
@@ -211,17 +211,25 @@ class NeuronModel:
                   'scale_factor': scale_factor, 'spine_factor': spine_factor}
 
         for comp in self._compartments:
+            # update v_rest for all compartments if provided
             if v_rest:
                 comp._ephys_object.v_rest = v_rest
-            if not comp.dimensionless and any(params.values()):
-                for param, value in params.items():
-                    setattr(comp._ephys_object, param, value)
-            elif comp.dimensionless and any(params.values()):
+            # prohibit dimensionless compartments from taking area-related params
+            if comp.dimensionless and any(params.values()):
                 raise DimensionlessCompartmentError(
                     f"The dimensionless compartment '{comp.name}' cannot take "
                     "the \nfollowing parameters: "
                     "[cm, gl, r_axial, scale_factor, spine_factor]."
-                )
+                ) 
+            # update all other params if provided
+            if not comp.dimensionless and any(params.values()):
+                for param, value in params.items():
+                    if value:
+                        setattr(comp._ephys_object, param, value)
+                    # make sure to initialize area factors if not provided
+                    if not value and param in ['scale_factor', 'spine_factor']:
+                        setattr(comp._ephys_object, param, 1.0)
+
 
     def config_dspikes(self, event_name: str,
                        threshold: Union[Quantity, None] = None,
