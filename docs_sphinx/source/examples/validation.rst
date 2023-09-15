@@ -8,5 +8,5 @@ Validation tests
    val_rinput
    val_fi_curve
    val_tau
-   val_dendritic_io
    val_dendritic_attenuation
+   val_dendritic_io

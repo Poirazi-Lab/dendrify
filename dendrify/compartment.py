@@ -701,13 +701,13 @@ class Dendrite(Compartment):
            When the dendritic voltage crosses the dSpike threshold AND the
            refractory period has elapsed. This triggers the instant activation
            of a positive current that is deactivated after a specified amount
-           of time (``duration_rise``).
+           of time (``duration_rise``). Also a new refractory period begins.
 
            **FALL PHASE:**\n
            This phase starts automatically with a delay (``offset_fall``) after
            the dSpike threshold is crossed. A negative current is activated
            instantly and then is deactivated after a specified amount of time
-           (``duration_fall``). Also a new refractory period begins. 
+           (``duration_fall``). 
 
         Parameters
         ----------
