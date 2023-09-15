@@ -5,12 +5,19 @@ Input resistance
 
 Description
 -----------
-In this example, we show how to estimate a neuron model's input resistance
-``Rin``, a useful metric of its excitability. This is done by injecting a small
-current pulse ``I`` into the neuron and measuring the steady-state change in its
+Input resistance (``Rin``) determines how much a neuron depolarizes in response
+to a steady current. It is a useful metric of a neuron's excitability; neurons
+with high ``Rin`` depolarize more in response to a given current than neurons
+with low ``Rin``. ``Rin`` is often measured experimentally by injecting a small
+current ``I`` into the neuron and measuring the steady-state change in its
 membrane potential ``ΔV``. Using Ohm's law, ``Rin`` can be estimated as
-``Rin = ΔV/I``. Bellow, we show how ``Rin`` is affected by changes in the neuron's
-membrane leak conductance ``gl``. 
+``Rin = ΔV/I``.
+
+In this example we show:
+
+- How to calculate ``Rin`` in a point neuron model.
+- How ``Rin`` is affected by changes in the neuron's membrane leak conductance
+  ``gl``. 
 
 Note: We also scale the neuron's membrane capacitance ``cm`` to maintain a
 constant membrane time constant (``τm = cm/gl``).
@@ -71,8 +78,8 @@ b.plot(low_rin_monitor.t/ms, low_rin_monitor.V[0]/mV,
        label='low Rin = {:.2f} MΩ'.format(Rin_low/ Mohm))
 b.plot(high_rin_monitor.t/ms, high_rin_monitor.V[0]/mV,
        label='high Rin = {:.2f} MΩ'.format(Rin_high/ Mohm))
-b.axvline(50, ls='--', c='gray')
-b.axvline(550, ls='--', c='gray')
+b.axvline(50, ls=':', c='gray', label='stimulation period')
+b.axvline(550, ls=':', c='gray')
 b.xlabel('Time (ms)')
 b.ylabel('Membrane potential (mV)')
 b.legend()
