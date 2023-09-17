@@ -62,6 +62,16 @@ html_theme_options = {
     "navigation_with_keys": True,
     "light_logo": "dendrify_logo_light.png",
     "dark_logo": "dendrify_logo_dark.png",
+    "dark_css_variables": {
+        "color-brand-primary": "#78b2ff",
+        "color-brand-content": "#78b2ff",
+        "color-foreground-secondary": "#b1b4b8",
+        "color-background-hover": "#ffffff4b"
+    },
+    "light_css_variables": {
+        "color-brand-primary": "#396aef",
+        "color-brand-content": "#396aef",
+    },
     "footer_icons": [
         {
             "name": "GitHub",
