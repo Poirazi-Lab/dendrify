@@ -73,6 +73,7 @@ ax0, ax1, ax2 = axes
 
 ax0.plot(time, v2, label='dendrite')
 ax0.plot(time, v1, label='soma', c='C2')
+ax0.axhline(-35, ls=':', c='black', label='threshold')
 ax0.set_ylabel('Voltage (mV)')
 ax0.set_xlim(110, 175)
 
