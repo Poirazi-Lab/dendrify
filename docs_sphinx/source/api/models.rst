@@ -1,21 +1,20 @@
 Model library
 =============
 
-.. image:: ../_static/under-construction.png
-   :width: 20 %
-   :align: center
-
 .. note::
 
    Dendrify relies on Brian's :doc:`Equations-based <brian2:user/equations>`
    approach to define models as systems of first order ordinary differential
    equations. For convenience, Dendrify includes a library of default models
-   (see below) however users can also provide custom model equations.
+   (see below), however users can also provide custom equations. **The model
+   list below is not exhaustive and will be updated in the future**.
+
 
 .. _somatic_models:
 
 Somatic models [1]_ [2]_
 ------------------------
+|
 
 Leaky Integrate-and-Fire
 ~~~~~~~~~~~~~~~~~~~~~~~~
@@ -32,6 +31,8 @@ where
 :math:`I` is the input current.
 When the firing threshold :math:`V_\theta` is crossed, :math:`V` resets to a
 fixed value :math:`V_r`.
+
+|
 
 Adaptive Integrate-and-Fire
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -52,6 +53,7 @@ When the firing threshold :math:`V_\theta` is crossed, :math:`V` resets to a
 fixed value :math:`V_r` and :math:`w \rightarrow w+b`, where :math:`b` is the 
 spike-triggered adaptation current.
 
+|
 
 Adaptive Exponential Integrate-and-Fire
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
@@ -72,17 +74,16 @@ spike-triggered adaptation current.
 
 ----
 
-.. _dendritic_models:
+.. .. _dendritic_models:
 
-Dendritic models
-----------------
-
-
+.. Dendritic models
+.. ----------------
 
 .. _synaptic_models:
 
 Synaptic models [3]_ [4]_
 -------------------------
+|
 
 AMPA
 ~~~~
@@ -103,6 +104,8 @@ where
 :math:`V` the membrane potential and 
 :math:`\tau_{\text{AMPA}}^{\text{decay}}` the AMPA decay time constant. When a
 pre-synaptic spike arrives :math:`s \rightarrow s+1`.
+
+|
 
 AMPA (rise & decay)
 ~~~~~~~~~~~~~~~~~~~~
@@ -126,6 +129,8 @@ where
 :math:`\tau_{\text{AMPA}}^{\text{rise}}` is the AMPA rise time constant and
 :math:`\tau_{\text{AMPA}}^{\text{decay}}` is the AMPA decay time constant.
 When a pre-synaptic spike arrives :math:`s \rightarrow s+1`.
+
+|
 
 NMDA
 ~~~~
@@ -153,6 +158,7 @@ magnesium and voltage dependencies and :math:`[\rm{Mg}^{2+}]_{o}`
 denotes the external magnesium concentration (mM).
 When a pre-synaptic spike arrives :math:`s \rightarrow s+1`.
 
+----
 
 References
 ~~~~~~~~~~
