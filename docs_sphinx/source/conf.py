@@ -66,7 +66,7 @@ html_theme_options = {
         "color-brand-primary": "#78b2ff",
         "color-brand-content": "#78b2ff",
         "color-foreground-secondary": "#b1b4b8",
-        "color-background-hover": "#ffffff4b"
+        "color-background-hover": "#ffffff40"
     },
     "light_css_variables": {
         "color-brand-primary": "#396aef",
