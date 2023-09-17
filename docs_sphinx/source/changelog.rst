@@ -12,6 +12,8 @@ Version 2.0.0
     * Added tutorials and code examples.
     * Improved documentation.
     * Many minor improvements, bug fixes and quality of life improvements.
+    * New logo :)
+    
 
 
 Version 1.0.9
