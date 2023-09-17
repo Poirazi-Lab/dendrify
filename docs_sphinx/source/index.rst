@@ -28,6 +28,7 @@ integrative properties. Such models strike a good balance between flexibility,
 performance, and biological accuracy, allowing us to explore dendritic
 contributions to network-level functions.
 
+
 .. image:: _static/intro.png
    :width: 75 %
    :align: center
@@ -37,6 +38,7 @@ contributions to network-level functions.
    :width: 75 %
    :align: center
    :class: only-dark
+
 
 .. tip::
    If you use Dendrify for your published research, we kindly ask you to cite our
