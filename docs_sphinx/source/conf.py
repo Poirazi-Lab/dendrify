@@ -52,6 +52,7 @@ mathjax3_config = {'chtml': {'displayAlign': 'left'}}
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
+html_scaled_image_link = False
 html_title = f"{project} {release}"
 html_theme = 'furo'
 pygments_style = "default"
