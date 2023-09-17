@@ -57,7 +57,10 @@ html_theme = 'furo'
 pygments_style = "default"
 pygments_dark_style = "material"
 html_theme_options = {
+    "sidebar_hide_name": True,
     "navigation_with_keys": True,
+    "light_logo": "dendrify_logo_light.png",
+    "dark_logo": "dendrify_logo_dark.png",
     "footer_icons": [
         {
             "name": "GitHub",

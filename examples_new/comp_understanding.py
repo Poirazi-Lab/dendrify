@@ -49,3 +49,4 @@ model.config_dspikes('Na', threshold=-35*mV,
                      duration_rise=1.2*ms, duration_fall=2.4*ms,
                      offset_fall=0.2*ms, refractory=5*ms,
                      reversal_rise='E_Na', reversal_fall='E_K')
+
