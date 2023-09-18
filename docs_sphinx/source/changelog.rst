@@ -17,7 +17,6 @@ Version 2.0.0
     Special thanks to Marcel Stimberg, Spyros Chavlis, Nikos Malakasis, Christos
     Karageorgiou Kaneen and Elisavet Kapetanou for their valuable feedback
     and suggestions for improving Dendrify.
-    
 
 
 Version 1.0.9
@@ -39,7 +38,6 @@ Version 1.0.5
 
 Version 1.0.4
 -------------
-
     * Redesigned documentation page.
     * Added more type hints.
     * Improved compatibility with older Python versions.
