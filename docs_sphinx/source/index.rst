@@ -12,21 +12,23 @@ Introduction
         :target: CODE_OF_CONDUCT.md
         :alt: Contributor Covenant
 
-Although neuronal dendrites greatly influence how single neurons process incoming
-information, their role in network-level functions remain largely unexplored.
-Current SNNs are usually quite simplistic, overlooking essential dendritic
-properties. Conversely, circuit models with morphologically detailed neuron
-models are computationally costly, thus impractical for large-network
-simulations.
 
-To bridge the gap between these two, we introduce Dendrify, a free,
-open-source Python package compatible with the
+Although neuronal dendrites play a crucial role in shaping how individual 
+neurons process synaptic information, their contribution to network-level 
+functions has remained largely unexplored. Current spiking neural networks 
+(SNNs) often oversimplify dendritic properties or overlook their essential 
+functions. On the other hand, circuit models with morphologically detailed 
+neuron representations are computationally intensive, making them impractical 
+for simulating large networks.
+
+In an effort to bridge this gap, we present Dendrify—a freely available,
+open-source Python package that seamlessly integrates with the
 `Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify,
 through simple commands, automatically generates reduced compartmental neuron
 models with simplified yet biologically relevant dendritic and synaptic
-integrative properties. Such models strike a good balance between flexibility,
-performance, and biological accuracy, allowing us to explore dendritic
-contributions to network-level functions.
+integrative properties. These models offer a well-rounded compromise between
+flexibility, performance, and biological accuracy, enabling us to investigate
+the impact of dendrites on network-level functions.
 
 
 .. image:: _static/intro.png

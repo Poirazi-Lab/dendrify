@@ -72,5 +72,5 @@ This examples shows:
     b.show()
 
 
-.. image:: _static/comp_passive_vs_active.png
+.. image:: _static/comp_amplification.png
    :align: center
