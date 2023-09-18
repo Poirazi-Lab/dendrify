@@ -41,7 +41,9 @@ Pagkalos, M., Chavlis, S., & Poirazi, P. (2023). Introducing the Dendrify framew
 for incorporating dendrites to spiking neural networks.
 Nature Communications, 14(1), 131. https://doi.org/10.1038/s41467-022-35747-8
 
+
 Documentation for Dendrify can be found at https://dendrify.readthedocs.io/en/latest/
+
 
 The project presentation for the INCF/OCNS Software Working Group is available 
 `on google drive <https://docs.google.com/presentation/d/1LUUh2ja3YSHcmByU0Vyn7vcDEnDq6fWfVxFfuK8FzE0/edit?usp=sharing>`_.
