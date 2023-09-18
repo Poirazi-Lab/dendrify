@@ -13,6 +13,10 @@ Version 2.0.0
     * Improved documentation.
     * Many minor improvements, bug fixes and quality of life improvements.
     * New logo :)
+
+    Special thanks to Marcel Stimberg, Spyros Chavlis, Nikos Malakasis, Christos
+    Karageorgiou Kaneen and Elisavet Kapetanou for their valuable feedback
+    and suggestions for improving Dendrify.
     
 
 
