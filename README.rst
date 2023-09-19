@@ -14,6 +14,7 @@ Dendrify
         :target: CODE_OF_CONDUCT.md
         :alt: Contributor Covenant
 
+
 Although neuronal dendrites play a crucial role in shaping how individual 
 neurons process synaptic information, their contribution to network-level 
 functions has remained largely unexplored. Current spiking neural networks 

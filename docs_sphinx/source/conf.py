@@ -15,6 +15,7 @@ copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
 release = '2.0.0'
 
+
 # -- General configuration -----------------------------------------------------
 extensions = [
     'sphinx.ext.autodoc',
