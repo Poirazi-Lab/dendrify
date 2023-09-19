@@ -6,8 +6,8 @@ Model library
    Dendrify relies on Brian's :doc:`Equations-based <brian2:user/equations>`
    approach to define models as systems of first order ordinary differential
    equations. For convenience, Dendrify includes a library of default models
-   (see below), however users can also provide custom equations. **The model
-   list below is not exhaustive and will be updated in the future**.
+   (see below), however users can also provide custom equations. **The list
+   below is not exhaustive and will be updated in the future**.
 
 
 .. _somatic_models:

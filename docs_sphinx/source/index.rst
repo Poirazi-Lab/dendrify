@@ -92,8 +92,9 @@ the impact of dendrites on network-level functions.
    :maxdepth: 1
    :caption: Useful information
 
-   papers
+   support
    changelog
+   papers
    code_of_conduct
 
 
