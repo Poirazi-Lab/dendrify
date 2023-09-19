@@ -1,8 +1,7 @@
 name: Build and publish to TestPyPI or PyPI
-on: push
-# on:
-  # release:
-    # types: [published]
+on:
+  release:
+    types: [published]
 
 jobs:
   build-n-publish:
