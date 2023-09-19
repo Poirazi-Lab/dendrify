@@ -13,7 +13,8 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2022, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '1.0.9'
+release = '2.0.0'
+
 
 # -- General configuration -----------------------------------------------------
 extensions = [
@@ -35,6 +36,8 @@ templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
 html_static_path = ['_static']
 autosummary_generate = True
+nbsphinx_input_prompt = "%.0s"
+nbsphinx_output_prompt = "%.0s"
 autodoc_default_options = {'show-inheritance': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {
@@ -46,15 +49,25 @@ intersphinx_mapping = {
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
-mathjax3_config = {'chtml': {'displayAlign': 'left'}}
+mathjax3_config = {'chtml': {'displayAlign': 'center'}}
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
-html_title = f"{project}"
+html_scaled_image_link = False
+html_title = f"{project} {release}"
 html_theme = 'furo'
 pygments_style = "default"
 pygments_dark_style = "material"
 html_theme_options = {
+    "sidebar_hide_name": True,
+    "navigation_with_keys": True,
+    "light_logo": "dendrify_logo_light.png",
+    "dark_logo": "dendrify_logo_dark.png",
+    "dark_css_variables": {
+        "color-brand-primary": "#78b2ff",
+        "color-brand-content": "#78b2ff",
+        "color-background-hover": "#ffffff33"
+    },
     "footer_icons": [
         {
             "name": "GitHub",

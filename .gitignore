@@ -132,3 +132,14 @@ dmypy.json
 test.py
 .vscode/settings.json
 .vscode/
+test.ipynb
+test2.ipynb
+minitest.ipynb
+dspikes_benchmarks.ipynb
+dspikes.ipynb
+nikos.ipynb
+viz.py
+bench_test_old.py
+bench_test.py
+test2.py
+examples_new/val_tau.py

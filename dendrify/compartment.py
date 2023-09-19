@@ -1,20 +1,19 @@
-#!/usr/bin/env python
-# -*- coding: utf-8 -*-
-# conda version : 4.8.3
-# conda-build version : 3.18.12
-# python version : 3.7.6.final.0
-# brian2 version : 2.3 (py37hc9558a2_0)
-
 from __future__ import annotations
 
-import sys
+import pprint as pp
 from typing import Optional, Union
 
 import numpy as np
-from brian2.units import Quantity, ms, pA
+from brian2 import defaultclock
+from brian2.core.functions import timestep
+from brian2.units import Quantity, ms, mV, pA
 
 from .ephysproperties import EphysProperties
 from .equations import library
+from .utils import (DimensionlessCompartmentError, DuplicateEquationsError,
+                    get_logger)
+
+logger = get_logger(__name__)
 
 
 class Compartment:
@@ -35,10 +34,26 @@ class Compartment:
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'passive'`` (default),
         ``'adaptiveIF'``, ``'leakyIF'``, ``'adex'``.
-    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
-        Kwargs are used to specify important electrophysiological properties,
-        such as the specific capacitance or resistance. For more information
-        see: :class:`.EphysProperties`.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length.
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter.
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2).
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2).
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF).
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS).
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm).
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage.
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``.
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Examples
     --------
@@ -47,35 +62,56 @@ class Compartment:
     >>> # specifying equations and ephys properties:
     >>> compY = Compartment('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
     >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Compartment('nameZ', 'adaptiveIF', cm_abs=100*pF, gl_abs=20*nS)
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
+    def __init__(
+        self,
+        name: str,
+        model: str = 'passive',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
         self.name = name
         self._equations = None
         self._params = None
         self._connections = None
+        self._synapses = None
         # Add membrane equations:
         self._add_equations(model)
         # Keep track of electrophysiological properties:
-        self._ephys_object = EphysProperties(name=self.name, **kwargs)
+        self._ephys_object = EphysProperties(
+            name=self.name,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
 
     def __str__(self):
-        ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join([f"\u2192 {i}:\n  [{ephys_dict[i]}]\n"
-                           for i in ephys_dict])
-        equations = self.equations.replace('\n', '\n   ')
-
-        parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()
-                                ]) if self.parameters else '   None'
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}"
-               f"\n{'-'*45}\n\n"
-               "PROPERTIES: \n\n"
-               f"\u2192 equations:\n   {equations}\n\n"
-               f"\u2192 parameters:\n{parameters}\n")
-        return msg
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        user = pp.pformat(self._ephys_object.__dict__)
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user}")
+        return txt
 
     def _add_equations(self, model: str):
         """
@@ -89,12 +125,15 @@ class Compartment:
         if model in library:
             self._equations = library[model].format('_'+self.name)
         else:
-            self._equations = model.format('_'+self.name)
+            logger.warning(("The model you provided is not found. The default " 
+                            "'passive' membrane model will be used instead."))
+            self._equations = library['passive'].format('_'+self.name)
 
-    def connect(self, other: Compartment,
+    def connect(self,
+                other: Compartment,
                 g: Union[Quantity, str] = 'half_cylinders'):
         """
-        Allows the connection (electrical coupling) of two compartments.
+        Connects two compartments (electrical coupling).
 
         Parameters
         ----------
@@ -102,13 +141,13 @@ class Compartment:
             Another compartment.
         g : str or :class:`~brian2.units.fundamentalunits.Quantity`, optional
             The coupling conductance. It can be set explicitly or calculated
-            automatically (provided all necessary parameters exist). 
-            Available options: ``'half_cylinders'`` (default), 
+            automatically (provided all necessary parameters exist).
+            Available options: ``'half_cylinders'`` (default),
             ``'cylinder_<compartment name>'``.
 
         Warning
         -------
-        The automatic approaches require that both compartments to be connected 
+        The automatic approaches require that both compartments to be connected
         have specified **length**, **diameter** and **axial resistance**.
 
         Examples
@@ -124,9 +163,20 @@ class Compartment:
 
         # Prohibit connecting compartments with the same name
         if self.name == other.name:
-            print(("ERROR: Cannot connect to compartments with the same name.\n"
-                   "Program exited"))
-            sys.exit()
+            raise ValueError(
+                "Cannot connect compartments with the same name.\n")
+        if (self.dimensionless or other.dimensionless) and type(g) == str:
+            raise DimensionlessCompartmentError(
+                ("Cannot automatically calculate the coupling \nconductance of "
+                 "dimensionless compartments. To resolve this error, perform\n"
+                 "one of the following:\n\n"
+                 f"1. Provide [length, diameter, r_axial] for both '{self.name}'"
+                 f" and '{other.name}'.\n\n"
+                 f"2. Turn both compartment into dimensionless by providing only"
+                 " values for \n   [cm_abs, gl_abs] and then connect them using "
+                 "an exact coupling conductance."
+                 )
+            )
 
         # Current from Comp2 -> Comp1
         I_forward = 'I_{1}_{0} = (V_{1}-V_{0}) * g_{1}_{0}  :amp'.format(
@@ -175,10 +225,12 @@ class Compartment:
                 other._connections.append(
                     (g_to_other, ctype, comp._ephys_object))
         else:
-            print('Please select a valid conductance.')
+            raise ValueError(
+                "Please provide a valid conductance option."
+            )
 
-    def synapse(self, channel: Optional[str] = None,
-                pre: Optional[str] = None,
+    def synapse(self, channel: str,
+                tag: str,
                 g: Optional[Quantity] = None,
                 t_rise: Optional[Quantity] = None,
                 t_decay: Optional[Quantity] = None,
@@ -189,24 +241,23 @@ class Compartment:
         instantaneous rise of the synaptic conductance followed by an exponential
         decay. When both the  rise ``t_rise`` and decay ``t_decay`` constants are
         provided, synapses are modelled as a sum of two exponentials. For more
-        information see: 
-        `Modeling Synapses by Arnd Roth & Mark C. W. van Rossum 
+        information see:
+        `Modeling Synapses by Arnd Roth & Mark C. W. van Rossum
         <https://doi.org/10.7551/mitpress/9780262013277.003.0007>`_
 
         Parameters
         ----------
         channel : str
             Synaptic channel type. Available options: ``'AMPA'``, ``'NMDA'``,
-            ``'GABA'``, by default ``None``
-        pre : str
-            A unique name to distinguish synapses of the same type coming from
-            different input sources, by default ``None``
+            ``'GABA'``.
+        tag : str
+            A unique name to distinguish synapses of the same type.
         g : :class:`~brian2.units.fundamentalunits.Quantity`
-            Maximum synaptic conductance, by default ``None``
+            Maximum synaptic conductance
         t_rise : :class:`~brian2.units.fundamentalunits.Quantity`
-            Rise time constant, by default ``None``
+            Rise time constant
         t_decay : :class:`~brian2.units.fundamentalunits.Quantity`
-            Decay time constant, by default ``None``
+            Decay time constant
         scale_g : bool, optional
             Option to add a normalization factor to scale the maximum
             conductance at 1 when synapses are modelled as a difference of
@@ -217,51 +268,66 @@ class Compartment:
         --------
         >>> comp = Compartment('comp')
         >>> # adding an AMPA synapse with instant rise & exponential decay:
-        >>> comp.synapse('AMPA', g=1*nS, t_decay=5*ms, pre='X')
+        >>> comp.synapse('AMPA', tag='X', g=1*nS, t_decay=5*ms)
         >>> # same channel, different conductance & source:
-        >>> comp.synapse('AMPA', g=2*nS, t_decay=5*ms, pre='Y')
-        >>> # different channel with both rise & decay kinetics: 
-        >>> comp.synapse('NMDA', g=1*nS, t_rise=5*ms, t_decay=50*ms, pre='X')
+        >>> comp.synapse('AMPA', tag='Y', g=2*nS, t_decay=5*ms)
+        >>> # different channel with both rise & decay kinetics:
+        >>> comp.synapse('NMDA', tag='X' g=1*nS, t_rise=5*ms, t_decay=50*ms)
         """
 
-        # Make sure that the user provides a synapse source
-        if not pre:
-            print((f"Warning: <pre> argument missing for '{channel}' "
-                   f"synapse @ '{self.name}'\n"
-                   "Program exited.\n"))
-            sys.exit()
-        # Switch to rise/decay equations if t_rise & t_decay are provided
-        if all([t_rise, t_decay]):
-            key = f"{channel}_rd"
-        else:
-            key = channel
+        synapse_id = "_".join([channel, tag, self.name])
 
-        current_name = f'I_{channel}_{pre}_{self.name}'
-        current_eqs = library[key].format(self.name, pre)
+        if self._synapses:
+            # Check if this synapse already exists
+            if synapse_id in self._synapses:
+                raise DuplicateEquationsError(
+                    f"The equations of '{channel}_{tag}' have already been "
+                    f"added to '{self.name}'. \nPlease use a different "
+                    f"combination of [channel, tag] when calling the synapse() "
+                    "method \nmultiple times on a single compartment. You might"
+                    " also see this error if you are using \nJupyter/iPython "
+                    "which store variable values in memory. Try cleaning all "
+                    "variables or \nrestart the kernel before running your "
+                    "code. If this problem persists, please report it \n"
+                    "by creating a new issue here: "
+                    "https://github.com/Poirazi-Lab/dendrify/issues."
+                )
+        else:
+            self._synapses = []
+
+        # Switch to rise/decay equations if t_rise & t_decay are provided
+        key = f"{channel}_rd" if all([t_rise, t_decay]) else channel
+        current_name = f'I_{channel}_{tag}_{self.name}'
+        current_eqs = library[key].format(self.name, tag)
 
         to_replace = f'= I_ext_{self.name}'
         self._equations = self._equations.replace(
-            to_replace, f'{to_replace} + {current_name}')
+            to_replace,
+            f'{to_replace} + {current_name}'
+        )
         self._equations += '\n'+current_eqs
 
         if not self._params:
             self._params = {}
 
-        weight = f"w_{channel}_{pre}_{self.name}"
-        self._params[weight] = 1
+        weight = f"w_{channel}_{tag}_{self.name}"
+        self._params[weight] = 1.0
+
         # If user provides a value for g, then add it to _params
         if g:
-            self._params[f'g_{channel}_{pre}_{self.name}'] = g
+            self._params[f'g_{channel}_{tag}_{self.name}'] = g
         if t_rise:
-            self._params[f't_{channel}_rise_{pre}_{self.name}'] = t_rise
+            self._params[f't_{channel}_rise_{tag}_{self.name}'] = t_rise
         if t_decay:
-            self._params[f't_{channel}_decay_{pre}_{self.name}'] = t_decay
+            self._params[f't_{channel}_decay_{tag}_{self.name}'] = t_decay
         if scale_g:
             if all([t_rise, t_decay, g]):
                 norm_factor = Compartment.g_norm_factor(t_rise, t_decay)
-                self._params[f'g_{channel}_{pre}_{self.name}'] *= norm_factor
+                self._params[f'g_{channel}_{tag}_{self.name}'] *= norm_factor
 
-    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 3*pA,
+        self._synapses.append(synapse_id)
+
+    def noise(self, tau: Quantity = 20*ms, sigma: Quantity = 1*pA,
               mean: Quantity = 0*pA):
         """
         Adds a stochastic noise current. For more information see the Noise
@@ -277,10 +343,24 @@ class Compartment:
             Mean of the Gaussian noise, by default ``0*pA``
         """
         I_noise_name = f'I_noise_{self.name}'
+
+        if I_noise_name in self.equations:
+            raise DuplicateEquationsError(
+                f"The equations of '{I_noise_name}' have already been "
+                f"added to '{self.name}'. \nYou might be seeing this error if "
+                "you are using Jupyter/iPython "
+                "which store variable values \nin memory. Try cleaning all "
+                "variables or restart the kernel before running your "
+                "code. If this \nproblem persists, please report it "
+                "by creating a new issue here:\n"
+                "https://github.com/Poirazi-Lab/dendrify/issues."
+            )
         noise_eqs = library['noise'].format(self.name)
         to_change = f'= I_ext_{self.name}'
         self._equations = self._equations.replace(
-            to_change, f'{to_change} + {I_noise_name}')
+            to_change,
+            f'{to_change} + {I_noise_name}'
+        )
         self._equations += '\n'+noise_eqs
 
         # Add _params:
@@ -293,7 +373,8 @@ class Compartment:
     @property
     def parameters(self) -> dict:
         """
-        All parameters that have been generated for a single compartment.
+        Returns all the parameters that have been generated for a single
+        compartment.
 
         Returns
         -------
@@ -310,59 +391,42 @@ class Compartment:
     @property
     def area(self) -> Quantity:
         """
-        A compartment's surface area (open cylinder) based on its length
+        Returns a compartment's surface area (open cylinder) based on its length
         and diameter.
 
         Returns
         -------
         :class:`~brian2.units.fundamentalunits.Quantity`
         """
-        try:
-            return self._ephys_object.area
-        except AttributeError:
-            print(("Error: Missing Parameters\n"
-                   f"Cannot calculate the area of <{self.name}>, "
-                   "returned None instead.\n"))
+        return self._ephys_object.area
 
     @property
     def capacitance(self) -> Quantity:
         """
-        A compartment's absolute capacitance based on its specific capacitance
-        (cm) and surface area.
+        Returns a compartment's absolute capacitance.
 
         Returns
         -------
         :class:`~brian2.units.fundamentalunits.Quantity`
         """
-        try:
-            return self._ephys_object.capacitance
-        except AttributeError:
-            print(("Error: Missing Parameters\n"
-                   f"Cannot calculate the capacitance of <{self.name}>, "
-                   "returned None instead.\n"))
+        return self._ephys_object.capacitance
 
     @property
     def g_leakage(self) -> Quantity:
         """
-        A compartment's absolute leakage conductance based on its specific
-        leakage conductance (gl) and surface area.
+        A compartment's absolute leakage conductance.
 
         Returns
         -------
         :class:`~brian2.units.fundamentalunits.Quantity`
         """
-        try:
-            return self._ephys_object.g_leakage
-        except AttributeError:
-            print(("Error: Missing Parameters\n"
-                   f"Cannot calculate the g leakage of <{self.name}>, "
-                   "returned None instead.\n"))
+        return self._ephys_object.g_leakage
 
     @property
     def equations(self) -> str:
         """
-        All differential equations that have been generated for a single
-        compartment.
+        Returns all differential equations that describe a single compartment
+        and the mechanisms that have been added to it.
 
         Returns
         -------
@@ -371,7 +435,7 @@ class Compartment:
         return self._equations
 
     @property
-    def _g_couples(self) -> dict:
+    def _g_couples(self) -> Union[dict, None]:
         # If not _connections have been specified yet
         if not self._connections:
             return None
@@ -405,6 +469,17 @@ class Compartment:
                   / ms)
         return 1/factor
 
+    @property
+    def dimensionless(self) -> bool:
+        """
+        Checks if a compartment has been flagged as dimensionless.
+
+        Returns
+        -------
+        bool
+        """
+        return True if self._ephys_object._dimensionless else False
+
 
 class Soma(Compartment):
     """
@@ -429,48 +504,70 @@ class Soma(Compartment):
         also be provided but they should be in the same formattable structure as
         the library models. Available options: ``'leakyIF'`` (default),
         ``'adaptiveIF'``, ``'adex'``.
-    kwargs : :class:`~brian2.units.fundamentalunits.Quantity`, optional
-        Kwargs are used to specify important electrophysiological properties,
-        such as the specific capacitance or resistance. For more information
-        see: :class:`.EphysProperties`.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length.
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter.
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2).
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2).
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF).
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS).
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm).
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage.
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``.
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``.
 
     Examples
     --------
     >>> # specifying equations only:
-    >>> somaX = Soma('nameX', 'leakyIF')
+    >>> compX = Soma('nameX', 'leakyIF')
     >>> # specifying equations and ephys properties:
-    >>> somaY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
-    >>>              cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> compY = Soma('nameY', 'adaptiveIF', length=100*um, diameter=1*um,
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Soma('nameZ', 'adaptiveIF', cm_abs=100*pF, gl_abs=20*nS)
     """
 
-    def __init__(self, name: str, model: str = 'leakyIF', **kwargs: Quantity):
-
-        super().__init__(name, model, **kwargs)
-        self._events = None
-        self._event_actions = None
-
-    def __str__(self):
-        ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join([f"\u2192 {i}:\n  [{ephys_dict[i]}]\n"
-                           for i in ephys_dict])
-        equations = self.equations.replace('\n', '\n   ')
-
-        parameters = '\n'.join([f"   '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()
-                                ]) if self.parameters else '   None'
-
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}"
-               f"\n{'-'*45}\n\n"
-               "PROPERTIES: \n\n"
-               f"\u2192 equations:\n   {equations}\n\n"
-               f"\u2192 parameters:\n{parameters}\n")
-        return msg
+    def __init__(
+        self,
+        name: str,
+        model: str = 'leakyIF',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
+        super().__init__(
+            name=name,
+            model=model,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
 
 
 class Dendrite(Compartment):
-    # TODO: restrict to passive
     """
     A class that automatically generates and handles all differential equations
     and parameters needed to describe a dendritic compartment, its active
@@ -491,46 +588,104 @@ class Dendrite(Compartment):
     model : str, optional
         A keyword for accessing Dendrify's library models. Dendritic compartments
         are by default set to ``'passive'``.
+    length : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's length.
+    diameter : ~brian2.units.fundamentalunits.Quantity, optional
+        A compartment's diameter.
+    cm : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific capacitance (usually μF / cm^2).
+    gl : ~brian2.units.fundamentalunits.Quantity, optional
+        Specific leakage conductance (usually μS / cm^2).
+    cm_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute capacitance (usually pF).
+    gl_abs : ~brian2.units.fundamentalunits.Quantity, optional
+        Absolute leakage conductance (usually nS).
+    r_axial : ~brian2.units.fundamentalunits.Quantity, optional
+        Axial resistance (usually Ohm * cm).
+    v_rest : ~brian2.units.fundamentalunits.Quantity, optional
+        Resting membrane voltage.
+    scale_factor : float, optional
+        A global area scale factor, by default ``1.0``.
+    spine_factor : float, optional
+        A dendritic area scale factor to account for spines, by default ``1.0``.
+
+    Examples
+    --------
+    >>> # specifying equations only:
+    >>> compX = Dendrite('nameX')
+    >>> # specifying equations and ephys properties:
+    >>> compY = Dendrite('nameY', length=100*um, diameter=1*um,
+    >>>                     cm=1*uF/(cm**2), gl=50*uS/(cm**2))
+    >>> # specifying equations and absolute ephys properties:
+    >>> compY = Dendrite('nameZ', cm_abs=100*pF, gl_abs=20*nS)
     """
 
-    def __init__(self, name: str, model: str = 'passive', **kwargs: Quantity):
-        super().__init__(name, model, **kwargs)
+    def __init__(
+        self,
+        name: str,
+        model: str = 'passive',
+        length: Optional[Quantity] = None,
+        diameter: Optional[Quantity] = None,
+        cm: Optional[Quantity] = None,
+        gl: Optional[Quantity] = None,
+        cm_abs: Optional[Quantity] = None,
+        gl_abs: Optional[Quantity] = None,
+        r_axial: Optional[Quantity] = None,
+        v_rest: Optional[Quantity] = None,
+        scale_factor: Optional[float] = 1.0,
+        spine_factor: Optional[float] = 1.0
+    ):
+        super().__init__(
+            name=name,
+            model=model,
+            length=length,
+            diameter=diameter,
+            cm=cm,
+            gl=gl,
+            cm_abs=cm_abs,
+            gl_abs=gl_abs,
+            r_axial=r_axial,
+            v_rest=v_rest,
+            scale_factor=scale_factor,
+            spine_factor=spine_factor
+        )
         self._events = None
         self._event_actions = None
+        self._dspike_params = None
 
     def __str__(self):
-        ephys_dict = self._ephys_object.__dict__
-        ephys = '\n'.join([f"\u2192 {i}:\n    [{ephys_dict[i]}]\n"
-                           for i in ephys_dict])
-        equations = self.equations.replace('\n', '\n    ')
-        events = '\n'.join([f"    '{key}': '{self.events[key]}'"
-                            for key in self.events
-                            ]) if self.events else '    None'
-        parameters = '\n'.join([f"    '{i[0]}': {i[1]}"
-                                for i in self.parameters.items()
-                                ]) if self.parameters else '    None'
-        msg = (f"OBJECT TYPE:\n\n  {self.__class__}\n\n"
-               f"{'-'*45}\n\n"
-               f"USER PARAMETERS:\n\n{ephys}"
-               f"\n{'-'*45}\n\n"
-               "PROPERTIES: \n\n"
-               f"\u2192 equations:\n    {equations}\n\n"
-               f"\u2192 events:\n{events}\n\n"
-               f"\u2192 parameters:\n{parameters}\n")
-        return msg
+        equations = self.equations
+        parameters = pp.pformat(self.parameters)
+        events = pp.pformat(self.events, width=120)
+        event_names = pp.pformat(self.event_names)
+        user = self._ephys_object.__dict__
+        user_clean = pp.pformat({k: v for k, v in user.items() if v})
+        txt = (f"\nOBJECT\n{6*'-'}\n{self.__class__}\n\n\n"
+               f"EQUATIONS\n{9*'-'}\n{equations}\n\n\n"
+               f"PARAMETERS\n{10*'-'}\n{parameters}\n\n\n"
+               f"EVENTS\n{6*'-'}\n{event_names}\n\n\n"
+               f"EVENT CONDITIONS\n{16*'-'}\n{events}\n\n\n"
+               f"USER PARAMETERS\n{15*'-'}\n{user_clean}")
+        return txt
 
-    def dspikes(self, channel: str,
+    def dspikes(self, name: str,
                 threshold: Optional[Quantity] = None,
                 g_rise: Optional[Quantity] = None,
-                g_fall: Optional[Quantity] = None):
-        # TODO: show error if channel does not exist.
+                g_fall: Optional[Quantity] = None,
+                duration_rise: Optional[Quantity] = None,
+                duration_fall: Optional[Quantity] = None,
+                reversal_rise: Union[Quantity, str, None] = None,
+                reversal_fall: Union[Quantity, str, None] = None,
+                offset_fall: Optional[Quantity] = None,
+                refractory: Optional[Quantity] = None
+                ):
         """
-        Adds the mechanisms and parameters needed for dendritic spiking. Under
-        the hood, this method creates all equations, conditions and actions to
-        utilize Brian's custom events functionality. Spikes are generated through
-        the sequential activation of a positive (sodium or calcium-like) and a
-        negative current (potassium-like current) when a specified dSpike
-        threshold is crossed.
+        Adds the ionic mechanisms and parameters needed for dendritic spiking.
+        Under the hood, this method creates the equations, conditions and
+        actions to take advantage of Brian's custom events. dSpikes are
+        generated through the sequential activation of a positive (sodium or
+        calcium-like) and a negative current (potassium-like current) when a
+        specified dSpike threshold is crossed.
 
         .. hint::
 
@@ -542,152 +697,228 @@ class Dendrite(Compartment):
            within the refractory period. dSpikes cannot be generated during this
            phase.
 
-           **DEPOLARIZATION PHASE:**\n
+           **RISE PHASE:**\n
            When the dendritic voltage crosses the dSpike threshold AND the
            refractory period has elapsed. This triggers the instant activation
-           of a positive current that enters the dendrite and then decays
-           exponentially.
+           of a positive current that is deactivated after a specified amount
+           of time (``duration_rise``). Also a new refractory period begins.
 
-           **REPOLARIZATION PHASE:**\n
-           This phase starts automatically after a specified delay from the
-           initiation of the dSpike. A negative current is activated instantly
-           and then decays exponentially. Also a new refractory period begins.  
+           **FALL PHASE:**\n
+           This phase starts automatically with a delay (``offset_fall``) after
+           the dSpike threshold is crossed. A negative current is activated
+           instantly and then is deactivated after a specified amount of time
+           (``duration_fall``). 
 
         Parameters
         ----------
-        channel : str
-            Ion channel type. Available options: ``'Na'``, ``'Ca'`` (coming soon).
-        threshold : :class:`~brian2.units.fundamentalunits.Quantity`
-            The membrane voltage threshold for dendritic spiking, by default
-            ``None``.
-        g_rise : :class:`~brian2.units.fundamentalunits.Quantity`
-            The conductance of the current that is activated during the
-            depolarization phase, by default ``None``.
-        g_fall : :class:`~brian2.units.fundamentalunits.Quantity`
-            The conductance of the current that is activated during the
-            repolarization phase, by default ``None``.
+        name : str
+            A unique name to describe a single dSpike type.
+        threshold : ~brian2.units.fundamentalunits.Quantity, optional
+            The membrane voltage threshold for dendritic spiking.
+        g_rise : ~brian2.units.fundamentalunits.Quantity, optional
+            The max conductance of the channel that is activated during the rise
+            (depolarization phase).
+        g_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The max conductance of the channel that is activated during the fall
+            (repolarization phase).
+        duration_rise : ~brian2.units.fundamentalunits.Quantity, optional
+            The duration of g_rise staying open.
+        duration_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The duration of g_fall staying open.
+        reversal_rise : (~brian2.units.fundamentalunits.Quantity, str), optional
+            The reversal potential of the channel that is activated during the rise
+            (depolarization) phase.
+        reversal_fall : (~brian2.units.fundamentalunits.Quantity, str), optional
+            The reversal potential of the channel that is activated during the fall
+            (repolarization) phase.
+        offset_fall : ~brian2.units.fundamentalunits.Quantity, optional
+            The delay for the activation of g_rise.
+        refractory : ~brian2.units.fundamentalunits.Quantity, optional
+            The time interval required before dSpike can be activated again.
         """
-        if channel == 'Na':
-            self._Na_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
-        elif channel == 'Ca':
-            self._Ca_spikes(threshold=threshold, g_rise=g_rise, g_fall=g_fall)
 
-    def _Na_spikes(self, threshold: Optional[Quantity] = None,
-                   g_rise: Optional[Quantity] = None,
-                   g_fall: Optional[Quantity] = None):
         # The following code creates all necessary equations for dspikes:
-        name = self.name
-        dspike_currents = f'I_Na_{name} + I_Kn_{name}'
-        # Both currents take into account the reversal potential of Na/K
-        I_Na_eqs = f'I_Na_{name} = g_Na_{name} * (E_Na-V_{name})  :amp'
-        I_Kn_eqs = f'I_Kn_{name} = g_Kn_{name} * (E_K-V_{name})  :amp'
-        # Ion conductances simply decay exponentially
-        g_Na_eqs = f'dg_Na_{name}/dt = -g_Na_{name}/tau_Na  :siemens'
-        g_Kn_eqs = f'dg_Kn_{name}/dt = -g_Kn_{name}/tau_Kn  :siemens'
-        # Parameters needed for the dSpike custom events
-        I_Na_check = f'allow_I_Na_{name}  :boolean'
-        I_Kn_check = f'allow_I_Kn_{name}  :boolean'
-        refractory_var = f'timer_Na_{name}  :second'
-        # Add equations to a compartment
-        to_replace = f'= I_ext_{name}'
-        self._equations = self._equations.replace(
-            to_replace, f'{to_replace} + {dspike_currents}')
-        self._equations += '\n'.join(['', I_Na_eqs, I_Kn_eqs, g_Na_eqs, g_Kn_eqs,
-                                      I_Na_check, I_Kn_check, refractory_var])
-        # Create all necessary custom _events for dspikes:
-        condition_I_Na = library['condition_I_Na']
-        condition_I_Kn = library['condition_I_Kn']
-        if not self._events:
+        comp = self.name
+        ID = f"{name}_{comp}"
+        event_name = f"spike_{ID}"
+
+        if self._events:
+            # Check if this event already exists
+            if event_name in self._events:
+                raise DuplicateEquationsError(
+                    f"The equations for '{event_name}' have already been "
+                    f"added to '{self.name}'. \nPlease use a different "
+                    f"[name] when adding multiple dSpike mechanisms to "
+                    " a single compartment. \nYou might"
+                    " also see this error if you are using Jupyter/iPython "
+                    "which store variable values in \nmemory. Try cleaning all "
+                    "variables or restart the kernel before running your "
+                    "code. If this \nproblem persists, please report it "
+                    "by creating a new issue here: \n"
+                    "https://github.com/Poirazi-Lab/dendrify/issues."
+                )
+        else:
             self._events = {}
-        self._events[f"activate_I_Na_{name}"] = condition_I_Na.format(name)
-        self._events[f"activate_I_Kn_{name}"] = condition_I_Kn.format(name)
+
+        dspike_currents = f"I_rise_{ID} + I_fall_{ID}"
+
+        # Both currents take into account the reversal potential of Na/K
+        I_rise_eqs = f"I_rise_{ID} = g_rise_{ID} * (E_rise_{name}-V_{comp})  :amp"
+        I_fall_eqs = f"I_fall_{ID} = g_fall_{ID} * (E_fall_{name}-V_{comp})  :amp"
+
+        # Ion conductances
+        g_rise_eqs = (
+            f"g_rise_{ID} = "
+            f"g_rise_max_{ID} * "
+            f"int(t_in_timesteps <= spiketime_{ID} + duration_rise_{ID}) * "
+            f"gate_{ID} "
+            ":siemens"
+        )
+        g_fall_eqs = (
+            f"g_fall_{ID} = "
+            f"g_fall_max_{ID} * "
+            f"int(t_in_timesteps <= spiketime_{ID} + offset_fall_{ID} + duration_fall_{ID}) * "
+            f"int(t_in_timesteps >= spiketime_{ID} + offset_fall_{ID}) *  "
+            f"gate_{ID} "
+            ":siemens"
+        )
+        spiketime = f'spiketime_{ID}  :1'  # in units of timestep
+        gate = f'gate_{ID}  :1'  # zero or one
+
+        # Add equations to a compartment
+        to_replace = f'= I_ext_{comp}'
+        self._equations = self._equations.replace(
+            to_replace,
+            f'{to_replace} + {dspike_currents}'
+        )
+        self._equations += '\n'.join(['', I_rise_eqs, I_fall_eqs,
+                                      g_rise_eqs, g_fall_eqs,
+                                      spiketime, gate]
+                                     )
+
+        # Create and add custom dspike event
+        event_name = f"spike_{ID}"
+        condition = (f"V_{comp} >= Vth_{ID} and "
+                     f"t_in_timesteps >= spiketime_{ID} + refractory_{ID} * gate_{ID}"
+                     )
+
+        self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
+        action = {f"spike_{ID}": f"spiketime_{ID} = t_in_timesteps; gate_{ID} = 1"}
         if not self._event_actions:
-            self._event_actions = library['run_on_Na_spike'].format(name)
+            self._event_actions = action
         else:
-            self._event_actions += "\n" + \
-                library['run_on_Na_spike'].format(name)
+            self._event_actions.update(action)
+
         # Include params needed
-        if not self._params:
-            self._params = {}
-        if threshold:
-            self._params[f"Vth_Na_{self.name}"] = threshold
-        if g_rise:
-            self._params[f"g_Na_{self.name}_max"] = g_rise
-        if g_fall:
-            self._params[f"g_Kn_{self.name}_max"] = g_fall
+        if not self._dspike_params:
+            self._dspike_params = {}
 
-    def _Ca_spikes(self, threshold: Quantity = None, g_rise: Quantity = None,
-                   g_fall: Quantity = None):
-        # TODO: check that it works as expected.
+        dt = defaultclock.dt
+
+        params = [threshold,
+                  g_rise,
+                  g_fall,
+                  self._ionic_param(reversal_rise),
+                  self._ionic_param(reversal_fall),
+                  self._timestep(duration_rise, dt),
+                  self._timestep(duration_fall, dt),
+                  self._timestep(offset_fall, dt),
+                  self._timestep(refractory, dt)]
+
+        vars = [f"Vth_{ID}",
+                f"g_rise_max_{ID}",
+                f"g_fall_max_{ID}",
+                f"E_rise_{name}",
+                f"E_fall_{name}",
+                f"duration_rise_{ID}",
+                f"duration_fall_{ID}",
+                f"offset_fall_{ID}",
+                f"refractory_{ID}"]
+
+        d = dict(zip(vars, params))
+        self._dspike_params[ID] = d
+
+    def _timestep(self,
+                  param: Union[Quantity, None], dt
+                  ) -> Union[int, None]:
+        if not param:
+            return None
+        if isinstance(param, Quantity):
+            return timestep(param, dt)
+        else:
+            raise ValueError(
+                f"Please provide a valid time parameter for '{self.name}'."
+            )
+
+    def _ionic_param(self,
+                     param: Union[str, Quantity, None],
+                     ) -> Union[Quantity, None]:
+        DEFAULT_PARAMS = EphysProperties.DEFAULT_PARAMS
+        valid_params = {k: v for k, v in DEFAULT_PARAMS.items() if k[0] == 'E'}
+        if not param:
+            return None
+        if isinstance(param, Quantity):
+            return param
+        elif isinstance(param, str):
+            try:
+                return DEFAULT_PARAMS[param]
+            except KeyError:
+                raise ValueError(
+                    f"Please provide a valid ionic parameter for '{self.name}'."
+                    " Available options:\n"
+                    f"{pp.pformat(valid_params)}"
+                )
+        else:
+            raise ValueError(
+                f"Please provide a valid ionic parameter for '{self.name}'."
+                " Available options:\n"
+                f"{pp.pformat(valid_params)}"
+            )
+
+    @property
+    def parameters(self) -> dict:
         """
-        Coming soon.
+        Returns a dictionary of all parameters that have been generated for a
+        single compartment.
+
+        Returns
+        -------
+        dict
         """
-        pass
-
-        # # The following code creates all necessary equations for dspikes:
-        # name = self.name
-        # dspike_currents = f'I_Ca_{name} + I_Kc_{name}'
-
-        # I_Ca_eqs = f'dI_Ca_{name}/dt = -I_Ca_{name}/tau_Ca  :amp'
-        # I_Kc_eqs = f'dI_Kc_{name}/dt = -I_Kc_{name}/tau_Kc  :amp'
-
-        # I_Ca_check = f'allow_I_Ca_{name}  :boolean'
-        # I_Kc_check = f'allow_I_Kc_{name}  :boolean'
-
-        # refractory_var = f'timer_Ca_{name}  :second'
-        # to_replace = f'= I_ext_{name}'
-
-        # self._equations = self._equations.replace(
-        #     to_replace, f'{to_replace} + {dspike_currents}')
-        # self._equations += '\n'.join(['', I_Ca_eqs, I_Kc_eqs, I_Ca_check,
-        #                               I_Kc_check, refractory_var])
-
-        # # Create all necessary custom _events for dspikes:
-        # condition_I_Ca = library['condition_I_Ca']
-        # condition_I_Kc = library['condition_I_Kc']
-        # if not self._events:
-        #     self._events = {}
-        # self._events[f"activate_I_Ca_{name}"] = condition_I_Ca.format(name)
-        # self._events[f"activate_I_Kc_{name}"] = condition_I_Kc.format(name)
-
-        # # Specify what is going to happen inside run_on_event()
-        # if not self._event_actions:
-        #     self._event_actions = library['run_on_Ca_spike'].format(name)
-        # else:
-        #     self._event_actions += "\n" + \
-        #         library['run_on_Ca_spike'].format(name)
-        # # Include params needed
-        # if not self._params:
-        #     self._params = {}
-        # if threshold:
-        #     self._params[f"Vth_Ca_{self.name}"] = threshold
-        # if g_rise:
-        #     self._params[f"g_Ca_{self.name}_max"] = g_rise
-        # if g_fall:
-        #     self._params[f"g_Kc_{self.name}_max"] = g_fall
+        d_out = {}
+        for i in [self._params, self._g_couples]:
+            if i:
+                d_out.update(i)
+        if self._dspike_params:
+            for d in self._dspike_params.values():
+                d_out.update(d)
+        if self._ephys_object:
+            d_out.update(self._ephys_object.parameters)
+        return d_out
 
     @property
     def events(self) -> dict:
         """
-        A dictionary of all dSpike events created for a single dendrite.
+        Returns a dictionary of all dSpike events created for a single dendrite.
 
         Returns
         -------
         dict
             Keys: event names, values: events conditions.
         """
-        return self._events
+        return self._events if self._events else {}
 
     @property
-    def event_actions(self) -> str:
+    def event_names(self) -> list:
         """
-        A string that is used to tell Brian how to handle the dSpike events.
+        Returns a list of all dSpike event names created for a single dendrite.
 
         Returns
         -------
-        str
-            Executable code that runs automatically in the background.
+        list
         """
-        return self._event_actions
+        if not self._events:
+            return []
+        return list(self._events.keys())
