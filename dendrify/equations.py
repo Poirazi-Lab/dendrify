@@ -13,6 +13,13 @@ library = {
                    'I{0} = I_ext{0}  :amp\n'
                    'I_ext{0}  :amp'),
 
+    # Condactance-based integrate and fire with adaptation:
+    'cadIF': ('dV{0}/dt =  (gL{0}*(EL{0}-V{0}) + I{0} - w{0}) / C{0} :volt \n'
+              'w{0} = gA * (V{0}-EA) :amp \n'
+              'dgA/dt = (gAmax * (abs(V{0}-VA)) / mV - gA) / tauA :siemens \n'
+              'I{0} = I_ext{0}  :amp \n'
+              'I_ext{0}  :amp'),
+
     # Leaky integrate and fire:
     'leakyIF': ('dV{0}/dt = (gL{0} * (EL{0}-V{0}) + I{0}) / C{0}  :volt\n'
                 'I{0} = I_ext{0}  :amp\n'

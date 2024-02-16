@@ -1,6 +1,10 @@
 Release notes
 ===============
 
+Version 2.0.1
+-------------
+    * Added Integrate-and-Fire with conductance based adaptation (cadIF) model.
+
 Version 2.0.0
 -------------
     * New and improved implementation of dendritic spikes.
