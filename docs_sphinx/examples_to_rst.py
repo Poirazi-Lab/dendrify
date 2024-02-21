@@ -11,6 +11,7 @@ def func(t, a, tau):
     """Exponential decay function"""
     return a * b.exp(-t / tau)
 
+
 def get_tau(trace, t0):
     dt = b.defaultclock.dt
     Vmin = min(trace)
@@ -28,6 +29,7 @@ def get_tau(trace, t0):
 
     return popt, X, v_norm
 
+
 class Parser:
     def __init__(self, file, docs_path):
         self.file = file
@@ -39,14 +41,15 @@ class Parser:
     def read_file(self):
         with open(self.file, 'r') as f:
             return f.read().splitlines()
-    
+
     def get_info_lines(self):
         return [i for i, x in enumerate(self.lines) if x == '"""']
-    
+
     def run_code(self):
         figname = self.filename.replace('.py', '.png')
         fig_path = path.join(self.figs_path, figname)
-        exec(self.code.replace('show()', f'savefig("{fig_path}", dpi=300)'), locals())
+        exec(self.code.replace(
+            'show()', f'savefig("{fig_path}", dpi=300)'), locals())
 
     def write_rst(self):
         filename = path.join(self.docs_path, 'source', 'examples',
@@ -57,39 +60,40 @@ class Parser:
     @property
     def filename(self):
         return path.basename(self.file)
-    
+
     @property
     def title(self):
         for index, value in enumerate(self.lines):
             if value == 'Title':
                 return self.lines[index + 2]
+
     @property
     def description(self):
         start = [i for i, x in enumerate(self.lines) if x == 'Description'][0]
         end = self.info_lines[-1]
         return '\n'.join(self.lines[start + 2:end])
-    
+
     @property
     def code(self):
         start = self.info_lines[-1] + 1
         return '\n'.join(self.lines[start:])
-    
+
     @property
     def rst_code(self):
         directive = '.. code-block:: python'
         indented_code = self.code.replace('\n', '\n    ')
         return '\n'.join([directive, indented_code])
-    
+
     @property
     def rst_file(self):
         image_name = path.join('_static', self.filename.replace('.py', '.png'))
         image = (f'.. image:: {image_name}\n'
-                  '   :align: center')
+                 '   :align: center')
         content = [f"{self.title}\n{'=' * len(self.title)}",
                    self.description,
                    self.rst_code, image]
         return '\n\n\n'.join(content)
-    
+
 
 if __name__ == '__main__':
     # Get the path to the directory that is one level up
