@@ -30,7 +30,7 @@ Resources:
     # Create neuron model
     model = PointNeuronModel(model='adex',
                              cm_abs=281*pF,
-                             gl_abs=30*nS, 
+                             gl_abs=30*nS,
                              v_rest=-70.6*mV)
     
     model.add_params({'Vth': -50.4*mV,
@@ -38,18 +38,16 @@ Resources:
                       'tauw': 144*ms,
                       'a': 4*nS,
                       'b': 0.0805*nA,
-                      'Vr': -70.6*mV,
-                      'Vcut': -50.4*mV + 5 * 2*mV})
-    
+                      'Vr': -70.6*mV})
     
     # Create a NeuronGroup
-    neuron = model.make_neurongroup(N=1, threshold='V>Vcut',
+    neuron = model.make_neurongroup(N=1, threshold='V>Vth+5*DeltaT',
                                     reset='V=Vr; w+=b',
                                     method='euler')
     
     # Update model with noise and create a new NeuronGroup
     model.noise(mean=50*pA, sigma=300*pA, tau=2*ms)
-    noisy_neuron = model.make_neurongroup(N=1, threshold='V>Vcut',
+    noisy_neuron = model.make_neurongroup(N=1, threshold='V>Vth+5*DeltaT',
                                           reset='V=Vr; w+=b',
                                           method='euler')
     
