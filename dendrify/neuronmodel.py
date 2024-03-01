@@ -1,3 +1,17 @@
+"""
+This module defines the NeuronModel and PointNeuronModel classes.
+
+The NeuronModel class creates a multicompartmental neuron model by connecting
+individual compartments and merging their equations, parameters, and custom
+events. This model can then be used for creating a population of neurons through
+Brian's NeuronGroup. This class also contains useful methods for managing model
+properties and for automating the initialization of custom events and simulation
+parameters.
+
+The PointNeuronModel is like a NeuronModel but for point-neuron (single-compartment)
+models.
+"""
+
 import pprint as pp
 from copy import deepcopy
 from typing import List, Optional, Tuple, Union
@@ -220,7 +234,7 @@ class NeuronModel:
                     f"The dimensionless compartment '{comp.name}' cannot take "
                     "the \nfollowing parameters: "
                     "[cm, gl, r_axial, scale_factor, spine_factor]."
-                ) 
+                )
             # update all other params if provided
             if not comp.dimensionless and any(params.values()):
                 for param, value in params.items():
@@ -229,7 +243,6 @@ class NeuronModel:
                     # make sure to initialize area factors if not provided
                     if not value and param in ['scale_factor', 'spine_factor']:
                         setattr(comp._ephys_object, param, 1.0)
-
 
     def config_dspikes(self, event_name: str,
                        threshold: Union[Quantity, None] = None,
@@ -267,16 +280,16 @@ class NeuronModel:
 
         for comp in self._compartments:
             if isinstance(comp, Dendrite) and comp._dspike_params:
-                ID = f"{event_name}_{comp.name}"
+                event_id = f"{event_name}_{comp.name}"
                 dt = defaultclock.dt
-                d = {f"Vth_{ID}": threshold,
-                     f"duration_rise_{ID}": comp._timestep(duration_rise, dt),
-                     f"duration_fall_{ID}": comp._timestep(duration_fall, dt),
+                d = {f"Vth_{event_id}": threshold,
+                     f"duration_rise_{event_id}": comp._timestep(duration_rise, dt),
+                     f"duration_fall_{event_id}": comp._timestep(duration_fall, dt),
                      f"E_rise_{event_name}": comp._ionic_param(reversal_rise),
                      f"E_fall_{event_name}": comp._ionic_param(reversal_fall),
-                     f"offset_fall_{ID}": comp._timestep(offset_fall, dt),
-                     f"refractory_{ID}": comp._timestep(refractory, dt)}
-                comp._dspike_params[ID].update(d)
+                     f"offset_fall_{event_id}": comp._timestep(offset_fall, dt),
+                     f"refractory_{event_id}": comp._timestep(refractory, dt)}
+                comp._dspike_params[event_id].update(d)
 
     def make_neurongroup(self,
                          N: int,
@@ -639,7 +652,7 @@ class PointNeuronModel:
         if model in library_point:
             self._equations = library_point[model]
         else:
-            logger.warning(("The model you provided is not found. The default " 
+            logger.warning(("The model you provided is not found. The default "
                             "'passive' membrane model will be used instead."))
             self._equations = library_point['passive']
 
@@ -715,7 +728,7 @@ class PointNeuronModel:
         current_name = f'I_{channel}_{tag}'
         current_eqs = library_point[key].format(tag)
 
-        to_replace = f'= I_ext'
+        to_replace = '= I_ext'
         self._equations = self._equations.replace(
             to_replace,
             f'{to_replace} + {current_name}'
@@ -757,11 +770,11 @@ class PointNeuronModel:
         mean : :class:`~brian2.units.fundamentalunits.Quantity`, optional
             Mean of the Gaussian noise, by default ``0*pA``
         """
-        I_noise_name = f'I_noise'
+        noise_current = 'I_noise'
 
-        if I_noise_name in self.equations:
+        if noise_current in self.equations:
             raise DuplicateEquationsError(
-                f"The equations of '{I_noise_name}' have already been "
+                f"The equations of '{noise_current}' have already been "
                 f"added to the model. \nYou might be seeing this error if "
                 "you are using Jupyter/iPython "
                 "which store variable values \nin memory. Try cleaning all "
@@ -771,22 +784,31 @@ class PointNeuronModel:
                 "https://github.com/Poirazi-Lab/dendrify/issues."
             )
         noise_eqs = library_point['noise']
-        to_change = f'= I_ext'
+        to_change = '= I_ext'
         self._equations = self._equations.replace(
             to_change,
-            f'{to_change} + {I_noise_name}'
+            f'{to_change} + {noise_current}'
         )
         self._equations = f"{self._equations}\n{noise_eqs}"
 
         # Add _params:
         if not self._params:
             self._params = {}
-        self._params[f'tau_noise'] = tau
-        self._params[f'sigma_noise'] = sigma
-        self._params[f'mean_noise'] = mean
-
+        self._params['tau_noise'] = tau
+        self._params['sigma_noise'] = sigma
+        self._params['mean_noise'] = mean
 
     def make_neurongroup(self, N: int, **kwargs) -> NeuronGroup:
+        """
+        Create a NeuronGroup object with the specified number of neurons.
+
+        Parameters:
+            N (int): The number of neurons in the group.
+            **kwargs: Additional keyword arguments to be passed to the NeuronGroup constructor.
+
+        Returns:
+            NeuronGroup: The created NeuronGroup object.
+        """
         group = NeuronGroup(N, model=self.equations,
                             namespace=self.parameters,
                             **kwargs)
@@ -904,4 +926,4 @@ class PointNeuronModel:
         -------
         bool
         """
-        return True if self._ephys_object._dimensionless else False
+        return bool(self._ephys_object._dimensionless)

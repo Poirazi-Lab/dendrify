@@ -1,10 +1,25 @@
+"""
+This module contains the EphysProperties class which is used for calculating
+various important ephys properties for a single compartment. It
+also contains utility functions to get and update the default ephys
+parameters.
+
+Classes:
+    EphysProperties: A class for calculating various important ephys
+                     properties for a single compartment.
+
+Functions:
+    default_params() -> dict: Returns the default ephys parameters.
+    update_default_params(params: dict) -> None: Updates the default ephys parameters.
+"""
+
 from __future__ import annotations
 
 import pprint as pp
 from math import pi
 from typing import Optional
 
-from brian2.units import *
+from brian2.units import Quantity, mV
 
 from .utils import DimensionlessCompartmentError, get_logger
 
@@ -34,7 +49,7 @@ def update_default_params(params: dict) -> None:
     EphysProperties.DEFAULT_PARAMS.update(params)
 
 
-class EphysProperties(object):
+class EphysProperties:
     """
     A class for calculating various important electrophysiological properties
     for a single compartment.
@@ -109,7 +124,7 @@ class EphysProperties(object):
         self.v_rest = v_rest
         self.scale_factor = scale_factor if not any([cm_abs, gl_abs]) else None
         self.spine_factor = spine_factor if not any([cm_abs, gl_abs]) else None
-        self._dimensionless = True if any([cm_abs, gl_abs]) else False
+        self._dimensionless = bool(any([cm_abs, gl_abs]))
         self._check_dimensionless()
 
     def __str__(self):
@@ -145,7 +160,7 @@ class EphysProperties(object):
             )
 
     @property
-    def _total_area_factor(self) -> float:
+    def _total_area_factor(self) -> float | None:
         """
         The total surface are factor.
 
@@ -153,6 +168,8 @@ class EphysProperties(object):
         -------
         float
         """
+        if self._dimensionless:
+            return None
         return self.scale_factor * self.spine_factor
 
     @property
@@ -168,21 +185,20 @@ class EphysProperties(object):
         """
         if self._dimensionless:
             logger.warning(
-                (f"Surface area is not defined for the dimensionless "
-                 f"compartment: '{self.name}'"
-                 f"\nReturning None instead."
-                 )
+                "Surface area is not defined for the dimensionless "
+                "compartment: '%s'\nReturning None instead.",
+                self.name
             )
-        else:
-            try:
-                return pi * self.length * self.diameter * self._total_area_factor
-            except TypeError:
-                logger.warning(
-                    (f"Missing parameters [length | diameter] for '{self.name}'."
-                     f"\nCould not calculate the area of '{self.name}', "
-                     "returned None."
-                     )
-                )
+            return None
+        try:
+            return pi * self.length * self.diameter * self._total_area_factor
+        except TypeError:
+            logger.warning(
+                "Missing parameters [length | diameter] for '%s'."
+                "\nCould not calculate the area of '%s', returned None.",
+                self.name, self.name
+            )
+            return None
 
     @property
     def capacitance(self) -> Quantity | None:
@@ -198,23 +214,22 @@ class EphysProperties(object):
         if self._dimensionless:
             if self.cm_abs:
                 return self.cm_abs
-            else:
-                logger.warning(
-                    f"Missing parameter [cm_abs] for '{self.name}', "
-                    "returned None."
-                )
-        else:
-            try:
-                return self.area * self.cm
-            except TypeError:
-                logger.warning(
-                    (f"Could not calculate the [capacitance] of '{self.name}', "
-                     "returned None."
-                     )
-                )
+            logger.warning(
+                "Missing parameter [cm_abs] for '%s', returned None.",
+                self.name
+            )
+            return None
+        try:
+            return self.area * self.cm
+        except TypeError:
+            logger.warning(
+                "Could not calculate the [capacitance] of '%s', returned None.",
+                self.name
+            )
+            return None
 
     @property
-    def g_leakage(self) -> Quantity:
+    def g_leakage(self) -> Quantity | None:
         """
         Returns a compartment's absolute leakage conductance based on its 
         specific leakage conductance (gl) and surface area. If an absolute
@@ -228,20 +243,19 @@ class EphysProperties(object):
         if self._dimensionless:
             if self.gl_abs:
                 return self.gl_abs
-            else:
-                logger.warning(
-                    f"Missing parameter [gl_abs] for '{self.name}', "
-                    "returned None."
-                )
-        else:
-            try:
-                return self.area * self.gl
-            except TypeError:
-                logger.warning(
-                    (f"Could not calculate the [g_leakage] of '{self.name}', "
-                     "returned None."
-                     )
-                )
+            logger.warning(
+                "Missing parameter [gl_abs] for '%s', returned None.",
+                self.name
+            )
+            return None
+        try:
+            return self.area * self.gl
+        except TypeError:
+            logger.warning(
+                "Could not calculate the [g_leakage] of '%s', returned None.",
+                self.name
+            )
+            return None
 
     @property
     def parameters(self) -> dict:
@@ -254,9 +268,8 @@ class EphysProperties(object):
         dict
         """
         d_out = {}
-        EL, C, gL = self.v_rest, self.capacitance, self.g_leakage
-
-        for value, var in zip([EL, C, gL], ['EL', 'C', 'gL']):
+        for value, var in zip([self.v_rest, self.capacitance, self.g_leakage],
+                              ['EL', 'C', 'gL']):
             if value:
                 if self.name:
                     d_out[f"{var}_{self.name}"] = value
@@ -264,13 +277,14 @@ class EphysProperties(object):
                     d_out[f"{var}"] = value
             else:
                 logger.error(
-                    f"Could not resolve [{var}_{self.name}] for '{self.name}'."
+                    "Could not resolve [%s_%s] for '%s'.",
+                    var, self.name, self.name
                 )
         d_out.update(self.DEFAULT_PARAMS)
         return d_out
 
     @property
-    def g_cylinder(self) -> Quantity:
+    def g_cylinder(self) -> Quantity | None:
         """
         The conductance (of coupling currents) passing through a cylindrical
         compartment based on its dimensions and its axial resistance. To be
@@ -283,7 +297,8 @@ class EphysProperties(object):
         """
         if self._dimensionless:
             raise DimensionlessCompartmentError(
-                f"Calculating [g_cylinder] is invalid for '{self.name}', since\n"
+                f"Calculating [g_cylinder] is invalid for '{
+                    self.name}', since\n"
                 "it is a dimensionless compartment. To connect two dimensionless"
                 " compartments, an exact \nvalue for g_couple must be provided."
             )
@@ -291,15 +306,16 @@ class EphysProperties(object):
             ri = (4*self.r_axial*self.length) / (pi*self.diameter**2)
         except TypeError:
             logger.warning(
-                (f"Could not calculate [g_cylinder] for '{self.name}'.\n"
-                 "Please make sure that [length, diameter, r_axial]\n"
-                 "are available.")
+                "Could not calculate [g_cylinder] for '%s'.\n"
+                "Please make sure that [length, diameter, r_axial]\n"
+                "are available.", self.name
             )
-        else:
-            return 1/ri
+            return None
+        return 1/ri
 
     @staticmethod
-    def g_couple(comp1: EphysProperties, comp2: EphysProperties) -> Quantity:
+    def g_couple(comp1: EphysProperties,
+                 comp2: EphysProperties) -> Quantity | None:
         """
         The conductance (of coupling currents) between the centers of
         two adjacent cylindrical compartments, based on their dimensions
@@ -321,7 +337,8 @@ class EphysProperties(object):
                 ("Cannot automatically calculate the coupling \nconductance of "
                  "dimensionless compartments. To resolve this error, perform\n"
                  "one of the following:\n\n"
-                 f"1. Provide [length, diameter, r_axial] for both '{comp1.name}'"
+                 f"1. Provide [length, diameter, r_axial] for both '{
+                     comp1.name}'"
                  f" and '{comp2.name}'.\n\n"
                  f"2. Turn both compartment into dimensionless by providing only"
                  " values for \n   [cm_abs, gl_abs] and then connect them using "
@@ -334,10 +351,9 @@ class EphysProperties(object):
             ri = (r1+r2) / 2
         except TypeError:
             logger.error(
-                (f"Could not calculate the g_couple for '{comp1.name}' and "
-                 f"'{comp2.name}'.\n"
-                 "Please make sure that [length, diameter, r_axial] are\n"
-                 "available for both compartments.")
+                "Could not calculate the g_couple for '%s' and '%s'.\n"
+                "Please make sure that [length, diameter, r_axial] are\n"
+                "available for both compartments.", comp1.name, comp2.name
             )
-        else:
-            return 1/ri
+            return None
+        return 1/ri
