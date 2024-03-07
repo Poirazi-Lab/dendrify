@@ -51,7 +51,7 @@ Here we explore:
     aif_monitor = b.StateMonitor(aif_neuron, 'V', record=0)
     
     # Run simulation
-    I = -10*pA # current pulse amplitude
+    I = -10*pA  # current pulse amplitude
     t0 = 20*ms  # time to start current pulse
     t_stim = 200*ms  # duration of current pulse
     
@@ -62,9 +62,12 @@ Here we explore:
     b.run(100*ms)
     
     # Analysis code
+    
+    
     def func(t, a, tau):
         """Exponential decay function"""
         return a * b.exp(-t / tau)
+    
     
     def get_tau(trace, t0):
         dt = b.defaultclock.dt
@@ -78,6 +81,7 @@ Here we explore:
         X = b.arange(0, len(v_norm)) * dt / ms
         popt, _ = curve_fit(func, X, v_norm)
         return popt, X, v_norm
+    
     
     # Plot results
     popt_lif, X_lif, v_norm_lif = get_tau(lif_monitor.V[0], t0)

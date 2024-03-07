@@ -35,14 +35,14 @@ constant membrane time constant (``τm = cm/gl``).
     EL = -70*mV  # resting potential
     
     # Create neuron models
-    control = PointNeuronModel(model='leakyIF', cm_abs=capacitance, 
+    control = PointNeuronModel(model='leakyIF', cm_abs=capacitance,
                                gl_abs=g_leakage, v_rest=EL)
     
     low_rin = PointNeuronModel(model='leakyIF', cm_abs=capacitance*1.2,
-                               gl_abs=g_leakage*1.2, v_rest=EL) 
+                               gl_abs=g_leakage*1.2, v_rest=EL)
     
     high_rin = PointNeuronModel(model='leakyIF', cm_abs=capacitance*0.8,
-                               gl_abs=g_leakage*0.8, v_rest=EL)
+                                gl_abs=g_leakage*0.8, v_rest=EL)
     
     # Create NeuronGroups (no threshold or reset conditions for simplicity)
     control_neuron = control.make_neurongroup(N=1, method='euler')
@@ -55,7 +55,7 @@ constant membrane time constant (``τm = cm/gl``).
     high_rin_monitor = b.StateMonitor(high_rin_neuron, 'V', record=0)
     
     # Run simulation
-    I = -20*pA # current pulse amplitude
+    I = -20*pA  # current pulse amplitude
     b.run(50*ms)
     for n in [control_neuron, low_rin_neuron, high_rin_neuron]:
         n.I_ext = -20*pA
@@ -72,11 +72,11 @@ constant membrane time constant (``τm = cm/gl``).
     # Plot results
     b.figure(figsize=(6, 3.5))
     b.plot(control_monitor.t/ms, control_monitor.V[0]/mV,
-           label='control Rin = {:.2f} MΩ'.format(Rin_control/ Mohm))
+           label='control Rin = {:.2f} MΩ'.format(Rin_control / Mohm))
     b.plot(low_rin_monitor.t/ms, low_rin_monitor.V[0]/mV,
-           label='low Rin = {:.2f} MΩ'.format(Rin_low/ Mohm))
+           label='low Rin = {:.2f} MΩ'.format(Rin_low / Mohm))
     b.plot(high_rin_monitor.t/ms, high_rin_monitor.V[0]/mV,
-           label='high Rin = {:.2f} MΩ'.format(Rin_high/ Mohm))
+           label='high Rin = {:.2f} MΩ'.format(Rin_high / Mohm))
     b.axvline(50, ls=':', c='gray', label='stimulation period')
     b.axvline(550, ls=':', c='gray')
     b.xlabel('Time (ms)')

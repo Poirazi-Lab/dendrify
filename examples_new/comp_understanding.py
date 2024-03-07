@@ -35,7 +35,7 @@ from brian2.units import ms, mV, nS, pA, pF
 
 from dendrify import Dendrite, NeuronModel, Soma
 
-b.prefs.codegen.target = 'numpy' # faster for simple simulations
+b.prefs.codegen.target = 'numpy'  # faster for simple simulations
 
 # Create neuron model
 soma = Soma('soma', cm_abs=200*pF, gl_abs=10*nS)
@@ -52,7 +52,7 @@ model.config_dspikes('Na', threshold=-35*mV,
 neuron = model.make_neurongroup(1, method='euler')
 
 # Record variables of interest
-vars = ['V_soma', 'V_dend', 'g_rise_Na_dend', 'g_fall_Na_dend', 
+vars = ['V_soma', 'V_dend', 'g_rise_Na_dend', 'g_fall_Na_dend',
         'I_rise_Na_dend', 'I_fall_Na_dend']
 M = b.StateMonitor(neuron, vars, record=True)
 
@@ -86,6 +86,7 @@ ax2.plot(time, M.I_fall_Na_dend[0]/pA, label='I_fall', c='C1')
 ax2.set_ylabel('Current (pA)')
 ax2.set_xlabel('Time (ms)')
 
-for ax in axes: ax.legend()
+for ax in axes:
+    ax.legend()
 fig.tight_layout()
 b.show()

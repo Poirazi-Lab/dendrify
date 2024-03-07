@@ -24,7 +24,7 @@ In this example, we show:
     
     from dendrify import Dendrite, NeuronModel, Soma
     
-    b.prefs.codegen.target = 'numpy' # faster for simple simulations
+    b.prefs.codegen.target = 'numpy'  # faster for simple simulations
     
     # Create neuron model
     soma = Soma('soma', cm_abs=200*pF, gl_abs=10*nS)
@@ -51,20 +51,21 @@ In this example, we show:
     
     # Create input source
     start = 10*ms
-    isi = 0.1*ms # inter-spike interval of input synapses
+    isi = 0.1*ms  # inter-spike interval of input synapses
     spiketimes = [(start + (i*isi)) for i in range(N_syn)]
     I = b.SpikeGeneratorGroup(N_syn, range(N_syn), spiketimes)
     
     # Connect input to neurons
     synaptic_effect = "s_AMPA_x_dend += 1.0; s_NMDA_x_dend += 1.0"
     S = b.Synapses(I, neurons, on_pre=synaptic_effect)
-    S.connect('j >= i') # 1st neuron receives 1 synapse, 2nd neuron receives 2 synapses, etc.
+    # 1st neuron receives 1 synapse, 2nd neuron receives 2 synapses, etc.
+    S.connect('j >= i')
     
     # Record dendritic voltage
     M = b.StateMonitor(neurons, ['V_dend'], record=True)
     
     # Run simulation
-    b.run(200 *ms)
+    b.run(200 * ms)
     
     # Visualize results
     time = M.t/ms

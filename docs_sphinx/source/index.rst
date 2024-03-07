@@ -83,8 +83,8 @@ the impact of dendrites on network-level functions.
    :maxdepth: 2
    :caption: Reference documentation
 
-   api/classes
    api/models
+   api/classes
    genindex
 
 
