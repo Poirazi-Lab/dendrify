@@ -411,6 +411,95 @@ At presynaptic firing time:
 
 * Example 1
 * Example 2
+
+|
+
+GABA
+~~~~
+.. math::
+
+   I_{\text{GABA}}=\bar{g}_{\text{GABA}}(E_{\text{GABA}}-V)s(t)
+
+.. math::
+
+   \dfrac{ds}{dt}=\dfrac{-s}{\tau_{\text{GABA}}^{\text{decay}}}
+
+At presynaptic firing time:
+
+.. math::
+   
+   s \rightarrow s+1
+
+.. list-table::
+   :align: left
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\bar{g}_{\text{GABA}}`
+     - maximal GABA conductance
+   * - :math:`E_{\text{GABA}}`
+     - GABA reversal potential
+   * - :math:`\tau_{\text{GABA}}^{\text{decay}}`
+     - GABA decay time constant
+   * - :math:`s`
+     - channel state variable
+   * - :math:`V`
+     - membrane potential
+
+
+**Examples:**
+
+* Example 1
+* :doc:`../examples/point_lif_inhibition`
+
+|
+
+GABA (rise & decay)
+~~~~~~~~~~~~~~~~~~~~
+.. math::
+
+   I_{\text{GABA}}=\bar{g}_{\text{GABA}}(E_{\text{GABA}}-V)x(t)
+
+.. math::
+
+   \dfrac{dx}{dt}=\dfrac{-x}{\tau_{\text{GABA}}^{\text{decay}}}+s(t)
+
+.. math::
+
+   \dfrac{ds}{dt}=\dfrac{-s}{\tau_{\text{GABA}}^{\text{rise}}}
+
+At presynaptic firing time:
+
+.. math::
+   
+   s \rightarrow s+1
+
+.. list-table::
+   :align: left
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`\bar{g}_{\text{GABA}}`
+     - maximal GABA conductance
+   * - :math:`E_{\text{GABA}}`
+     - GABA reversal potential
+   * - :math:`\tau_{\text{GABA}}^{\text{decay}}`
+     - GABA decay time constant
+   * - :math:`s`
+     - rise state variable
+   * - :math:`x`
+     - decay state variable
+   * - :math:`V`
+     - membrane potential
+
+**Examples:**
+
+* Example 1
+* Example 2
+
+|
   
 ----
 

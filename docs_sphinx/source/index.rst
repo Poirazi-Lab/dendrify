@@ -75,6 +75,7 @@ the impact of dendrites on network-level functions.
    
    examples/compartmental
    examples/point
+   examples/synapses
    examples/validation
 
 
