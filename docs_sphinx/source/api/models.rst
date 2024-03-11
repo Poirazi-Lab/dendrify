@@ -257,8 +257,8 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/syn_ampa`
+* :doc:`../examples/point_adex_synapses`
 
 |
 
@@ -303,8 +303,7 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/syn_ampa`
 
 |
 
@@ -353,8 +352,7 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/point_adex_synapses`
 
 |
 
@@ -409,8 +407,7 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/syn_nmda`
 
 |
 
@@ -451,6 +448,7 @@ At presynaptic firing time:
 **Examples:**
 
 * Example 1
+* :doc:`../examples/syn_gaba`
 * :doc:`../examples/point_lif_inhibition`
 
 |
@@ -496,8 +494,7 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/syn_nmda`
 
 |
   
