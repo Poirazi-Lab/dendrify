@@ -377,7 +377,7 @@ class NeuronModel:
                 for event, action in self.event_actions.items():
                     if show:
                         print(f"Setting run_on_event('{event}', '{action}')")
-                    group.run_on_event(event, action, order='start')
+                    group.run_on_event(event, action, order='before_groups')
 
         ap_reset = None
         if any([second_reset, spike_width]):
