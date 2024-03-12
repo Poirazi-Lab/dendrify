@@ -23,5 +23,10 @@ setup(
         "Programming Language :: Python :: 3",
         "Operating System :: OS Independent",
         "Topic :: Scientific/Engineering :: Bio-Informatics"
-    ]
+    ],
+    project_urls={
+        'Documentation': 'https://dendrify.readthedocs.io/en/latest/',
+        'Source': 'https://github.com/Poirazi-Lab/dendrify',
+        'Tracker': 'https://github.com/Poirazi-Lab/dendrify/issues'
+    }
 )
