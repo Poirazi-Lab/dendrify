@@ -101,8 +101,7 @@ Spike mechanism:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/point_adaptation`
 
 |
 
@@ -155,8 +154,7 @@ Spike mechanism:
 
 **Examples:**
 
-* Example 1
-* Example 2
+* :doc:`../examples/point_adaptation`
 
 |
 
@@ -210,15 +208,8 @@ Spike mechanism:
 
 ----
 
-.. .. _dendritic_models:
-
-.. Dendritic models
-.. ----------------
-
-.. _synaptic_models:
-
-Synaptic models [3]_ [4]_
--------------------------
+Synapses
+--------
 |
 
 AMPA
@@ -447,7 +438,6 @@ At presynaptic firing time:
 
 **Examples:**
 
-* Example 1
 * :doc:`../examples/syn_gaba`
 * :doc:`../examples/point_lif_inhibition`
 
@@ -500,10 +490,13 @@ At presynaptic firing time:
   
 ----
 
-References
-~~~~~~~~~~
+Study material
+--------------
 
-.. [1] https://neuronaldynamics.epfl.ch/online/Ch1.S3.html
-.. [2] https://neuronaldynamics.epfl.ch/online/Ch6.S1.html
-.. [3] https://neuronaldynamics.epfl.ch/online/Ch3.S1.html
-.. [4] https://link.springer.com/chapter/10.1007/978-0-387-87708-2_7#Sec1
+https://neuronaldynamics.epfl.ch/online/Ch1.html
+
+https://neuronaldynamics.epfl.ch/online/Ch3.html
+
+https://link.springer.com/chapter/10.1007/978-0-387-87708-2_2
+
+https://link.springer.com/chapter/10.1007/978-0-387-87708-2_7#Sec1

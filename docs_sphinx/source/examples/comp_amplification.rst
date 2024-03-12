@@ -32,28 +32,31 @@ In this example we show:
     # Add dendritic spikes and create a neuron model with active dendrites
     dend.dspikes('Na', g_rise=30*nS, g_fall=14*nS)
     model_active = NeuronModel([(soma, dend, 15*nS)], v_rest=-60*mV)
-    model_active.config_dspikes('Na', threshold=-35*mV,
-                                duration_rise=1.2*ms, duration_fall=2.4*ms,
-                                offset_fall=0.2*ms, refractory=5*ms,
-                                reversal_rise='E_Na', reversal_fall='E_K')
+    model_active.config_dspikes(
+        'Na', threshold=-35*mV,
+        duration_rise=1.2*ms, duration_fall=2.4*ms,
+        offset_fall=0.2*ms, refractory=5*ms,
+        reversal_rise='E_Na', reversal_fall='E_K')
     
     # Create a neuron group with passive dendrites
-    neuron_passive, reset_p = model_passive.make_neurongroup(1, method='euler',
-                                                             threshold='V_soma > -40*mV',
-                                                             reset='V_soma = 40*mV',
-                                                             second_reset='V_soma=-50*mV',
-                                                             spike_width=0.8*ms,
-                                                             refractory=4*ms)
+    neuron_passive, reset_p = model_passive.make_neurongroup(
+        1, method='euler',
+        threshold='V_soma > -40*mV',
+        reset='V_soma = 40*mV',
+        second_reset='V_soma=-50*mV',
+        spike_width=0.8*ms,
+        refractory=4*ms)
     
     # Create a neuron group with active dendrites
-    neuron_active, reset_a = model_active.make_neurongroup(1, method='euler',
-                                                           threshold='V_soma > -40*mV',
-                                                           reset='V_soma = 40*mV',
-                                                           second_reset='V_soma=-50*mV',
-                                                           spike_width=0.8*ms,
-                                                           refractory=4*ms)
+    neuron_active, reset_a = model_active.make_neurongroup(
+        1, method='euler',
+        threshold='V_soma > -40*mV',
+        reset='V_soma = 40*mV',
+        second_reset='V_soma=-50*mV',
+        spike_width=0.8*ms,
+        refractory=4*ms)
     
-    # # Create random Poisson input
+    # Create random Poisson input
     Input_p = b.PoissonGroup(5, rates=20*Hz)
     Input_a = b.PoissonGroup(5, rates=20*Hz)
     

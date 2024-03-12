@@ -25,7 +25,7 @@ threshold is crossed. A negative current is activated instantly and then is
 deactivated after a specified amount of time (``duration_fall``).
 
 
-In this example:
+In this example we show:
 
 - How dendritic spiking is implemented in Dendrify.
 """
