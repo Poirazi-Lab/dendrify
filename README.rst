@@ -32,7 +32,7 @@ integrative properties. These models offer a well-rounded compromise between
 flexibility, performance, and biological accuracy, enabling us to investigate
 the impact of dendrites on network-level functions.
 
-.. image:: https://github.com/Poirazi-Lab/dendrify/blob/main/docs_sphinx/source/_static/intro.png
+.. image:: https://github.com/Poirazi-Lab/dendrify/assets/30598350/b6db9876-6de4-458a-b27e-61d4edd360db
    :width: 70 %
    :align: center
 
