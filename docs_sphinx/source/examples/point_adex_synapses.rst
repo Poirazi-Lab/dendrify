@@ -31,7 +31,8 @@ Resources:
                              cm_abs=281*pF,
                              gl_abs=30*nS,
                              v_rest=-70.6*mV)
-    model.synapse('AMPA', tag='x', g=2*nS, t_decay=2*ms)
+    model.synapse('AMPA', tag='x', g=0.5*nS, t_decay=2*ms)
+    model.synapse('NMDA', tag='x', g=0.5*nS, t_decay=50*ms)
     
     # Include adex parameters
     model.add_params({'Vth': -50.4*mV,
@@ -50,7 +51,7 @@ Resources:
     Input = b.PoissonGroup(200, rates=100*Hz)
     
     # Randomly connect Poisson input to NeuronGroup
-    S = b.Synapses(Input, neuron, on_pre='s_AMPA_x += 1')
+    S = b.Synapses(Input, neuron, on_pre='s_AMPA_x += 1; s_NMDA_x += 1')
     S.connect(p=0.25)
     
     # Record voltages and spike times

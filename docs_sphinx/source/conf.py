@@ -11,9 +11,9 @@ sys.path.insert(0, os.path.abspath('../../..'))
 
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'
-copyright = '2022, Michalis Pagkalos'
+copyright = '2024, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '2.0.1'
+release = '2.1.0'
 
 
 # -- General configuration -----------------------------------------------------
@@ -49,7 +49,7 @@ intersphinx_mapping = {
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
-mathjax3_config = {'chtml': {'displayAlign': 'center'}}
+mathjax3_config = {'chtml': {'displayAlign': 'left'}}
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True

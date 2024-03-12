@@ -22,7 +22,7 @@ threshold is crossed. A negative current is activated instantly and then is
 deactivated after a specified amount of time (``duration_fall``).
 
 
-In this example:
+In this example we show:
 
 - How dendritic spiking is implemented in Dendrify.
 
@@ -34,7 +34,7 @@ In this example:
     
     from dendrify import Dendrite, NeuronModel, Soma
     
-    b.prefs.codegen.target = 'numpy' # faster for simple simulations
+    b.prefs.codegen.target = 'numpy'  # faster for simple simulations
     
     # Create neuron model
     soma = Soma('soma', cm_abs=200*pF, gl_abs=10*nS)
@@ -51,7 +51,7 @@ In this example:
     neuron = model.make_neurongroup(1, method='euler')
     
     # Record variables of interest
-    vars = ['V_soma', 'V_dend', 'g_rise_Na_dend', 'g_fall_Na_dend', 
+    vars = ['V_soma', 'V_dend', 'g_rise_Na_dend', 'g_fall_Na_dend',
             'I_rise_Na_dend', 'I_fall_Na_dend']
     M = b.StateMonitor(neuron, vars, record=True)
     
@@ -85,7 +85,8 @@ In this example:
     ax2.set_ylabel('Current (pA)')
     ax2.set_xlabel('Time (ms)')
     
-    for ax in axes: ax.legend()
+    for ax in axes:
+        ax.legend()
     fig.tight_layout()
     b.show()
 

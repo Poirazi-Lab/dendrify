@@ -16,11 +16,11 @@ In this example we show:
 .. code-block:: python
 
     import brian2 as b
-    from brian2.units import Hz, cm, ms, mV, nS, ohm, pA, pF, uF, um, uS
+    from brian2.units import Hz, ms, mV, nS, pF
     
     from dendrify import Dendrite, NeuronModel, Soma
     
-    b.prefs.codegen.target = 'numpy' # faster for simple simulations
+    b.prefs.codegen.target = 'numpy'  # faster for simple simulations
     
     # Create neuron model with passive dendrites
     soma = Soma('soma', cm_abs=200*pF, gl_abs=10*nS)
@@ -32,36 +32,41 @@ In this example we show:
     # Add dendritic spikes and create a neuron model with active dendrites
     dend.dspikes('Na', g_rise=30*nS, g_fall=14*nS)
     model_active = NeuronModel([(soma, dend, 15*nS)], v_rest=-60*mV)
-    model_active.config_dspikes('Na', threshold=-35*mV,
-                         duration_rise=1.2*ms, duration_fall=2.4*ms,
-                         offset_fall=0.2*ms, refractory=5*ms,
-                         reversal_rise='E_Na', reversal_fall='E_K')
+    model_active.config_dspikes(
+        'Na', threshold=-35*mV,
+        duration_rise=1.2*ms, duration_fall=2.4*ms,
+        offset_fall=0.2*ms, refractory=5*ms,
+        reversal_rise='E_Na', reversal_fall='E_K')
     
     # Create a neuron group with passive dendrites
-    neuron_passive, reset_p = model_passive.make_neurongroup(1, method='euler',
-                                              threshold='V_soma > -40*mV',
-                                              reset='V_soma = 40*mV',
-                                              second_reset='V_soma=-50*mV',
-                                              spike_width=0.8*ms,
-                                              refractory=4*ms)
+    neuron_passive, reset_p = model_passive.make_neurongroup(
+        1, method='euler',
+        threshold='V_soma > -40*mV',
+        reset='V_soma = 40*mV',
+        second_reset='V_soma=-50*mV',
+        spike_width=0.8*ms,
+        refractory=4*ms)
     
     # Create a neuron group with active dendrites
-    neuron_active, reset_a = model_active.make_neurongroup(1, method='euler',
-                                              threshold='V_soma > -40*mV',
-                                              reset='V_soma = 40*mV',
-                                              second_reset='V_soma=-50*mV',
-                                              spike_width=0.8*ms,
-                                              refractory=4*ms)
+    neuron_active, reset_a = model_active.make_neurongroup(
+        1, method='euler',
+        threshold='V_soma > -40*mV',
+        reset='V_soma = 40*mV',
+        second_reset='V_soma=-50*mV',
+        spike_width=0.8*ms,
+        refractory=4*ms)
     
-    # # Create random Poisson input
+    # Create random Poisson input
     Input_p = b.PoissonGroup(5, rates=20*Hz)
     Input_a = b.PoissonGroup(5, rates=20*Hz)
     
     # Create synapses
-    S_p = b.Synapses(Input_p, neuron_passive, on_pre='s_AMPA_x_dend += 1; s_NMDA_x_dend += 1')
+    S_p = b.Synapses(Input_p, neuron_passive,
+                     on_pre='s_AMPA_x_dend += 1; s_NMDA_x_dend += 1')
     S_p.connect(p=1)
     
-    S_a = b.Synapses(Input_a, neuron_active, on_pre='s_AMPA_x_dend += 1; s_NMDA_x_dend += 1')
+    S_a = b.Synapses(Input_a, neuron_active,
+                     on_pre='s_AMPA_x_dend += 1; s_NMDA_x_dend += 1')
     S_a.connect(p=1)
     
     # Record voltages
@@ -70,11 +75,11 @@ In this example we show:
     M_a = b.StateMonitor(neuron_active, vars, record=True)
     
     # Run simulation
-    b.seed(123) # for reproducibility
+    b.seed(123)  # for reproducibility
     net_passive = b.Network(neuron_passive, reset_p, Input_p, S_p, M_p)
     net_passive.run(500*ms)
-    b.start_scope() # clear previous simulation
-    b.seed(123) # for reproducibility
+    b.start_scope()  # clear previous simulation
+    b.seed(123)  # for reproducibility
     net_active = b.Network(neuron_active, reset_a, Input_a, S_a, M_a)
     net_active.run(500*ms)
     

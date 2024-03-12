@@ -22,7 +22,7 @@ from brian2.units import cm, ms, mV, ohm, pA, pF, uF, um, uS
 
 from dendrify import Dendrite, NeuronModel, Soma
 
-b.prefs.codegen.target = 'numpy' # faster for simple simulations
+b.prefs.codegen.target = 'numpy'  # faster for simple simulations
 
 # Create neuron model
 soma = Soma('soma', length=25*um, diameter=25*um)
@@ -34,7 +34,7 @@ dist = Dendrite('dist', length=100*um, diameter=1*um)
 connections = [(soma, trunk), (trunk, prox), (prox, dist)]
 model = NeuronModel(connections, cm=1*uF/(cm**2), gl=50*uS/(cm**2),
                     v_rest=-70*mV, r_axial=400*ohm*cm)
-neuron = model.make_neurongroup(1, method='euler') # no spiking for simplicity
+neuron = model.make_neurongroup(1, method='euler')  # no spiking for simplicity
 
 # Monitor voltages
 M = b.StateMonitor(neuron, ['V_soma', 'V_trunk', 'V_prox', 'V_dist'],

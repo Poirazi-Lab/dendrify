@@ -16,7 +16,7 @@ library = {
     # Condactance-based integrate and fire with adaptation:
     'cadIF': ('dV{0}/dt =  (gL{0}*(EL{0}-V{0}) + I{0} - w{0}) / C{0} :volt \n'
               'w{0} = gA * (V{0}-EA) :amp \n'
-              'dgA/dt = (gAmax * (abs(V{0}-VA)) / mV - gA) / tauA :siemens \n'
+              'dgA/dt = (gAmax * (abs(V{0}-EA)) / mV - gA) / tauA :siemens \n'
               'I{0} = I_ext{0}  :amp \n'
               'I_ext{0}  :amp'),
 
@@ -73,6 +73,13 @@ library_point = {
                    'dw/dt = (a * (V-EL) - w) / tauw  :amp\n'
                    'I = I_ext  :amp\n'
                    'I_ext  :amp'),
+
+    # Condactance-based integrate and fire with adaptation:
+    'cadIF': ('dV/dt =  (gL*(EL-V) + I - w) / C :volt \n'
+              'w = gA * (V-EA) :amp \n'
+              'dgA/dt = (gAmax * (abs(V-EA)) / mV - gA) / tauA :siemens \n'
+              'I = I_ext  :amp \n'
+              'I_ext  :amp'),
 
     # Leaky integrate and fire:
     'leakyIF': ('dV/dt = (gL * (EL-V) + I) / C  :volt\n'

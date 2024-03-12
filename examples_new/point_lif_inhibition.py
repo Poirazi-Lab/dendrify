@@ -26,11 +26,12 @@ N_e = 700
 N_i = 300
 
 # Create a neuron model
-model = PointNeuronModel(model='leakyIF', cm_abs=281*pF, gl_abs=30*nS, 
+model = PointNeuronModel(model='leakyIF', cm_abs=281*pF, gl_abs=30*nS,
                          v_rest=-70.6*mV)
 
-model.synapse('AMPA', tag='ext', g=2*nS, t_decay=2.5*ms) # external excitatory input
-model.synapse('GABA', tag='inh', g=2*nS, t_decay=7.5*ms) # feedback inhibition
+# external excitatory input
+model.synapse('AMPA', tag='ext', g=2*nS, t_decay=2.5*ms)
+model.synapse('GABA', tag='inh', g=2*nS, t_decay=7.5*ms)  # feedback inhibition
 model.add_params({'Vth': -40.4*mV, 'Vr': -65.6*mV})
 
 # Create a NeuronGroup
@@ -51,7 +52,7 @@ Syn_ext_a = b.Synapses(Input, excitatory, on_pre='s_AMPA_ext += 1')
 Syn_ext_a.connect(p=0.2)
 
 Syn_ext_b = b.Synapses(Input, inhibitory, on_pre='s_AMPA_ext += 1')
-Syn_ext_b.connect(p=0) # initially no connections to inhibitory neurons
+Syn_ext_b.connect(p=0)  # initially no connections to inhibitory neurons
 
 Syn_inh = b.Synapses(inhibitory, excitatory, on_pre='s_GABA_inh += 1')
 Syn_inh.connect(p=0.15)
@@ -62,7 +63,7 @@ spikes_i = b.SpikeMonitor(inhibitory)
 
 # Run simulation
 b.run(250 * ms)
-Syn_ext_b.connect(p=0.2) # add connections to inhibitory neurons
+Syn_ext_b.connect(p=0.2)  # add connections to inhibitory neurons
 b.run(250 * ms)
 
 # Plot results

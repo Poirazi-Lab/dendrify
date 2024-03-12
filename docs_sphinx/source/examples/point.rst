@@ -8,4 +8,5 @@ Point-neuron models
    point_adex
    point_adex_noise
    point_adex_synapses
+   point_adaptation
    point_lif_inhibition

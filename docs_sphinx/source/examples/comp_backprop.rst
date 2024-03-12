@@ -38,7 +38,7 @@ In this example we show:
     
     from dendrify import Dendrite, NeuronModel, Soma
     
-    b.prefs.codegen.target = 'numpy' # faster for simple simulations
+    b.prefs.codegen.target = 'numpy'  # faster for simple simulations
     
     # Create neuron model
     soma = Soma('soma', model='leakyIF', length=25*um, diameter=25*um)
@@ -63,8 +63,8 @@ In this example we show:
     neuron, ap_reset = model.make_neurongroup(1, method='euler',
                                               threshold='V_soma > -40*mV',
                                               reset='V_soma = 40*mV',
-                                              second_reset= 'V_soma=-55*mV',
-                                              spike_width = 0.8*ms,
+                                              second_reset='V_soma=-55*mV',
+                                              spike_width=0.8*ms,
                                               refractory=4*ms)
     
     # Record voltages

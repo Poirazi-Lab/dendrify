@@ -1,6 +1,16 @@
 Release notes
 ===============
 
+Version 2.1
+-----------
+    * Changed the order of dSpikes thresholding to be more compatible with other
+      Brian 2 objects and increase overall simulation stability.
+    * Added the cadIF model as an option to PointNeuronModel.
+    * Completely redesigned the Library section of the documentation and added
+      more mathematical descriptions for the all built-in Dendrify models.
+    * Added many new code examples.
+    * Minor improvements in the source code for better readability and maintainability.
+
 Version 2.0.1
 -------------
     * Added Integrate-and-Fire with conductance based adaptation (cadIF) model.

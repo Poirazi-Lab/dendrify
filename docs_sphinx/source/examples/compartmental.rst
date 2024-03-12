@@ -8,3 +8,4 @@ Compartmental models
    comp_understanding
    comp_backprop
    comp_amplification
+   comp_network

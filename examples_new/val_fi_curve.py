@@ -19,7 +19,7 @@ from brian2.units import ms, mV, nS, pA, pF
 
 from dendrify import Dendrite, NeuronModel, Soma
 
-b.prefs.codegen.target = 'numpy' # faster for simple simulations
+b.prefs.codegen.target = 'numpy'  # faster for simple simulations
 
 # Create neuron model
 soma = Soma('soma', cm_abs=200*pF, gl_abs=10*nS)
