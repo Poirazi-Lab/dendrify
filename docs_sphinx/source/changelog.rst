@@ -3,7 +3,7 @@ Release notes
 
 Version 2.1.1
 -------------
-    * A minor release to fix some bugs intruduced by VS code autoformatting. 
+    * A minor release to fix some bugs introduced by VS code auto-formatting. 
 
 Version 2.1.0
 -------------
