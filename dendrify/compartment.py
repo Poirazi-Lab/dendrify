@@ -187,7 +187,8 @@ class Compartment:
                 ("Cannot automatically calculate the coupling \nconductance of "
                  "dimensionless compartments. To resolve this error, perform\n"
                  "one of the following:\n\n"
-                 f"1. Provide [length, diameter, r_axial] for both '{self.name}'"
+                 f"1. Provide [length, diameter, r_axial] for both '{
+                     self.name}'"
                  f" and '{other.name}'.\n\n"
                  f"2. Turn both compartment into dimensionless by providing only"
                  " values for \n   [cm_abs, gl_abs] and then connect them using "
@@ -897,7 +898,8 @@ class Dendrite(Compartment):
                 return default_params[param]
             except KeyError:
                 raise ValueError(
-                    f"Please provide a valid ionic parameter for '{self.name}'."
+                    f"Please provide a valid ionic parameter for '{
+                        self.name}'."
                     " Available options:\n"
                     f"{pp.pformat(valid_params)}"
                 )
