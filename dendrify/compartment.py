@@ -187,8 +187,7 @@ class Compartment:
                 ("Cannot automatically calculate the coupling \nconductance of "
                  "dimensionless compartments. To resolve this error, perform\n"
                  "one of the following:\n\n"
-                 f"1. Provide [length, diameter, r_axial] for both '{
-                     self.name}'"
+                 f"1. Provide [length, diameter, r_axial] for both '{self.name}'"
                  f" and '{other.name}'.\n\n"
                  f"2. Turn both compartment into dimensionless by providing only"
                  " values for \n   [cm_abs, gl_abs] and then connect them using "
@@ -803,18 +802,15 @@ class Dendrite(Compartment):
         g_rise_eqs = (
             f"g_rise_{event_id} = "
             f"g_rise_max_{event_id} * "
-            f"int(t_in_timesteps <= spiketime_{
-                event_id} + duration_rise_{event_id}) * "
+            f"int(t_in_timesteps <= spiketime_{event_id} + duration_rise_{event_id}) * "
             f"gate_{event_id} "
             ":siemens"
         )
         g_fall_eqs = (
             f"g_fall_{event_id} = "
             f"g_fall_max_{event_id} * "
-            f"int(t_in_timesteps <= spiketime_{
-                event_id} + offset_fall_{event_id} + duration_fall_{event_id}) * "
-            f"int(t_in_timesteps >= spiketime_{
-                event_id} + offset_fall_{event_id}) *  "
+            f"int(t_in_timesteps <= spiketime_{event_id} + offset_fall_{event_id} + duration_fall_{event_id}) * "
+            f"int(t_in_timesteps >= spiketime_{event_id} + offset_fall_{event_id}) *  "
             f"gate_{event_id} "
             ":siemens"
         )
@@ -842,8 +838,7 @@ class Dendrite(Compartment):
         self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
-        action = {f"spike_{event_id}": f"spiketime_{
-            event_id} = t_in_timesteps; gate_{event_id} = 1"}
+        action = {f"spike_{event_id}": f"spiketime_{event_id} = t_in_timesteps; gate_{event_id} = 1"}
         if not self._event_actions:
             self._event_actions = action
         else:
@@ -905,8 +900,7 @@ class Dendrite(Compartment):
                 return default_params[param]
             except KeyError:
                 raise ValueError(
-                    f"Please provide a valid ionic parameter for '{
-                        self.name}'."
+                    f"Please provide a valid ionic parameter for '{self.name}'."
                     " Available options:\n"
                     f"{pp.pformat(valid_params)}"
                 )

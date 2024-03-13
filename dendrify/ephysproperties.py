@@ -297,8 +297,7 @@ class EphysProperties:
         """
         if self._dimensionless:
             raise DimensionlessCompartmentError(
-                f"Calculating [g_cylinder] is invalid for '{
-                    self.name}', since\n"
+                f"Calculating [g_cylinder] is invalid for '{self.name}', since\n"
                 "it is a dimensionless compartment. To connect two dimensionless"
                 " compartments, an exact \nvalue for g_couple must be provided."
             )
@@ -337,8 +336,7 @@ class EphysProperties:
                 ("Cannot automatically calculate the coupling \nconductance of "
                  "dimensionless compartments. To resolve this error, perform\n"
                  "one of the following:\n\n"
-                 f"1. Provide [length, diameter, r_axial] for both '{
-                     comp1.name}'"
+                 f"1. Provide [length, diameter, r_axial] for both '{comp1.name}'"
                  f" and '{comp2.name}'.\n\n"
                  f"2. Turn both compartment into dimensionless by providing only"
                  " values for \n   [cm_abs, gl_abs] and then connect them using "
