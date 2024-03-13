@@ -794,27 +794,22 @@ class Dendrite(Compartment):
         dspike_currents = f"I_rise_{event_id} + I_fall_{event_id}"
 
         # Both currents take into account the reversal potential of Na/K
-        current_rise_eqs = f"I_rise_{event_id} = g_rise_{
-            event_id} * (E_rise_{name}-V_{comp})  :amp"
-        current_fall_eqs = f"I_fall_{event_id} = g_fall_{
-            event_id} * (E_fall_{name}-V_{comp})  :amp"
+        current_rise_eqs = f"I_rise_{event_id} = g_rise_{event_id} * (E_rise_{name}-V_{comp})  :amp"
+        current_fall_eqs = f"I_fall_{event_id} = g_fall_{event_id} * (E_fall_{name}-V_{comp})  :amp"
 
         # Ion conductances
         g_rise_eqs = (
             f"g_rise_{event_id} = "
             f"g_rise_max_{event_id} * "
-            f"int(t_in_timesteps <= spiketime_{
-                event_id} + duration_rise_{event_id}) * "
+            f"int(t_in_timesteps <= spiketime_{event_id} + duration_rise_{event_id}) * "
             f"gate_{event_id} "
             ":siemens"
         )
         g_fall_eqs = (
             f"g_fall_{event_id} = "
             f"g_fall_max_{event_id} * "
-            f"int(t_in_timesteps <= spiketime_{
-                event_id} + offset_fall_{event_id} + duration_fall_{event_id}) * "
-            f"int(t_in_timesteps >= spiketime_{
-                event_id} + offset_fall_{event_id}) *  "
+            f"int(t_in_timesteps <= spiketime_{event_id} + offset_fall_{event_id} + duration_fall_{event_id}) * "
+            f"int(t_in_timesteps >= spiketime_{event_id} + offset_fall_{event_id}) *  "
             f"gate_{event_id} "
             ":siemens"
         )
@@ -835,15 +830,13 @@ class Dendrite(Compartment):
         # Create and add custom dspike event
         event_name = f"spike_{event_id}"
         condition = (f"V_{comp} >= Vth_{event_id} and "
-                     f"t_in_timesteps >= spiketime_{
-                         event_id} + refractory_{event_id} * gate_{event_id}"
+                     f"t_in_timesteps >= spiketime_{event_id} + refractory_{event_id} * gate_{event_id}"
                      )
 
         self._events[event_name] = condition
 
         # Specify what is going to happen inside run_on_event()
-        action = {f"spike_{event_id}": f"spiketime_{
-            event_id} = t_in_timesteps; gate_{event_id} = 1"}
+        action = {f"spike_{event_id}": f"spiketime_{event_id} = t_in_timesteps; gate_{event_id} = 1"}
         if not self._event_actions:
             self._event_actions = action
         else:
