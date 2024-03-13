@@ -1,8 +1,12 @@
 Release notes
-===============
+=============
 
-Version 2.1
------------
+Version 2.1.1
+-------------
+    * A minor release to fix some bugs intruduced by VS code autoformatting. 
+
+Version 2.1.0
+-------------
     * Changed the order of dSpikes thresholding to be more compatible with other
       Brian 2 objects and increase overall simulation stability.
     * Added the cadIF model as an option to PointNeuronModel.
