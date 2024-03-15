@@ -1,6 +1,12 @@
 Release notes
 =============
 
+Version 2.1.2
+-------------
+    * Fixed a bug that could cause the wrong estimation of a somatic
+      compartment's surface area.
+    * Other minor improvements.
+
 Version 2.1.1
 -------------
     * A minor release to fix some bugs introduced by VS code auto-formatting. 

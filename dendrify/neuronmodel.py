@@ -238,6 +238,9 @@ class NeuronModel:
             # update all other params if provided
             if not comp.dimensionless and any(params.values()):
                 for param, value in params.items():
+                    # omit spine_factor for Soma
+                    if param == 'spine_factor' and isinstance(comp, Soma):
+                        continue
                     if value:
                         setattr(comp._ephys_object, param, value)
                     # make sure to initialize area factors if not provided
@@ -391,7 +394,8 @@ class NeuronModel:
             try:
                 ap_reset = Synapses(group, group,
                                     on_pre=second_reset,
-                                    delay=spike_width)
+                                    delay=spike_width,
+                                    namespace=self.parameters)
                 ap_reset.connect(j='i')
 
             except Exception:

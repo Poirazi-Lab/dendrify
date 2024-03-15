@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = '2.1.1'
+VERSION = '2.1.2'
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 with open("README.rst") as f:
     LONG_DESCRIPTION = f.read()

@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2024, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '2.1.1'
+release = '2.1.2'
 
 
 # -- General configuration -----------------------------------------------------
