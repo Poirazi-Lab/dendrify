@@ -1,6 +1,6 @@
 from setuptools import find_packages, setup
 
-VERSION = '2.1.2'
+VERSION = '2.1.3'
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 with open("README.rst") as f:
     LONG_DESCRIPTION = f.read()
@@ -15,7 +15,7 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['brian2==2.5.4'],
+    install_requires=['brian2==2.6.0'],
     keywords=['python', 'brian2', 'dendrites', 'SNNs', 'network models'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

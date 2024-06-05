@@ -1,6 +1,10 @@
 Release notes
 =============
 
+Version 2.1.3
+-------------
+    * Changed package requirements to fix installation conflicts with Brian 2.6.0.
+
 Version 2.1.2
 -------------
     * Fixed a bug that could cause the wrong estimation of a somatic
