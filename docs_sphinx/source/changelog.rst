@@ -1,8 +1,22 @@
 Release notes
-===============
+=============
 
-Version 2.1
------------
+Version 2.1.3
+-------------
+    * Changed package requirements to fix installation conflicts with Brian 2.6.0.
+
+Version 2.1.2
+-------------
+    * Fixed a bug that could cause the wrong estimation of a somatic
+      compartment's surface area.
+    * Other minor improvements.
+
+Version 2.1.1
+-------------
+    * A minor release to fix some bugs introduced by VS code auto-formatting. 
+
+Version 2.1.0
+-------------
     * Changed the order of dSpikes thresholding to be more compatible with other
       Brian 2 objects and increase overall simulation stability.
     * Added the cadIF model as an option to PointNeuronModel.
