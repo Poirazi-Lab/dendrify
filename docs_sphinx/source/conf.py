@@ -3,19 +3,21 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os
-import sys
+import os, sys, re, io
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
 
-from dendrify._version import __version__
+
 
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'
 copyright = '2024, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = __version__
+release = re.search(
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+    io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
+    ).group(1)
 
 
 # -- General configuration -----------------------------------------------------

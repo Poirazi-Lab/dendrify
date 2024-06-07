@@ -4,7 +4,6 @@ from .ephysproperties import (EphysProperties, default_params,
 from .equations import library
 from .neuronmodel import NeuronModel, PointNeuronModel
 
-from ._version import __version__
-
+__version__ = '2.1.4'
 __author__ = 'Michalis Pagkalos'
 __email__ = 'mpagkalos93@gmail.com'

@@ -1,19 +1,19 @@
 from setuptools import find_packages, setup
-from dendrify._version import __version__
+import re, io
 
+VERSION = re.search(
+    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+    io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
+    ).group(1)
 
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 with open("README.rst") as f:
     LONG_DESCRIPTION = f.read()
 
-pkg_vars  = {}
-with open("dendrify/_version.py") as fp:
-    exec(fp.read(), pkg_vars)
-
 # Setting up
 setup(
     name="dendrify",
-    version=pkg_vars['__version__'],
+    version=VERSION,
     author="Michalis Pagkalos",
     author_email="<mpagkalos93@gmail.com>",
     description=DESCRIPTION,
