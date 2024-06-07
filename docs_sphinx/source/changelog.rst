@@ -1,6 +1,15 @@
 Release notes
 =============
 
+Version 2.1.4
+-------------
+    * Fixed a bug that raised an error when config_dspikes was called multiple times
+      to configure different dSpike types. Thank you Tim Bax for discovering and
+      reporting this issue.
+    * Checked compatibility with Brian 2.7.0.
+    * Added package metadata (e.g. dendrify.__version__ works now).
+    * Minor documentation improvements.
+
 Version 2.1.3
 -------------
     * Changed package requirements to fix installation conflicts with Brian 2.6.0.
