@@ -4,4 +4,4 @@ from .ephysproperties import (EphysProperties, default_params,
 from .equations import library
 from .neuronmodel import NeuronModel, PointNeuronModel
 
-from _version import __version__
+from ._version import __version__
