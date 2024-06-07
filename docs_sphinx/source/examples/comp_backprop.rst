@@ -74,7 +74,7 @@ In this example we show:
     # Run simulation
     net = b.Network(neuron, ap_reset, M)
     net.run(10*ms)
-    neuron.I_ext_soma = 150*pA
+    neuron.I_ext_soma = 115*pA
     net.run(100*ms)
     neuron.I_ext_soma = 0*pA
     net.run(60*ms)
