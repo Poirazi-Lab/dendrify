@@ -4,6 +4,7 @@
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
 import os, sys, re, io
+from importlib.metadata import version
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
@@ -14,10 +15,11 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2024, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-    io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
-    ).group(1)
+release = version('dendrify')
+# release = re.search(
+#     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+#     io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
+#     ).group(1)
 
 
 # -- General configuration -----------------------------------------------------
