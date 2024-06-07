@@ -9,7 +9,7 @@ import sys
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
 
-from _version import __version__
+from dendrify._version import __version__
 
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'

@@ -1,5 +1,5 @@
 from setuptools import find_packages, setup
-from _version import __version__
+from dendrify._version import __version__
 
 VERSION = __version__
 DESCRIPTION = 'A package for adding dendrites to SNNs'
