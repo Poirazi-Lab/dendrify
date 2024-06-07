@@ -1,10 +1,11 @@
 from setuptools import find_packages, setup
 import re, io
 
-VERSION = re.search(
-    r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-    io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
-    ).group(1)
+# VERSION = re.search(
+#     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
+#     io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
+#     ).group(1)
+VERSION = '2.1.4'
 
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 with open("README.rst") as f:
