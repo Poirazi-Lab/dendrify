@@ -1,6 +1,17 @@
 from setuptools import find_packages, setup
-VERSION = '2.1.4'
 
+
+def read_version():
+    with open('dendrify/version.py', 'r') as f:
+        lines = f.readlines()
+    for line in lines:
+        if line.startswith('__version__'):
+            delim = '"' if '"' in line else "'"
+            return line.split(delim)[1]
+    return "unknown"
+
+
+VERSION = read_version()
 DESCRIPTION = 'A package for adding dendrites to SNNs'
 with open("README.rst") as f:
     LONG_DESCRIPTION = f.read()
