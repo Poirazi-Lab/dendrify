@@ -1,6 +1,5 @@
 from setuptools import find_packages, setup
 
-
 def read_version():
     with open('dendrify/version.py', 'r') as f:
         lines = f.readlines()

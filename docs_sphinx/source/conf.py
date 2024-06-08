@@ -11,6 +11,8 @@ sys.path.insert(0, os.path.abspath('../../dendrify'))
 
 from version import __version__ as release
 
+
+
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'
 copyright = '2024, Michalis Pagkalos'
