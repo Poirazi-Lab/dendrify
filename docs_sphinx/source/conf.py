@@ -7,6 +7,9 @@ import os, sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
+sys.path.insert(0, os.path.abspath('../../dendrify'))
+
+from version import __version__ as release
 
 
 
@@ -14,11 +17,6 @@ sys.path.insert(0, os.path.abspath('../../..'))
 project = 'Dendrify'
 copyright = '2024, Michalis Pagkalos'
 author = 'Michalis Pagkalos'
-release = '2.1.4'
-# release = re.search(
-#     r'__version__\s*=\s*[\'"]([^\'"]*)[\'"]',
-#     io.open('dendrify/__init__.py', encoding='utf_8_sig').read()
-#     ).group(1)
 
 
 # -- General configuration -----------------------------------------------------
