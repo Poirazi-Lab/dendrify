@@ -59,6 +59,7 @@ the impact of dendrites on network-level functions.
    
    self
    installation
+   changelog
 
 
 .. toctree::
@@ -94,7 +95,6 @@ the impact of dendrites on network-level functions.
    :caption: Useful information
 
    support
-   changelog
    papers
    code_of_conduct
 
