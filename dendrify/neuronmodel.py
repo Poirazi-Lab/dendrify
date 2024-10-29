@@ -284,15 +284,16 @@ class NeuronModel:
         for comp in self._compartments:
             if isinstance(comp, Dendrite) and comp._dspike_params:
                 event_id = f"{event_name}_{comp.name}"
-                dt = defaultclock.dt
-                d = {f"Vth_{event_id}": threshold,
-                     f"duration_rise_{event_id}": comp._timestep(duration_rise, dt),
-                     f"duration_fall_{event_id}": comp._timestep(duration_fall, dt),
-                     f"E_rise_{event_name}": comp._ionic_param(reversal_rise),
-                     f"E_fall_{event_name}": comp._ionic_param(reversal_fall),
-                     f"offset_fall_{event_id}": comp._timestep(offset_fall, dt),
-                     f"refractory_{event_id}": comp._timestep(refractory, dt)}
-                comp._dspike_params[event_id].update(d)
+                if event_id in comp._dspike_params:
+                    dt = defaultclock.dt
+                    d = {f"Vth_{event_id}": threshold,
+                        f"duration_rise_{event_id}": comp._timestep(duration_rise, dt),
+                        f"duration_fall_{event_id}": comp._timestep(duration_fall, dt),
+                        f"E_rise_{event_name}": comp._ionic_param(reversal_rise),
+                        f"E_fall_{event_name}": comp._ionic_param(reversal_fall),
+                        f"offset_fall_{event_id}": comp._timestep(offset_fall, dt),
+                        f"refractory_{event_id}": comp._timestep(refractory, dt)}
+                    comp._dspike_params[event_id].update(d)
 
     def make_neurongroup(self,
                          N: int,
