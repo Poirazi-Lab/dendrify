@@ -1,6 +1,11 @@
 Release notes
 =============
 
+Version 2.1.5
+-------------
+    * Ensured compatibility with Brian 2.7.1.
+    * Improved tutorials and documentation
+
 Version 2.1.4
 -------------
     * Fixed a bug that raised an error when config_dspikes was called multiple times
