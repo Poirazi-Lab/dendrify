@@ -3,7 +3,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os, sys
+import os
+import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
@@ -11,11 +12,9 @@ sys.path.insert(0, os.path.abspath('../../dendrify'))
 
 from version import __version__ as release
 
-
-
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'
-copyright = '2024, Michalis Pagkalos'
+copyright = '2023-2025, Michalis Pagkalos. Licensed under the GPL-3.0 License.'
 author = 'Michalis Pagkalos'
 
 
