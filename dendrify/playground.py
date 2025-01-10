@@ -1,8 +1,11 @@
 from brian2 import Network, NeuronGroup, StateMonitor
 from brian2.units import *
-from matplotlib.pyplot import rcParams, show, style, subplots
+from matplotlib.pyplot import rcParams, show, subplots
 from matplotlib.widgets import Button, Slider
+from brian2 import prefs
+import time
 
+prefs.codegen.target = 'cython'
 
 class Playground:
     SIMULATION_PARAMS = {
@@ -12,52 +15,94 @@ class Playground:
     }
 
     MODEL_PARAMS = {
-        'threshold': -40. * mvolt,
-        'g_rise': 20. * nS,
-        'g_fall': 20. * nS,
         'EL': -70. * mvolt,
         'C': 80 * pF,
         'gL': 3 * nS,
-        'E_pos': 70. * mV,
-        'E_neg': -89. * mV,
-        'refractory_pos': 5. * ms,
-        'offset_neg': 1. * ms,
-        'duration_pos': 2. * ms,
-        'duration_neg': 3. * ms
+        'reversal_fall': -89 * mV
     }
 
     SLIDER_PARAMS = {
-        'current': [0, 200, 120, 5],
-        'threshold': [-70, 0, -40, 0.5],
-        'g_rise': [0, 40, 20, 0.5],
-        'g_fall': [0, 40, 20, 0.5],
-        'duration_rise': [0, 50, 2, 0.5],
-        'duration_fall': [0, 50, 3, 0.5],
-        'offset_fall': [0, 55, 1, 0.5],
-        'refractory': [0, 100, 5, 0.5],
-        'reversal_rise': [70, 136, 70, (70, 136)]
+        'current': [0, 200, 120, 5, pA],
+        'threshold': [-70, 0, -40, 0.5, mV],
+        'g_rise': [0, 40, 20, 0.5, nS],
+        'g_fall': [0, 40, 20, 0.5, nS],
+        'duration_rise': [0, 50, 2, 0.5, ms],
+        'duration_fall': [0, 50, 3, 0.5, ms],
+        'offset_fall': [0, 55, 1, 0.5, ms],
+        'refractory': [0, 100, 5, 0.5, ms],
+        'reversal_rise': [70, 136, 70, (70, 136), mV]
     }
 
     EQUATIONS = """
         dV/dt = (gL * (EL-V) + I) / C  :volt
         I = I_ext + I_pos + I_neg  :amp
         I_ext  :amp
-        I_pos = g_pos * (E_pos-V)  :amp
-        I_neg = g_neg * (E_neg-V)  :amp
-        g_pos = g_rise * int(t <= spiketime + duration_pos) * check :siemens
-        g_neg = g_fall * int(t <= spiketime + offset_neg + duration_neg) * int(t >= spiketime + offset_neg) * check   :siemens
+        I_pos = g_pos * (reversal_rise-V)  :amp
+        I_neg = g_neg * (reversal_fall-V)  :amp
+        g_pos = g_rise * int(t <= spiketime + duration_rise) * check :siemens
+        g_neg = g_fall * int(t <= spiketime + offset_fall + duration_fall) * int(t >= spiketime + offset_fall) * check   :siemens
         spiketime  :second
         check :1
     """
 
-    EVENT = {'dspike': 'V >= threshold and t >= spiketime + refractory_pos * check'}
+    EVENT = {'dspike': 'V >= threshold and t >= spiketime + refractory * check'}
 
     def __init__(self):
         self.simulation_params = self.SIMULATION_PARAMS.copy()
         self.model_params = self.MODEL_PARAMS.copy()
         self.slider_params = self.SLIDER_PARAMS.copy()
+    
+    def start(self, timeit=False) -> None:
+        """
+        Starts the simulation and sets up the interactive plot.
+
+        Parameters
+        ----------
+        timeit : bool, optional
+            If True, the simulation time will be measured and printed. Default is False.
+
+        Returns
+        -------
+        None
+        """
+        fig, ax1, ax2, sliders, reset_button = self._setup_plot()
+        neuron, M, net = self._create_brian_objects()
+        net.store()
+        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA,
+                             timeit=timeit)
+        line1, = ax1.plot(M.t / ms, M.V[0] / mV)
+        line2, = ax2.plot(M.t / ms, M.g_pos[0] / nS, label='g_rise', c='black')
+        line3, = ax2.plot(M.t / ms, -M.g_neg[0] / nS, label='- g_fall', c='firebrick')
+        ax2.legend()
+
+        reset_button.on_clicked(lambda event: self._reset(event, sliders))
+        for slider in sliders:
+            slider.on_changed(
+                lambda val: self._update(
+                    val, net, neuron, M, sliders, ax1, ax2, line1, line2, line3
+                )
+            )
+        show()
 
     def set_simulation_params(self, user_sim_params: dict) -> None:
+        """
+        Set simulation parameters.
+
+        Parameters
+        ----------
+        user_sim_params : dict
+            A dictionary containing user-defined simulation parameters. Valid
+            keys are:
+            - 'idle_duration': Duration of idle time in milliseconds (ms) before the stimulation starts.
+            - 'stim_duration': Duration of the stimulation period in milliseconds (ms).
+            - 'post_stim_duration': Duration of the time in milliseconds (ms) after the stimulation ends.
+
+        Raises
+        ------
+        KeyError
+            If invalid keys are provided.
+
+        """
         invalid_keys = [key for key in user_sim_params if key not in self.simulation_params]
         if invalid_keys:
             raise KeyError(
@@ -87,6 +132,7 @@ class Playground:
     def _create_brian_objects(self):
         neuron = NeuronGroup(1, model=self.EQUATIONS, method='euler',
                              events=self.EVENT, namespace=self.model_params)
+        neuron.namespace.update(self._initial_slider_values())
         neuron.run_on_event('dspike', 'spiketime = t; check = 1')
         neuron.V = self.model_params['EL']
         neuron.check = 0
@@ -94,12 +140,16 @@ class Playground:
         net = Network(neuron, M)
         return neuron, M, net
 
-    def _run_simulation(self, net, neuron, current):
+    def _run_simulation(self, net, neuron, current, timeit=False):
+        if timeit:
+            t0 = time.time()
         net.run(self.simulation_params['idle_duration'])
         neuron.I_ext = current
         net.run(self.simulation_params['stim_duration'])
         neuron.I_ext = 0 * pA
         net.run(self.simulation_params['post_stim_duration'])
+        if timeit:
+            print(f"Simulation time: {time.time() - t0:.2f} s")
 
     def _setup_plot(self):
         rcParams.update({
@@ -136,27 +186,14 @@ class Playground:
         ax2.set_title('dSpike channels', fontsize=11, fontweight='bold', loc='left')
         fig.text(0.66, 0.962, "Parameters", fontsize=11, fontweight='bold')
 
-        units = {
-            'current': 'pA',
-            'threshold': 'mV',
-            'g_rise': 'nS',
-            'g_fall': 'nS',
-            'duration_rise': 'ms',
-            'duration_fall': 'ms',
-            'offset_fall': 'ms',
-            'refractory': 'ms',
-            'reversal_rise': 'mV'
-        }
-
-        sliders = []
-        for i, (label, params) in enumerate(self.slider_params.items()):
-            valmin, valmax, valinit, valstep = params
-            ax = fig.add_axes([0.8, 0.9 - i * 0.05, 0.15, 0.025])
-            slider = Slider(
-            ax, f'{label} ({units[label]}) ', valmin, valmax,
-            valinit=valinit, valstep=valstep, track_color='0.92'
-)
-            sliders.append(slider)
+        sliders = [
+            Slider(
+                fig.add_axes([0.8, 0.9 - i * 0.05, 0.15, 0.025]),
+                f'{label} ({unit}) ', valmin, valmax,
+                valinit=valinit, valstep=valstep, track_color='0.92'
+            )
+            for i, (label, (valmin, valmax, valinit, valstep, unit)) in enumerate(self.slider_params.items())
+        ]
 
         ax_reset = fig.add_axes([0.8, 0.45, 0.15, 0.025])
         reset_button = Button(ax_reset, 'Reset', color='0.92', hovercolor='0.95')
@@ -173,11 +210,12 @@ class Playground:
             'threshold': sliders[1].val * mV,
             'g_rise': sliders[2].val * nS,
             'g_fall': sliders[3].val * nS,
-            'duration_pos': sliders[4].val * ms,
-            'duration_neg': sliders[5].val * ms,
-            'offset_neg': sliders[6].val * ms,
-            'refractory_pos': sliders[7].val * ms,
-            'E_pos': sliders[8].val * mV})
+            'duration_rise': sliders[4].val * ms,
+            'duration_fall': sliders[5].val * ms,
+            'offset_fall': sliders[6].val * ms,
+            'refractory': sliders[7].val * ms,
+            'reversal_rise': sliders[8].val * mV
+        })
         self._run_simulation(net, neuron, sliders[0].val * pA)
         line1.set_ydata(M.V[0] / mV)
         line2.set_ydata(M.g_pos[0] / nS)
@@ -185,27 +223,9 @@ class Playground:
         ax1.set_ylim(top=max(M.V[0] / mV) + 2, bottom=min(M.V[0] / mV) - 2)
         ax2.set_ylim(top=max(M.g_pos[0] / nS) + 2, bottom=min(-M.g_neg[0] / nS) - 2)
 
-    def main(self):
-        neuron, M, net = self._create_brian_objects()
-        net.store()
-        fig, ax1, ax2, sliders, reset_button = self._setup_plot()
-        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA)
-        line1, = ax1.plot(M.t / ms, M.V[0] / mV)
-        line2, = ax2.plot(M.t / ms, M.g_pos[0] / nS, label='g_rise', c='black')
-        line3, = ax2.plot(M.t / ms, -M.g_neg[0] / nS, label='- g_fall', c='firebrick')
-        ax2.legend()
-
-        reset_button.on_clicked(lambda event: self._reset(event, sliders))
-        for slider in sliders:
-            slider.on_changed(
-                lambda val: self._update(
-                    val, net, neuron, M, sliders, ax1, ax2, line1, line2, line3
-                )
-            )
-        show()
+    def _initial_slider_values(self):
+        return {key: params[2] * params[-1] for key, params in self.slider_params.items()}
 
 
 test = Playground()
-# test.set_simulation_params({'idle_duration': 5 * ms, 'post_stim_duration': 590 * ms})
-# test.set_model_params({'C': 180 * pF, 'gL': 3 * nS})
-test.main()
+test.start()
