@@ -1,5 +1,4 @@
 import time
-
 from brian2 import Network, NeuronGroup, StateMonitor, prefs
 from brian2.units import *
 from matplotlib.pyplot import draw, rcParams, show, subplots
@@ -53,20 +52,23 @@ class Playground:
         self.slider_params = self.SLIDER_PARAMS.copy()
     
     def start(self) -> None:
-        fig, ax1, ax2, sliders, reset_button, text_boxes = self._setup_plot()
-        neuron, M, net = self._create_brian_objects()
-        net.store()
-        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA)
-        line1, = ax1.plot(M.t / ms, M.V[0] / mV)
-        line2, = ax2.plot(M.t / ms, M.g_pos[0] / nS, label='g_rise', c='black')
-        line3, = ax2.plot(M.t / ms, -M.g_neg[0] / nS, label='- g_fall', c='firebrick')
-        ax2.legend()
+        self._setup_plot()
+        self._create_brian_objects()
+        self.net.store()
+        self._run_simulation()
+        self._initial_plot()
 
-        reset_button.on_clicked(lambda event: self._reset(sliders, text_boxes))
-        for slider in sliders:
-            slider.on_changed(lambda val: self._update(val, net, neuron, M, sliders, ax1, ax2, line1, line2, line3))
-        for text_box in text_boxes:
-            text_box.on_submit(lambda expr: self._update_neuron_params(expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3))
+        for slider in self.sliders:
+            slider.on_changed(self._update_sliders)
+        
+        for neuron_box in self.neuron_boxes:
+            neuron_box.on_submit(self._update_neuron_params)
+        
+        for sim_box in self.sim_boxes:
+            sim_box.on_submit(self._update_simulation_params)
+
+        self.reset_button.on_clicked(self._reset)
+
         show()
 
     def set_model_params(self, user_model_params: dict) -> None:
@@ -89,18 +91,14 @@ class Playground:
         neuron.check = 0
         M = StateMonitor(neuron, ['V', 'g_pos', 'g_neg'], record=True)
         net = Network(neuron, M)
-        return neuron, M, net
+        self.neuron, self.M, self.net = neuron, M, net
 
-    def _run_simulation(self, net, neuron, current, timeit=False):
-        if timeit:
-            t0 = time.time()
-        net.run(self.simulation_params['idle_duration'])
-        neuron.I_ext = current
-        net.run(self.simulation_params['stim_duration'])
-        neuron.I_ext = 0 * pA
-        net.run(self.simulation_params['post_stim_duration'])
-        if timeit:
-            print(f"Simulation time: {time.time() - t0:.2f} s")
+    def _run_simulation(self):
+        self.net.run(self.simulation_params['idle_duration'])
+        self.neuron.I_ext = self.sliders[0].val * pA
+        self.net.run(self.simulation_params['stim_duration'])
+        self.neuron.I_ext = 0 * pA
+        self.net.run(self.simulation_params['post_stim_duration'])
 
     def _setup_plot(self):
         self._configure_plot()
@@ -117,12 +115,18 @@ class Playground:
         ax1.set_title('Membrane response', fontsize=11, fontweight='bold', loc='left')
         ax2.set_title('dSpike channels', fontsize=11, fontweight='bold', loc='left')
 
-        sliders = self._create_sliders(fig)
-        text_boxes = self._create_neuron_boxes(fig)
-        text_boxes += self._create_simulation_boxes(fig)
-        reset_button = self._create_reset_button(fig)
+        self.sliders = self._create_sliders(fig)
+        self.neuron_boxes = self._create_neuron_boxes(fig)
+        self.sim_boxes = self._create_simulation_boxes(fig)
+        self.reset_button = self._create_reset_button(fig)
 
-        return fig, ax1, ax2, sliders, reset_button, text_boxes
+        self.fig, self.ax1, self.ax2 = fig, ax1, ax2
+
+    def _initial_plot(self):
+        self.line1, = self.ax1.plot(self.M.t / ms, self.M.V[0] / mV)
+        self.line2, = self.ax2.plot(self.M.t / ms, self.M.g_pos[0] / nS, label='g_rise', c='black')
+        self.line3, = self.ax2.plot(self.M.t / ms, -self.M.g_neg[0] / nS, label='- g_fall', c='firebrick')
+        self.ax2.legend()
 
     def _configure_plot(self):
         rcParams.update({
@@ -158,7 +162,7 @@ class Playground:
         return sliders
 
     def _create_reset_button(self, fig):
-        ax_reset = fig.add_axes([0.77, 0.07, 0.08, 0.03])
+        ax_reset = fig.add_axes([0.78, 0.07, 0.15, 0.03])
         return Button(ax_reset, 'Reset', color='indianred', hovercolor='0.95')
 
     def _create_neuron_boxes(self, fig):
@@ -169,7 +173,7 @@ class Playground:
         }
         text_box_axes = [fig.add_axes([0.78, 0.445 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
         text_boxes_widgets = [
-            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.99', hovercolor='0.95')
+            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.95', hovercolor='1')
             for ax, (label, value) in zip(text_box_axes, text_boxes.items())
         ]
         text_box_axes[0].set_title('Neuron', fontsize=11, fontweight='bold', loc='left', x=-0.8, y=1.1)
@@ -181,62 +185,72 @@ class Playground:
             'stim_time (ms)  ': (self.simulation_params["stim_duration"] / ms),
             'post_stim_time (ms)  ': (self.simulation_params["post_stim_duration"] / ms)
         }
-        text_box_axes = [fig.add_axes([0.78, 0.23 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
+        text_box_axes = [fig.add_axes([0.78, 0.24 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
         text_boxes_widgets = [
-            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.99', hovercolor='0.95')
+            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.95', hovercolor='1')
             for ax, (label, value) in zip(text_box_axes, text_boxes.items())
         ]
         text_box_axes[0].set_title('Protocol', fontsize=11, fontweight='bold', loc='left', x=-0.8, y=1.1)
         return text_boxes_widgets
 
-    def _reset(self, sliders, text_boxes):
-        for slider in sliders:
+    def _reset(self, event):
+        for slider in self.sliders:
             slider.reset()
-        for text_box in text_boxes:
-            text_box.set_val(str(text_box.initial))
         
-    def _update(self, val, net, neuron, M, sliders, ax1, ax2, line1, line2, line3):
-        start_time = time.time()
-        net.restore()
-        neuron.namespace.update({
-            'threshold': sliders[1].val * mV,
-            'g_rise': sliders[2].val * nS,
-            'g_fall': sliders[3].val * nS,
-            'duration_rise': sliders[4].val * ms,
-            'duration_fall': sliders[5].val * ms,
-            'offset_fall': sliders[6].val * ms,
-            'refractory': sliders[7].val * ms,
-            'reversal_rise': sliders[8].val * mV
+    def _update_sliders(self, val):
+        self.net.restore()
+        self.neuron.namespace.update({
+            'threshold': self.sliders[1].val * mV,
+            'g_rise': self.sliders[2].val * nS,
+            'g_fall': self.sliders[3].val * nS,
+            'duration_rise': self.sliders[4].val * ms,
+            'duration_fall': self.sliders[5].val * ms,
+            'offset_fall': self.sliders[6].val * ms,
+            'refractory': self.sliders[7].val * ms,
+            'reversal_rise': self.sliders[8].val * mV
         })
-        self._run_simulation(net, neuron, sliders[0].val * pA)
-        self._update_plot(M, ax1, ax2, line1, line2, line3)
-        print(f"Update time: {time.time() - start_time:.2f} s")
+        self._run_simulation()
+        self._update_plot()
 
-    def _update_neuron_params(self, expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3):
-        start_time = time.time()
-        net.restore()
-        neuron.namespace.update({
-            'C': float(text_boxes[0].text) * pF,
-            'gL': float(text_boxes[1].text) * nS,
-            'EL': float(text_boxes[2].text) * mV
+    def _update_neuron_params(self, expr):
+        self.net.restore()
+        self.neuron.namespace.update({
+            'C': float(self.neuron_boxes[0].text) * pF,
+            'gL': float(self.neuron_boxes[1].text) * nS,
+            'EL': float(self.neuron_boxes[2].text) * mV
         })
-        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA)
-        self._update_plot(M, ax1, ax2, line1, line2, line3)
-        print(f"Update time: {time.time() - start_time:.2f} s")
+        self._run_simulation()
+        self._update_plot()
 
-    def _update_plot(self, M, ax1, ax2, line1, line2, line3):
-        line1.set_ydata(M.V[0] / mV)
-        line2.set_ydata(M.g_pos[0] / nS)
-        line3.set_ydata(-M.g_neg[0] / nS)
-        ax1.set_ylim(top=max(M.V[0] / mV) + 2, bottom=min(M.V[0] / mV) - 2)
-        ax2.set_ylim(top=max(M.g_pos[0] / nS) + 2, bottom=min(-M.g_neg[0] / nS) - 2)
+    def _update_simulation_params(self, expr):
+        self.net.restore()
+        self.simulation_params.update({
+            'idle_duration': float(self.sim_boxes[0].text) * ms,
+            'stim_duration': float(self.sim_boxes[1].text) * ms,
+            'post_stim_duration': float(self.sim_boxes[2].text) * ms
+        })
+        self._run_simulation()
+        self._update_plot(change_x=True)
+
+    def _update_plot(self, change_x=False):
+        if change_x:
+            x = self.M.t / ms
+            self.line1.set_xdata(x)
+            self.line2.set_xdata(x)
+            self.line3.set_xdata(x)
+            self.ax1.set_xlim(left=min(x), right=max(x))
+            self.ax2.set_xlim(left=min(x), right=max(x))
+            
+        self.line1.set_ydata(self.M.V[0] / mV)
+        self.line2.set_ydata(self.M.g_pos[0] / nS)
+        self.line3.set_ydata(-self.M.g_neg[0] / nS)
+        self.ax1.set_ylim(top=max(self.M.V[0] / mV) + 2, bottom=min(self.M.V[0] / mV) - 2)
+        self.ax2.set_ylim(top=max(self.M.g_pos[0] / nS) + 2, bottom=min(-self.M.g_neg[0] / nS) - 2)
         draw()
 
     def _initial_slider_values(self):
         return {key: params[2] * params[-1] for key, params in self.slider_params.items()}
 
 if __name__ == "__main__":
-    test = Playground()
-    # test._setup_plot()
-    # show()
-    test.start()
+    playground = Playground()
+    playground.start()
