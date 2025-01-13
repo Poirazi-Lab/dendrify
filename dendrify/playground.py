@@ -8,9 +8,9 @@ prefs.codegen.target = 'cython'
 
 class Playground:
     SIMULATION_PARAMS = {
-        'idle_duration': 5 * ms,
-        'stim_duration': 100 * ms,
-        'post_stim_duration': 50 * ms
+        'idle_period': 5 * ms,
+        'stim_time': 100 * ms,
+        'post_stim_time': 50 * ms
     }
 
     MODEL_PARAMS = {
@@ -50,7 +50,7 @@ class Playground:
         self.simulation_params = self.SIMULATION_PARAMS.copy()
         self.model_params = self.MODEL_PARAMS.copy()
         self.slider_params = self.SLIDER_PARAMS.copy()
-    
+
     def start(self) -> None:
         self._setup_plot()
         self._create_brian_objects()
@@ -63,9 +63,11 @@ class Playground:
         
         for neuron_box in self.neuron_boxes:
             neuron_box.on_submit(self._update_neuron_params)
+            neuron_box.intial_text = neuron_box.text
         
         for sim_box in self.sim_boxes:
             sim_box.on_submit(self._update_simulation_params)
+            sim_box.intial_text = sim_box.text
 
         self.reset_button.on_clicked(self._reset)
 
@@ -94,11 +96,11 @@ class Playground:
         self.neuron, self.M, self.net = neuron, M, net
 
     def _run_simulation(self):
-        self.net.run(self.simulation_params['idle_duration'])
+        self.net.run(self.simulation_params['idle_period'])
         self.neuron.I_ext = self.sliders[0].val * pA
-        self.net.run(self.simulation_params['stim_duration'])
+        self.net.run(self.simulation_params['stim_time'])
         self.neuron.I_ext = 0 * pA
-        self.net.run(self.simulation_params['post_stim_duration'])
+        self.net.run(self.simulation_params['post_stim_time'])
 
     def _setup_plot(self):
         self._configure_plot()
@@ -181,9 +183,9 @@ class Playground:
     
     def _create_simulation_boxes(self, fig):
         text_boxes = {
-            'idle_period (ms)  ': (self.simulation_params["idle_duration"] / ms),
-            'stim_time (ms)  ': (self.simulation_params["stim_duration"] / ms),
-            'post_stim_time (ms)  ': (self.simulation_params["post_stim_duration"] / ms)
+            'idle_period (ms)  ': (self.simulation_params["idle_period"] / ms),
+            'stim_time (ms)  ': (self.simulation_params["stim_time"] / ms),
+            'post_stim_time (ms)  ': (self.simulation_params["post_stim_time"] / ms)
         }
         text_box_axes = [fig.add_axes([0.78, 0.24 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
         text_boxes_widgets = [
@@ -196,6 +198,10 @@ class Playground:
     def _reset(self, event):
         for slider in self.sliders:
             slider.reset()
+        for neuron_box in self.neuron_boxes:
+            neuron_box.set_val(neuron_box.intial_text)
+        for sim_box in self.sim_boxes:
+            sim_box.set_val(sim_box.intial_text)
         
     def _update_sliders(self, val):
         self.net.restore()
@@ -225,9 +231,9 @@ class Playground:
     def _update_simulation_params(self, expr):
         self.net.restore()
         self.simulation_params.update({
-            'idle_duration': float(self.sim_boxes[0].text) * ms,
-            'stim_duration': float(self.sim_boxes[1].text) * ms,
-            'post_stim_duration': float(self.sim_boxes[2].text) * ms
+            'idle_period': float(self.sim_boxes[0].text) * ms,
+            'stim_time': float(self.sim_boxes[1].text) * ms,
+            'post_stim_time': float(self.sim_boxes[2].text) * ms
         })
         self._run_simulation()
         self._update_plot(change_x=True)
