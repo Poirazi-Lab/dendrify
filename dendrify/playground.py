@@ -1,9 +1,9 @@
-from brian2 import Network, NeuronGroup, StateMonitor
-from brian2.units import *
-from matplotlib.pyplot import rcParams, show, subplots, draw
-from matplotlib.widgets import Button, Slider, TextBox
-from brian2 import prefs
 import time
+
+from brian2 import Network, NeuronGroup, StateMonitor, prefs
+from brian2.units import *
+from matplotlib.pyplot import draw, rcParams, show, subplots
+from matplotlib.widgets import Button, Slider, TextBox
 
 prefs.codegen.target = 'cython'
 
@@ -52,11 +52,11 @@ class Playground:
         self.model_params = self.MODEL_PARAMS.copy()
         self.slider_params = self.SLIDER_PARAMS.copy()
     
-    def start(self, timeit=True) -> None:
+    def start(self) -> None:
         fig, ax1, ax2, sliders, reset_button, text_boxes = self._setup_plot()
         neuron, M, net = self._create_brian_objects()
         net.store()
-        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA, timeit=timeit)
+        self._run_simulation(net, neuron, self.slider_params['current'][2] * pA)
         line1, = ax1.plot(M.t / ms, M.V[0] / mV)
         line2, = ax2.plot(M.t / ms, M.g_pos[0] / nS, label='g_rise', c='black')
         line3, = ax2.plot(M.t / ms, -M.g_neg[0] / nS, label='- g_fall', c='firebrick')
@@ -66,11 +66,8 @@ class Playground:
         for slider in sliders:
             slider.on_changed(lambda val: self._update(val, net, neuron, M, sliders, ax1, ax2, line1, line2, line3))
         for text_box in text_boxes:
-            text_box.on_submit(lambda expr: self._update_model_params(expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3))
+            text_box.on_submit(lambda expr: self._update_neuron_params(expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3))
         show()
-
-    def set_simulation_params(self, user_sim_params: dict) -> None:
-        self._update_params(self.simulation_params, user_sim_params)
 
     def set_model_params(self, user_model_params: dict) -> None:
         self._update_params(self.model_params, user_model_params)
@@ -107,10 +104,11 @@ class Playground:
 
     def _setup_plot(self):
         self._configure_plot()
-        fig, axes = subplots(2, 1, figsize=[9.5, 7], sharex=True)
+        scale = 0.75
+        fig, axes = subplots(2, 1, figsize=[16*scale, 9*scale], sharex=True)
         ax1, ax2 = axes
         fig.canvas.manager.set_window_title('dSpike Playground')
-        fig.subplots_adjust(top=0.95, bottom=0.07, left=0.09, right=0.62, hspace=0.15, wspace=0.2)
+        fig.subplots_adjust(top=0.95, bottom=0.07, left=0.09, right=0.6, hspace=0.15, wspace=0.2)
         ax1.set_ylabel('Voltage (mV)')
         ax2.set_ylabel('Conductance (nS)')
         ax2.set_xlabel('Time (ms)')
@@ -118,12 +116,11 @@ class Playground:
         ax2.grid(True)
         ax1.set_title('Membrane response', fontsize=11, fontweight='bold', loc='left')
         ax2.set_title('dSpike channels', fontsize=11, fontweight='bold', loc='left')
-        fig.text(0.66, 0.962, "Parameters", fontsize=11, fontweight='bold')
-        fig.text(0.66, 0.25, "Membrane properties", fontsize=11, fontweight='bold')
 
         sliders = self._create_sliders(fig)
+        text_boxes = self._create_neuron_boxes(fig)
+        text_boxes += self._create_simulation_boxes(fig)
         reset_button = self._create_reset_button(fig)
-        text_boxes = self._create_text_boxes(fig)
 
         return fig, ax1, ax2, sliders, reset_button, text_boxes
 
@@ -147,30 +144,50 @@ class Playground:
         })
 
     def _create_sliders(self, fig):
-        return [
-            Slider(
-                fig.add_axes([0.8, 0.9 - i * 0.05, 0.15, 0.025]),
+        sliders = []
+        for i, (label, (valmin, valmax, valinit, valstep, unit)) in enumerate(self.slider_params.items()):
+            ax = fig.add_axes([0.78, 0.92 - i * 0.045, 0.15, 0.025])
+            slider = Slider(
+                ax,
                 f'{label} ({unit})  ', valmin, valmax,
                 valinit=valinit, valstep=valstep, track_color='0.92'
             )
-            for i, (label, (valmin, valmax, valinit, valstep, unit)) in enumerate(self.slider_params.items())
-        ]
+            sliders.append(slider)
+            if i == 0:
+                ax.set_title('Parameters', fontsize=11, fontweight='bold', loc='left', x=-0.8, y=1.1)
+        return sliders
 
     def _create_reset_button(self, fig):
-        ax_reset = fig.add_axes([0.8, 0.45, 0.15, 0.025])
-        return Button(ax_reset, 'Reset', color='0.92', hovercolor='0.95')
+        ax_reset = fig.add_axes([0.77, 0.07, 0.08, 0.03])
+        return Button(ax_reset, 'Reset', color='indianred', hovercolor='0.95')
 
-    def _create_text_boxes(self, fig):
+    def _create_neuron_boxes(self, fig):
         text_boxes = {
             'C (pF)  ': (self.model_params["C"] / pF),
             'gL (nS)  ': (self.model_params["gL"] / nS),
             'EL (mV)  ': (self.model_params["EL"] / mV)
         }
-        text_box_axes = [fig.add_axes([0.8, 0.17 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
-        return [
-            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center')
+        text_box_axes = [fig.add_axes([0.78, 0.445 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
+        text_boxes_widgets = [
+            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.99', hovercolor='0.95')
             for ax, (label, value) in zip(text_box_axes, text_boxes.items())
         ]
+        text_box_axes[0].set_title('Neuron', fontsize=11, fontweight='bold', loc='left', x=-0.8, y=1.1)
+        return text_boxes_widgets
+    
+    def _create_simulation_boxes(self, fig):
+        text_boxes = {
+            'idle_period (ms)  ': (self.simulation_params["idle_duration"] / ms),
+            'stim_time (ms)  ': (self.simulation_params["stim_duration"] / ms),
+            'post_stim_time (ms)  ': (self.simulation_params["post_stim_duration"] / ms)
+        }
+        text_box_axes = [fig.add_axes([0.78, 0.23 - i * 0.05, 0.15, 0.03]) for i in range(len(text_boxes))]
+        text_boxes_widgets = [
+            TextBox(ax, label, initial=f'{value:.1f}', textalignment='center', color='0.99', hovercolor='0.95')
+            for ax, (label, value) in zip(text_box_axes, text_boxes.items())
+        ]
+        text_box_axes[0].set_title('Protocol', fontsize=11, fontweight='bold', loc='left', x=-0.8, y=1.1)
+        return text_boxes_widgets
 
     def _reset(self, sliders, text_boxes):
         for slider in sliders:
@@ -195,7 +212,7 @@ class Playground:
         self._update_plot(M, ax1, ax2, line1, line2, line3)
         print(f"Update time: {time.time() - start_time:.2f} s")
 
-    def _update_model_params(self, expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3):
+    def _update_neuron_params(self, expr, net, neuron, M, text_boxes, ax1, ax2, line1, line2, line3):
         start_time = time.time()
         net.restore()
         neuron.namespace.update({
@@ -220,4 +237,6 @@ class Playground:
 
 if __name__ == "__main__":
     test = Playground()
+    # test._setup_plot()
+    # show()
     test.start()
