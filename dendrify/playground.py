@@ -14,9 +14,9 @@ class Playground:
     }
 
     MODEL_PARAMS = {
-        'EL': -70. * mvolt,
         'C': 80 * pF,
         'gL': 3 * nS,
+        'EL': -70. * mvolt,
         'reversal_fall': -89 * mV
     }
 
