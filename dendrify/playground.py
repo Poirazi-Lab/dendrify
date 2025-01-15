@@ -1,4 +1,5 @@
 import time
+
 from brian2 import Network, NeuronGroup, StateMonitor, prefs
 from brian2.units import *
 from matplotlib.pyplot import draw, rcParams, show, subplots
@@ -164,7 +165,7 @@ class Playground:
         return sliders
 
     def _create_reset_button(self, fig):
-        ax_reset = fig.add_axes([0.78, 0.07, 0.15, 0.03])
+        ax_reset = fig.add_axes([0.82, 0.07, 0.07, 0.035])
         return Button(ax_reset, 'Reset', color='indianred', hovercolor='0.95')
 
     def _create_neuron_boxes(self, fig):
