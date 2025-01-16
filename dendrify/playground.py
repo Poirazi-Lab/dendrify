@@ -1,11 +1,10 @@
-import time
+from time import time
 
-from brian2 import Network, NeuronGroup, StateMonitor, prefs
+from brian2 import Network, NeuronGroup, StateMonitor
 from brian2.units import *
 from matplotlib.pyplot import draw, rcParams, show, subplots
 from matplotlib.widgets import Button, Slider, TextBox
 
-prefs.codegen.target = 'cython'
 
 class Playground:
     SIMULATION_PARAMS = {
@@ -22,7 +21,7 @@ class Playground:
     }
 
     SLIDER_PARAMS = {
-        'current': [0, 200, 120, 5, pA],
+        'current': [0, 200, 120, 2, pA],
         'threshold': [-70, 0, -40, 0.5, mV],
         'g_rise': [0, 40, 20, 0.5, nS],
         'g_fall': [0, 40, 20, 0.5, nS],
@@ -51,13 +50,15 @@ class Playground:
         self.simulation_params = self.SIMULATION_PARAMS.copy()
         self.model_params = self.MODEL_PARAMS.copy()
         self.slider_params = self.SLIDER_PARAMS.copy()
+        self.timeit = False
 
-    def start(self) -> None:
+    def run(self, timeit=False) -> None:
         self._setup_plot()
         self._create_brian_objects()
         self.net.store()
         self._run_simulation()
         self._initial_plot()
+        self.timeit = timeit
 
         for slider in self.sliders:
             slider.on_changed(self._update_sliders)
@@ -97,11 +98,15 @@ class Playground:
         self.neuron, self.M, self.net = neuron, M, net
 
     def _run_simulation(self):
+        if self.timeit:
+            start = time()
         self.net.run(self.simulation_params['idle_period'])
         self.neuron.I_ext = self.sliders[0].val * pA
         self.net.run(self.simulation_params['stim_time'])
         self.neuron.I_ext = 0 * pA
         self.net.run(self.simulation_params['post_stim_time'])
+        if self.timeit:
+            print(f"Simulation run in {time()-start:.4f} s")
 
     def _setup_plot(self):
         self._configure_plot()
@@ -203,7 +208,7 @@ class Playground:
             neuron_box.set_val(neuron_box.intial_text)
         for sim_box in self.sim_boxes:
             sim_box.set_val(sim_box.intial_text)
-        
+    
     def _update_sliders(self, val):
         self.net.restore()
         self.neuron.namespace.update({
@@ -258,6 +263,3 @@ class Playground:
     def _initial_slider_values(self):
         return {key: params[2] * params[-1] for key, params in self.slider_params.items()}
 
-if __name__ == "__main__":
-    playground = Playground()
-    playground.start()
