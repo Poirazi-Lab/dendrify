@@ -517,12 +517,6 @@ class Soma(Compartment):
     and parameters needed to describe a somatic compartment and any currents
     (synaptic, dendritic, noise) passing through it.
 
-    .. seealso::
-
-       Soma acts as a wrapper for Compartment with slight changes to account for
-       certain somatic properties. For a full list of its methods and attributes,
-       please see: :class:`.Compartment`.
-
     Parameters
     ----------
     name : str
@@ -603,11 +597,6 @@ class Dendrite(Compartment):
     and parameters needed to describe a dendritic compartment, its active
     mechanisms, and any currents (synaptic, dendritic, ionic, noise) passing
     through it.
-
-    .. seealso::
-       Dendrite inherits all the methods and attributes of its parent class
-       :class:`.Compartment`. For a complete list, please
-       refer to the documentation of the latter.
 
     Parameters
     ----------

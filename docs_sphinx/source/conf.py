@@ -28,7 +28,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.autosectionlabel',
+    'sphinx.ext.autossectionlabel',
     'nbsphinx',
     'autodocsumm',
     'sphinx_copybutton',
@@ -40,7 +40,10 @@ html_static_path = ['_static']
 autosummary_generate = True
 nbsphinx_input_prompt = "%.0s"
 nbsphinx_output_prompt = "%.0s"
-autodoc_default_options = {'show-inheritance': True}
+autodoc_default_options = {
+    'show-inheritance': True,
+    'members': True,
+    'inherited-members': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {
     "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
