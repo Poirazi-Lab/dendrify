@@ -28,7 +28,7 @@ extensions = [
     'sphinx.ext.mathjax',
     'sphinx.ext.viewcode',
     'sphinx.ext.intersphinx',
-    'sphinx.ext.autossectionlabel',
+    'sphinx.ext.autosectionlabel',
     'nbsphinx',
     'autodocsumm',
     'sphinx_copybutton',
