@@ -25,7 +25,7 @@ setup(
     long_description_content_type="text/x-rst; charset=UTF-8",
     long_description=LONG_DESCRIPTION,
     packages=find_packages(),
-    install_requires=['brian2'],
+    install_requires=['brian2', 'matplotlib', 'networkx'],
     keywords=['python', 'brian2', 'dendrites', 'SNNs', 'network models'],
     classifiers=[
         "Development Status :: 5 - Production/Stable",

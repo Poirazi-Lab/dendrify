@@ -1,6 +1,17 @@
 Release notes
 =============
 
+Version 2.2.0
+-------------
+    * New feature: dSpike Playground.
+    * New feature: easier model customization through new methods. All compartments
+      get the add_equations, replace_equations and and add_params methods.
+    * New tutorial: "Customizing a model".
+    * Installation: by default, Dendrify will install the latest version of Brian 2,
+      matplotlib and networkx. If you want to install Dendrify without its dependencies,
+      you can use the command: pip install dendrify --no-deps.
+    * Significant documentation improvements. Also added a new section "Known issues".
+
 Version 2.1.4
 -------------
     * Fixed a bug that raised an error when config_dspikes was called multiple times
