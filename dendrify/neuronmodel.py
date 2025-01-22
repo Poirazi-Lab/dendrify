@@ -373,14 +373,14 @@ class NeuronModel:
             for comp in self._compartments:
                 if show:
                     print(
-                        f"Setting V_{comp.name} = {comp._ephys_object.v_rest}")
+                        f"V_{comp.name} = {repr(comp._ephys_object.v_rest)}")
                 setattr(group, f'V_{comp.name}', comp._ephys_object.v_rest)
 
         if init_events:
             if self.event_actions:
                 for event, action in self.event_actions.items():
                     if show:
-                        print(f"Setting run_on_event('{event}', '{action}')")
+                        print(f"run_on_event('{event}', '{action}')")
                     group.run_on_event(event, action, order='before_groups')
 
         ap_reset = None
