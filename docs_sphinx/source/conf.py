@@ -48,7 +48,8 @@ autodoc_typehints = "none"
 intersphinx_mapping = {
     "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
-    "brian2cuda": ("https://brian2cuda.readthedocs.io/en/latest/", None)
+    "brian2cuda": ("https://brian2cuda.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None)
 }
 
 myst_url_schemes = ["http", "https", ]
