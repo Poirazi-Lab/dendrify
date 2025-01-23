@@ -8,7 +8,7 @@ The easiest way to install it is through ``pip``, using the command::
 
 This command will automatically install the latest version of Brian 2 and other
 optional dependencies (recommended for most users). If you prefer to install
-Dendrify without its dependencies, you can use the command::
+Dendrify without any of its dependencies, you can use the command::
 
   pip install dendrify --no-deps
 
