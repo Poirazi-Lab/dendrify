@@ -38,9 +38,11 @@ making it possible to study the impact of dendrites on network-level functions.
    :class: only-dark
 
 
-.. tip::
-   If you use Dendrify for your published research, we kindly ask you to cite our
-   article:|br|
+.. admonition:: Cite Dendrify
+   :class: important
+
+   If you find Dendrify useful in your research, please consider citing our
+   introductory article:|br|
    **Introducing the Dendrify framework for incorporating dendrites to spiking neural networks** |br|
    M Pagkalos, S Chavlis, P Poirazi |br|
    DOI: https://doi.org/10.1038/s41467-022-35747-8 |br|
@@ -64,6 +66,7 @@ making it possible to study the impact of dendrites on network-level functions.
    
    tutorials/Dendrify_101
    tutorials/Dendrify_simulations
+   tutorials/Dendrify_custom_models
 
 
 .. toctree::

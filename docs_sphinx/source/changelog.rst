@@ -12,6 +12,11 @@ Version 2.2.0
       you can use the command: pip install dendrify --no-deps.
     * Significant documentation improvements. Also added a new section "Known issues".
 
+Version 2.1.5
+-------------
+    * Ensured compatibility with Brian 2.7.1.
+    * Improved tutorials and documentation
+
 Version 2.1.4
 -------------
     * Fixed a bug that raised an error when config_dspikes was called multiple times
