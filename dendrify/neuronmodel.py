@@ -429,9 +429,14 @@ class NeuronModel:
         if not self._extra_equations:
             self._extra_equations = f"{eqs}"
         else:
-            self._extra_equations += f"\n{eqs}"
+            if eqs not in self._extra_equations:
+                self._extra_equations += f"\n{eqs}"
+            else:
+                logger.warning(
+                    "The equations you are trying to add already exist in the model."
+                )
 
-    def replace_equations(self, eqs_old:str, eqs_new: str):
+    def replace_equations(self, eqs_old: str, eqs_new: str):
         """
         Replaces existing equations with custom ones.
 
@@ -448,7 +453,7 @@ class NeuronModel:
                 comp._equations = comp._equations.replace(eqs_old, eqs_new)
                 eqs_found = True
         if not eqs_found:
-            raise ValueError(
+            logger.warning(
                 "The equations to be replaced are not found in the model."
             )
 

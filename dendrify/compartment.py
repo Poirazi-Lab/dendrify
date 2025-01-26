@@ -415,7 +415,7 @@ class Compartment:
         if eqs_old in self._equations:
             self._equations = self._equations.replace(eqs_old, eqs_new)
         else:
-            raise ValueError(
+            logger.warning(
                 "The equations to be replaced are not found in the compartment."
                 )
 
