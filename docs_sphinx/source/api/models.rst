@@ -1,5 +1,5 @@
-Model library
-=============
+Math library
+============
 
 Leaky membrane
 --------------

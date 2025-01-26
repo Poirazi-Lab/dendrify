@@ -7,6 +7,10 @@ from matplotlib.widgets import Button, Slider, TextBox
 
 
 class Playground:
+    """
+    A class that creates a graphical user interface for visualizing, exploring,
+    and understanding dendritic spikes in Dendrify.
+    """
     SIMULATION_PARAMS = {
         'idle_period': 5 * ms,
         'stim_time': 100 * ms,
@@ -53,6 +57,15 @@ class Playground:
         self.timeit = False
 
     def run(self, timeit=False) -> None:
+        """
+        Initializes the GUI, allowing the user to interact with the model
+        by adjusting slider values, neuron parameters, and simulation parameters.
+
+        Parameters
+        ----------
+        timeit : bool
+            If True, prints the time taken to run a simulation.
+        """
         self._setup_plot()
         self._create_brian_objects()
         self.net.store()
@@ -76,9 +89,39 @@ class Playground:
         show()
 
     def set_model_params(self, user_model_params: dict) -> None:
+        """
+        Updates the default model parameters with new values provided by the user.
+
+        Parameters
+        ----------
+        user_model_params : dict
+            A dictionary containing the new model parameters. Valid keys are
+            'C', 'gL', 'EL', and 'reversal_fall'. The corresponding values should
+            be in units of pF, nS, mV, and mV, respectively.
+
+        Examples
+        --------
+        >>> playground.set_model_params({'C': 100 * pF, 'gL': 2 * nS})
+        """
         self._update_params(self.model_params, user_model_params)
 
     def set_slider_params(self, user_slider_params: dict) -> None:
+        """
+        Updates the default slider parameters with new values provided by the user.
+
+        Parameters
+        ----------
+        user_slider_params : dict
+            A dictionary containing the new slider parameters. Valid keys are
+            'current', 'threshold', 'g_rise', 'g_fall', 'duration_rise',
+            'duration_fall', 'offset_fall', 'refractory', and 'reversal_rise'.
+            The corresponding values should be in the format
+            [min value, max value, initial value, step, unit].
+
+        Examples
+        --------
+        >>> playground.set_slider_params({'current': [0, 300, 150, 5, pA]})
+        """
         self._update_params(self.slider_params, user_slider_params)
 
     def _update_params(self, params, user_params):

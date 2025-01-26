@@ -5,3 +5,4 @@ Playground
     :members:
     :autosummary:
     :autosummary-nosignatures:
+    :no-show-inheritance:
