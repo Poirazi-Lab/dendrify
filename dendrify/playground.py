@@ -101,7 +101,7 @@ class Playground:
 
         Examples
         --------
-        >>> playground.set_model_params({'C': 100 * pF, 'gL': 2 * nS})
+        >>> playground.set_model_params({'C': 100 * pF, 'gL': 2 * nS, 'EL': -65 * mV})
         """
         self._update_params(self.model_params, user_model_params)
 
