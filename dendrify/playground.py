@@ -120,7 +120,8 @@ class Playground:
 
         Examples
         --------
-        >>> playground.set_slider_params({'current': [0, 300, 150, 5, pA]})
+        >>> playground.set_slider_params({'current': [0, 300, 150, 5, pA],
+        ...                              'threshold': [-65, 0, -30, 1.0, mV]})
         """
         self._update_params(self.slider_params, user_slider_params)
 
