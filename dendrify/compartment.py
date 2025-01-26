@@ -394,12 +394,14 @@ class Compartment:
         Parameters
         ----------
         eqs : str
-            A string of Brian-compatible equations be added to the compartment.
+            A string of Brian-compatible equations to be added to the compartment.
         """
-        if eqs not in self._equations:
-            self._equations += '\n'+eqs
+        if eqs in self._equations:
+            logger.warning("The equations you are trying to add already exist in the compartment.")
+        else:
+            self._equations += '\n' + eqs
 
-    def replace_equations(self, eqs_old:str, eqs_new: str):
+    def replace_equations(self, eqs_old: str, eqs_new: str):
         """
         Replaces a set of equations with new ones.
 
@@ -412,6 +414,10 @@ class Compartment:
         """
         if eqs_old in self._equations:
             self._equations = self._equations.replace(eqs_old, eqs_new)
+        else:
+            raise ValueError(
+                "The equations to be replaced are not found in the compartment."
+                )
 
     def add_params(self, params_dict: dict):
         """
