@@ -1,5 +1,5 @@
-Classes
-=======
+Main classes
+============
 
 .. toctree::
    :maxdepth: 1
@@ -9,5 +9,6 @@ Classes
    dendrite
    neuronmodel
    pointneuronmodel
+   playground
    compartment
    ephys
