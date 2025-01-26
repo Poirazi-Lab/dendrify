@@ -104,7 +104,7 @@ class Compartment:
         self._connections = None
         self._synapses = None
         # Add membrane equations:
-        self._add_equations(model)
+        self._create_equations(model)
         # Keep track of electrophysiological properties:
         self._ephys_object = EphysProperties(
             name=self.name,
@@ -130,7 +130,7 @@ class Compartment:
                f"USER PARAMETERS\n{15*'-'}\n{user}")
         return txt
 
-    def _add_equations(self, model: str):
+    def _create_equations(self, model: str):
         """
         Adds equations to a compartment.
 
@@ -386,6 +386,45 @@ class Compartment:
         self._params[f'tau_noise_{self.name}'] = tau
         self._params[f'sigma_noise_{self.name}'] = sigma
         self._params[f'mean_noise_{self.name}'] = mean
+    
+    def add_equations(self, eqs: str):
+        """
+        Adds custom equations to a compartment.
+
+        Parameters
+        ----------
+        eqs : str
+            A string of Brian-compatible equations be added to the compartment.
+        """
+        if eqs not in self._equations:
+            self._equations += '\n'+eqs
+
+    def replace_equations(self, eqs_old:str, eqs_new: str):
+        """
+        Replaces a set of equations with new ones.
+
+        Parameters
+        ----------
+        eqs_old : str
+            The equations to be replaced.
+        eqs_new : str
+            The new equations.
+        """
+        if eqs_old in self._equations:
+            self._equations = self._equations.replace(eqs_old, eqs_new)
+
+    def add_params(self, params_dict: dict):
+        """
+        Adds custom parameters to a compartment.
+
+        Parameters
+        ----------
+        params_dict : dict
+            A dictionary of parameters to be added to the compartment.
+        """
+        if not self._params:
+            self._params = {}
+        self._params.update(params_dict)
 
     @property
     def parameters(self) -> dict:

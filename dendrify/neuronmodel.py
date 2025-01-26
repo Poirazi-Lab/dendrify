@@ -406,7 +406,7 @@ class NeuronModel:
 
     def add_params(self, params_dict: dict):
         """
-        Allows specifying extra/custom parameters.
+        Adds extra/custom parameters to a NeuronModel.
 
         Parameters
         ----------
@@ -430,6 +430,19 @@ class NeuronModel:
             self._extra_equations = f"{eqs}"
         else:
             self._extra_equations += f"\n{eqs}"
+
+    def replace_equations(self, eqs_old:str, eqs_new: str):
+        """
+        Replaces old equations with new ones.
+
+        Parameters
+        ----------
+        eqs_old : str
+            The old equations to be replaced.
+        eqs_new : str
+            The new equations.
+        """
+        return self.equations.replace(eqs_old, eqs_new)
 
     def as_graph(self, figsize: list = [6, 4], fontsize: int = 10, fontcolor: str = 'white',
                  scale_nodes: float = 1, color_soma: str = '#4C6C92',
@@ -622,7 +635,7 @@ class PointNeuronModel:
         self._extra_equations = None
         self._extra_params = None
         # Add membrane equations:
-        self._add_equations(model)
+        self._create_equations(model)
         # Keep track of electrophysiological properties:
         self._ephys_object = EphysProperties(
             name=None,
@@ -645,7 +658,7 @@ class PointNeuronModel:
                f"USER PARAMETERS\n{15*'-'}\n{user}")
         return txt
 
-    def _add_equations(self, model: str):
+    def _create_equations(self, model: str):
         """
         Adds equations to a compartment.
 
