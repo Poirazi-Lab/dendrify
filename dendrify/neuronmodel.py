@@ -442,13 +442,15 @@ class NeuronModel:
         eqs_new : str
             The custom equations.
         """
+        eqs_found = False
         for comp in self._compartments:
             if eqs_old in comp._equations:
                 comp._equations = comp._equations.replace(eqs_old, eqs_new)
-            else:
-                raise ValueError(
-                    "The equations to be replaced are not found in the compartment."
-                )
+                eqs_found = True
+        if not eqs_found:
+            raise ValueError(
+                "The equations to be replaced are not found in the model."
+            )
 
     def as_graph(self, figsize: list = [6, 4], fontsize: int = 10, fontcolor: str = 'white',
                  scale_nodes: float = 1, color_soma: str = '#4C6C92',
