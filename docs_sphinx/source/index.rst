@@ -73,6 +73,7 @@ making it possible to study the impact of dendrites on network-level functions.
    :maxdepth: 1
    :caption: Examples
    
+   examples/playground
    examples/compartmental
    examples/point
    examples/synapses

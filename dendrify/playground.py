@@ -1,7 +1,7 @@
 from time import time
 
 from brian2 import Network, NeuronGroup, StateMonitor
-from brian2.units import *
+from brian2.units import Quantity, ms, mV, mvolt, nS, pA, pF
 from matplotlib.pyplot import draw, rcParams, show, subplots
 from matplotlib.widgets import Button, Slider, TextBox
 
@@ -58,8 +58,9 @@ class Playground:
 
     def run(self, timeit=False) -> None:
         """
-        Initializes the GUI, allowing the user to interact with the model
-        by adjusting slider values, neuron parameters, and simulation parameters.
+        Initializes the graphical environment, allowing the user to interact with
+        the model by adjusting slider values, neuron parameters, and simulation
+        parameters.
 
         Parameters
         ----------
@@ -88,16 +89,17 @@ class Playground:
 
         show()
 
-    def set_model_params(self, user_model_params: dict) -> None:
+    def set_model_params(self, user_model_params: dict[str, Quantity]) -> None:
         """
         Updates the default model parameters with new values provided by the user.
 
         Parameters
         ----------
-        user_model_params : dict
-            A dictionary containing the new model parameters. Valid keys are
-            'C', 'gL', 'EL', and 'reversal_fall'. The corresponding values should
-            be in units of pF, nS, mV, and mV, respectively.
+        user_model_params : dict[str, ~brian2.units.fundamentalunits.Quantity]
+            A dictionary containing the new model parameters. Valid keys are:
+            ``'C'``, ``'gL'``, ``'EL'``, and ``'reversal_fall'``. The
+            corresponding values are expected to be in units of ``pF``, ``nS``,
+            ``mV``, and ``mV``, respectively.
 
         Examples
         --------
@@ -105,24 +107,36 @@ class Playground:
         """
         self._update_params(self.model_params, user_model_params)
 
-    def set_slider_params(self, user_slider_params: dict) -> None:
+    def set_slider_params(self, user_slider_params: dict[str, list]) -> None:
         """
         Updates the default slider parameters with new values provided by the user.
 
         Parameters
         ----------
-        user_slider_params : dict
-            A dictionary containing the new slider parameters. Valid keys are
-            'current', 'threshold', 'g_rise', 'g_fall', 'duration_rise',
-            'duration_fall', 'offset_fall', 'refractory', and 'reversal_rise'.
-            The corresponding values should be in the format
-            [min value, max value, initial value, step, unit].
+        user_slider_params : dict[str, list]
+            A dictionary containing the new slider parameters. Valid keys are:
+            
+            - ``'current'``
+            - ``'threshold'``
+            - ``'g_rise'``
+            - ``'g_fall'``
+            - ``'duration_rise'``
+            - ``'duration_fall'``
+            - ``'offset_fall'``
+            - ``'refractory'``
+            - ``'reversal_rise'``
+            
+            The corresponding values must be in the format:
+            ``[min value, max value, initial value, step, unit]``. The first four
+            elements are expected to be integers or floats, while the last element
+            must be a Brian2 :class:`~brian2.units.fundamentalunits.Quantity`.
 
         Examples
         --------
         >>> playground.set_slider_params({'current': [0, 300, 150, 5, pA],
-        ...                              'threshold': [-65, 0, -30, 1.0, mV]})
+        ...                               'threshold': [-65, 0, -30, 1.0, mV]})
         """
+
         self._update_params(self.slider_params, user_slider_params)
 
     def _update_params(self, params, user_params):
