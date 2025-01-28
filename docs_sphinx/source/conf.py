@@ -36,7 +36,6 @@ extensions = [
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
-html_static_path = ['_static']
 autosummary_generate = True
 nbsphinx_input_prompt = "%.0s"
 nbsphinx_output_prompt = "%.0s"
@@ -55,7 +54,11 @@ intersphinx_mapping = {
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
+def setup(app):
+    app.add_css_file("custom-nbsphinx.css")
+
 mathjax3_config = {'chtml': {'displayAlign': 'left'}}
+html_static_path = ['_static']
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
@@ -67,8 +70,15 @@ pygments_dark_style = "material"
 html_theme_options = {
     "sidebar_hide_name": True,
     "navigation_with_keys": True,
+    "announcement": "Version 2.2 has just been released! Check out the release notes to discover all the new features.",
     "light_logo": "dendrify_logo_light.png",
     "dark_logo": "dendrify_logo_dark.png",
+    "light_css_variables": {
+        "color-brand-primary": "#052a91",
+        "color-brand-content": "#052a91",
+        "color-announcement-background": "#031958 ",
+        "color-announcement-text": "#ffffff",
+    },
     "dark_css_variables": {
         "color-brand-primary": "#78b2ff",
         "color-brand-content": "#78b2ff",

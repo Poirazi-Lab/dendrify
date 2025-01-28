@@ -38,8 +38,8 @@ making it possible to study the impact of dendrites on network-level functions.
    :class: only-dark
 
 
-.. admonition:: Cite Dendrify
-   :class: important
+.. admonition:: Citation
+   :class: note
 
    If you find Dendrify useful in your research, please consider citing our
    introductory article:|br|
