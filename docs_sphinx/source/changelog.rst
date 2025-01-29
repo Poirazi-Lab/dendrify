@@ -3,14 +3,35 @@ Release notes
 
 Version 2.2.0
 -------------
-    * New feature: dSpike Playground.
-    * New feature: easier model customization through new methods. All compartments
-      get the add_equations, replace_equations and and add_params methods.
-    * New tutorial: "Customizing a model".
-    * Installation: by default, Dendrify will install the latest version of Brian 2,
-      matplotlib and networkx. If you want to install Dendrify without its dependencies,
-      you can use the command: pip install dendrify --no-deps.
-    * Significant documentation improvements. Also added a new section "Known issues".
+    * **New Feature: dSpike Playground**
+      |br|
+      Introducing a new graphical tool for interactively visualizing, exploring,
+      and calibrating dendritic spikes in Dendrify. Check out the new
+      example: :doc:`examples/playground` and the
+      relevant :class:`documentation <.Playground>` for more details.
+
+    * **New Functionality: Model Customization**
+      |br|
+      Users can now fully customize the built-in models by adding new equations,
+      replacing existing ones, and introducing new parameters. For more details,
+      refer to the new tutorial: :doc:`tutorials/Dendrify_custom_models`.
+
+    * **Installation**
+      |br| 
+      By default, Dendrify now installs the latest versions of Brian 2,
+      Matplotlib, and NetworkX. Learn more in the
+      updated :doc:`installation guide <installation>`.
+
+    * **Documentation Improvements**
+      |br|
+      Key updates include:
+
+      - Fixed a bug that prevented tutorials from rendering correctly.
+      - Added new tutorials and examples.
+      - Child classes now inherit documentation from parent classes.
+      - Introduced a new section: :doc:`known_issues`.
+      - Numerous aesthetic and language enhancements.
+
 
 Version 2.1.5
 -------------
@@ -97,6 +118,10 @@ Version 1.0.4
     * Improved compatibility with older Python versions.
     * Minor bug fixes.
 
+
+.. |br| raw:: html
+
+     <br>
 
 
 

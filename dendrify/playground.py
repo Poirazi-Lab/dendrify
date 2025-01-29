@@ -8,8 +8,8 @@ from matplotlib.widgets import Button, Slider, TextBox
 
 class Playground:
     """
-    A class that creates a graphical user interface for visualizing, exploring,
-    and understanding dendritic spikes in Dendrify.
+    A class that creates a graphical user interface for interactively visualizing,
+    exploring, and calibrating dendritic spikes in Dendrify.
     """
     SIMULATION_PARAMS = {
         'idle_period': 5 * ms,

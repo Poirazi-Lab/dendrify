@@ -70,14 +70,11 @@ pygments_dark_style = "material"
 html_theme_options = {
     "sidebar_hide_name": True,
     "navigation_with_keys": True,
-    "announcement": "Version 2.2 has just been released! Check out the release notes to discover all the new features.",
     "light_logo": "dendrify_logo_light.png",
     "dark_logo": "dendrify_logo_dark.png",
     "light_css_variables": {
         "color-brand-primary": "#052a91",
         "color-brand-content": "#052a91",
-        "color-announcement-background": "#031958 ",
-        "color-announcement-text": "#ffffff",
     },
     "dark_css_variables": {
         "color-brand-primary": "#78b2ff",
