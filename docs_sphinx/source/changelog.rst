@@ -1,6 +1,38 @@
 Release notes
 =============
 
+Version 2.2.0
+-------------
+    * **New Feature: dSpike Playground**
+      |br|
+      Introducing a new graphical tool for interactively visualizing, exploring,
+      and calibrating dendritic spikes in Dendrify. Check out the new
+      example: :doc:`examples/playground` and the
+      relevant :class:`documentation <.Playground>` for more details.
+
+    * **New Functionality: Model Customization**
+      |br|
+      Users can now fully customize the built-in models by adding new equations,
+      replacing existing ones, and introducing new parameters. For more details,
+      refer to the new tutorial: :doc:`tutorials/Dendrify_custom_models`.
+
+    * **Installation**
+      |br| 
+      By default, Dendrify now installs the latest versions of Brian 2,
+      Matplotlib, and NetworkX. Learn more in the
+      updated :doc:`installation guide <installation>`.
+
+    * **Documentation Improvements**
+      |br|
+      Key updates include:
+
+      - Fixed a bug that prevented tutorials from rendering correctly.
+      - Added new tutorials and examples.
+      - Child classes now inherit documentation from parent classes.
+      - Introduced a new section: :doc:`known_issues`.
+      - Numerous aesthetic and language enhancements.
+
+
 Version 2.1.5
 -------------
     * Ensured compatibility with Brian 2.7.1.
@@ -86,6 +118,10 @@ Version 1.0.4
     * Improved compatibility with older Python versions.
     * Minor bug fixes.
 
+
+.. |br| raw:: html
+
+     <br>
 
 
 

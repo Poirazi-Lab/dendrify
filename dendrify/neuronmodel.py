@@ -373,14 +373,14 @@ class NeuronModel:
             for comp in self._compartments:
                 if show:
                     print(
-                        f"Setting V_{comp.name} = {comp._ephys_object.v_rest}")
+                        f"V_{comp.name} = {repr(comp._ephys_object.v_rest)}")
                 setattr(group, f'V_{comp.name}', comp._ephys_object.v_rest)
 
         if init_events:
             if self.event_actions:
                 for event, action in self.event_actions.items():
                     if show:
-                        print(f"Setting run_on_event('{event}', '{action}')")
+                        print(f"run_on_event('{event}', '{action}')")
                     group.run_on_event(event, action, order='before_groups')
 
         ap_reset = None
@@ -406,7 +406,7 @@ class NeuronModel:
 
     def add_params(self, params_dict: dict):
         """
-        Allows specifying extra/custom parameters.
+        Adds extra/custom parameters to a NeuronModel.
 
         Parameters
         ----------
@@ -429,7 +429,33 @@ class NeuronModel:
         if not self._extra_equations:
             self._extra_equations = f"{eqs}"
         else:
-            self._extra_equations += f"\n{eqs}"
+            if eqs not in self._extra_equations:
+                self._extra_equations += f"\n{eqs}"
+            else:
+                logger.warning(
+                    "The equations you are trying to add already exist in the model."
+                )
+
+    def replace_equations(self, eqs_old: str, eqs_new: str):
+        """
+        Replaces existing equations with custom ones.
+
+        Parameters
+        ----------
+        eqs_old : str
+            The existing equations to be replaced.
+        eqs_new : str
+            The custom equations.
+        """
+        eqs_found = False
+        for comp in self._compartments:
+            if eqs_old in comp._equations:
+                comp._equations = comp._equations.replace(eqs_old, eqs_new)
+                eqs_found = True
+        if not eqs_found:
+            logger.warning(
+                "The equations to be replaced are not found in the model."
+            )
 
     def as_graph(self, figsize: list = [6, 4], fontsize: int = 10, fontcolor: str = 'white',
                  scale_nodes: float = 1, color_soma: str = '#4C6C92',
@@ -622,7 +648,7 @@ class PointNeuronModel:
         self._extra_equations = None
         self._extra_params = None
         # Add membrane equations:
-        self._add_equations(model)
+        self._create_equations(model)
         # Keep track of electrophysiological properties:
         self._ephys_object = EphysProperties(
             name=None,
@@ -645,7 +671,7 @@ class PointNeuronModel:
                f"USER PARAMETERS\n{15*'-'}\n{user}")
         return txt
 
-    def _add_equations(self, model: str):
+    def _create_equations(self, model: str):
         """
         Adds equations to a compartment.
 

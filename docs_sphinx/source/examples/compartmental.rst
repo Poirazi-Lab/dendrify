@@ -1,3 +1,5 @@
+.. _compartmental:
+
 Compartmental models
 ====================
 

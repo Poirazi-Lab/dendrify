@@ -104,7 +104,7 @@ class Compartment:
         self._connections = None
         self._synapses = None
         # Add membrane equations:
-        self._add_equations(model)
+        self._create_equations(model)
         # Keep track of electrophysiological properties:
         self._ephys_object = EphysProperties(
             name=self.name,
@@ -130,7 +130,7 @@ class Compartment:
                f"USER PARAMETERS\n{15*'-'}\n{user}")
         return txt
 
-    def _add_equations(self, model: str):
+    def _create_equations(self, model: str):
         """
         Adds equations to a compartment.
 
@@ -386,6 +386,51 @@ class Compartment:
         self._params[f'tau_noise_{self.name}'] = tau
         self._params[f'sigma_noise_{self.name}'] = sigma
         self._params[f'mean_noise_{self.name}'] = mean
+    
+    def add_equations(self, eqs: str):
+        """
+        Adds custom equations to a compartment.
+
+        Parameters
+        ----------
+        eqs : str
+            A string of Brian-compatible equations to be added to the compartment.
+        """
+        if eqs in self._equations:
+            logger.warning("The equations you are trying to add already exist in the compartment.")
+        else:
+            self._equations += '\n' + eqs
+
+    def replace_equations(self, eqs_old: str, eqs_new: str):
+        """
+        Replaces a set of equations with new ones.
+
+        Parameters
+        ----------
+        eqs_old : str
+            The equations to be replaced.
+        eqs_new : str
+            The new equations.
+        """
+        if eqs_old in self._equations:
+            self._equations = self._equations.replace(eqs_old, eqs_new)
+        else:
+            logger.warning(
+                "The equations to be replaced are not found in the compartment."
+                )
+
+    def add_params(self, params_dict: dict):
+        """
+        Adds custom parameters to a compartment.
+
+        Parameters
+        ----------
+        params_dict : dict
+            A dictionary of parameters to be added to the compartment.
+        """
+        if not self._params:
+            self._params = {}
+        self._params.update(params_dict)
 
     @property
     def parameters(self) -> dict:
@@ -517,12 +562,6 @@ class Soma(Compartment):
     and parameters needed to describe a somatic compartment and any currents
     (synaptic, dendritic, noise) passing through it.
 
-    .. seealso::
-
-       Soma acts as a wrapper for Compartment with slight changes to account for
-       certain somatic properties. For a full list of its methods and attributes,
-       please see: :class:`.Compartment`.
-
     Parameters
     ----------
     name : str
@@ -603,11 +642,6 @@ class Dendrite(Compartment):
     and parameters needed to describe a dendritic compartment, its active
     mechanisms, and any currents (synaptic, dendritic, ionic, noise) passing
     through it.
-
-    .. seealso::
-       Dendrite inherits all the methods and attributes of its parent class
-       :class:`.Compartment`. For a complete list, please
-       refer to the documentation of the latter.
 
     Parameters
     ----------

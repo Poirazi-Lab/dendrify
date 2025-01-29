@@ -3,7 +3,8 @@
 # For the full list of built-in configuration values, see the documentation:
 # https://www.sphinx-doc.org/en/master/usage/configuration.html
 
-import os, sys
+import os
+import sys
 
 sys.path.insert(0, os.path.abspath('../..'))
 sys.path.insert(0, os.path.abspath('../../..'))
@@ -11,11 +12,9 @@ sys.path.insert(0, os.path.abspath('../../dendrify'))
 
 from version import __version__ as release
 
-
-
 # -- Project information -------------------------------------------------------
 project = 'Dendrify'
-copyright = '2024, Michalis Pagkalos'
+copyright = '2023-2025, Michalis Pagkalos. Licensed under the GPL-3.0 License.'
 author = 'Michalis Pagkalos'
 
 
@@ -37,22 +36,29 @@ extensions = [
 
 templates_path = ['_templates']
 exclude_patterns = ['_build', '**.ipynb_checkpoints']
-html_static_path = ['_static']
 autosummary_generate = True
 nbsphinx_input_prompt = "%.0s"
 nbsphinx_output_prompt = "%.0s"
-autodoc_default_options = {'show-inheritance': True}
+autodoc_default_options = {
+    'show-inheritance': True,
+    'members': True,
+    'inherited-members': True}
 autodoc_typehints = "none"
 intersphinx_mapping = {
     "brian2": ("https://brian2.readthedocs.io/en/stable/", None),
     "networkx": ("https://networkx.org/documentation/stable", None),
-    "brian2cuda": ("https://brian2cuda.readthedocs.io/en/latest/", None)
+    "brian2cuda": ("https://brian2cuda.readthedocs.io/en/latest/", None),
+    "matplotlib": ("https://matplotlib.org/stable/", None)
 }
 
 myst_url_schemes = ["http", "https", ]
 
 # -- HTML settings -------------------------------------------------------------
+def setup(app):
+    app.add_css_file("custom-nbsphinx.css")
+
 mathjax3_config = {'chtml': {'displayAlign': 'left'}}
+html_static_path = ['_static']
 copybutton_prompt_text = r">>> (?!#)"
 copybutton_prompt_is_regexp = True
 copybutton_only_copy_prompt_lines = True
@@ -66,6 +72,10 @@ html_theme_options = {
     "navigation_with_keys": True,
     "light_logo": "dendrify_logo_light.png",
     "dark_logo": "dendrify_logo_dark.png",
+    "light_css_variables": {
+        "color-brand-primary": "#052a91",
+        "color-brand-content": "#052a91",
+    },
     "dark_css_variables": {
         "color-brand-primary": "#78b2ff",
         "color-brand-content": "#78b2ff",

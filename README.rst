@@ -15,22 +15,20 @@ Dendrify
         :alt: Contributor Covenant
 
 
-Although neuronal dendrites play a crucial role in shaping how individual 
-neurons process synaptic information, their contribution to network-level 
-functions has remained largely unexplored. Current spiking neural networks 
-(SNNs) often oversimplify dendritic properties or overlook their essential 
-functions. On the other hand, circuit models with morphologically detailed 
-neuron representations are computationally intensive, making them impractical 
-for simulating large networks.
+Neuronal dendrites play a crucial role in shaping how individual neurons process
+synaptic information, yet their contributions to network-level functions remain
+largely underexplored. While current spiking neural networks (SNNs) often
+oversimplify or neglect essential dendritic properties, circuit models with
+morphologically detailed neuron representations are computationally expensive,
+limiting their practicality for large-scale network simulations.
 
-In an effort to bridge this gap, we present Dendrify—a freely available,
-open-source Python package that seamlessly integrates with the
-`Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify,
-through simple commands, automatically generates reduced compartmental neuron
-models with simplified yet biologically relevant dendritic and synaptic
-integrative properties. These models offer a well-rounded compromise between
-flexibility, performance, and biological accuracy, enabling us to investigate
-the impact of dendrites on network-level functions.
+To address these challenges, we introduce Dendrify, a free and open-source Python
+package designed to work seamlessly with the 
+`Brian 2 simulator <https://brian2.readthedocs.io/en/stable/>`_. Dendrify enables
+users to generate reduced compartmental neuron models with biologically relevant
+dendritic and synaptic properties using simple commands. These models strike a
+good balance between flexibility, performance, and accuracy, making it possible 
+to study the impact of dendrites on network-level functions.
 
 .. image:: https://github.com/Poirazi-Lab/dendrify/assets/30598350/b6db9876-6de4-458a-b27e-61d4edd360db
    :width: 70 %

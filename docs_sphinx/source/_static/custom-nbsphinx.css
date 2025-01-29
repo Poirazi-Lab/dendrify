@@ -1,0 +1,75 @@
+/* Ensure containers span full width */
+div.nbinput.container,
+div.nboutput.container {
+    display: flex;
+    align-items: flex-start;
+    margin: 0 !important; /* Remove extra margin */
+    padding: 0 !important; /* Remove extra padding */
+    width: 100%; /* Ensure full width */
+    box-sizing: border-box;
+}
+
+/* Add vertical spacing between stacked cells */
+div.nbinput.container + div.nbinput.container,
+div.nboutput.container + div.nbinput.container {
+    margin-top: 15px !important; /* Add vertical space */
+}
+
+/* Fix alignment for nested containers */
+div.nbinput.container div.highlight,
+div.nboutput.container div.highlight {
+    width: 100% !important; /* Ensure code spans full width */
+    margin: 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box;
+}
+
+/* Code cells styling */
+div.highlight pre,
+div.codecell pre {
+    margin: 0 !important;
+    padding: 10px !important; /* Add padding for readability */
+    border-radius: 20px; /* Subtle rounding for aesthetics */
+    box-sizing: border-box;
+}
+
+/* Avoid horizontal scrollbars in code cells */
+div.nbinput.container div.highlight pre,
+div.codecell pre {
+    overflow-x: hidden !important; /* No horizontal scrollbar for code cells */
+    white-space: pre-wrap !important; /* Wrap long lines */
+}
+
+/* Enable horizontal scrollbars for output cells */
+div.nboutput.container div.output_area pre {
+    overflow-x: auto !important; /* Allow scrolling for output cells */
+    white-space: pre !important; /* Preserve long lines without wrapping */
+}
+
+/* Remove the left "artifact" */
+div.nbinput.container div.prompt,
+div.nboutput.container div.prompt {
+    display: none; /* Hide the input/output prompts */
+}
+
+/* Ensure code and text are aligned */
+div.nbinput.container,
+div.nboutput.container,
+div.highlight pre {
+    margin-left: 0 !important;
+}
+
+/* Specific styling for output area */
+div.nboutput.container div.output_area {
+    background: transparent !important; /* Transparent background for output */
+    border: none !important; /* Remove borders */
+    margin: 0 !important;
+    padding: 0 !important;
+}
+
+/* Style text inside the output area */
+div.nboutput.container div.output_area pre {
+    margin: 0 !important;
+    padding: 10px !important; /* Add padding for readability */
+    background: transparent !important; /* Ensure transparency here as well */
+}
