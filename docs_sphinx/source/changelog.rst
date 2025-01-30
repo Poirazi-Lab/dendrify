@@ -10,17 +10,23 @@ Version 2.2.0
       example: :doc:`examples/playground` and the
       relevant :class:`documentation <.Playground>` for more details.
 
+      |br|
+
     * **New Functionality: Model Customization**
       |br|
       Users can now fully customize the built-in models by adding new equations,
       replacing existing ones, and introducing new parameters. For more details,
       refer to the new tutorial: :doc:`tutorials/Dendrify_custom_models`.
 
+      |br|
+
     * **Installation**
       |br| 
       By default, Dendrify now installs the latest versions of Brian 2,
       Matplotlib, and NetworkX. Learn more in the
       updated :doc:`installation guide <installation>`.
+
+      |br|
 
     * **Documentation Improvements**
       |br|
@@ -31,6 +37,8 @@ Version 2.2.0
       - Child classes now inherit documentation from parent classes.
       - Introduced a new section: :doc:`known_issues`.
       - Numerous aesthetic and language enhancements.
+
+      |br|
 
 
 Version 2.1.5
