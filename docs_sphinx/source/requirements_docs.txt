@@ -7,3 +7,4 @@ brian2
 sphinx-copybutton
 sphinx >= 5.1
 ipython
+dendrify
