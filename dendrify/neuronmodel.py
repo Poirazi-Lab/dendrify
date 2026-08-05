@@ -687,6 +687,43 @@ class PointNeuronModel:
                             "'passive' membrane model will be used instead."))
             self._equations = library_point['passive']
 
+
+    def add_equations(self, eqs: str):
+        """
+        Adds custom equations to a compartment.
+
+        Parameters
+        ----------
+        eqs : str
+            A string of Brian-compatible equations to be added to the compartment.
+        """
+        if eqs in self._equations:
+            logger.warning("The equations you are trying to add already exist in the compartment.")
+        else:
+            self._equations += '\n' + eqs
+
+
+    def replace_equations(self, eqs_old: str, eqs_new: str):
+        """
+        Replaces existing equations with custom ones.
+
+        Parameters
+        ----------
+        eqs_old : str
+            The existing equations to be replaced.
+        eqs_new : str
+            The custom equations.
+        """
+        eqs_found = False
+        if eqs_old in self._equations:
+            self._equations = self._equations.replace(eqs_old, eqs_new)
+            eqs_found = True
+        if not eqs_found:
+            logger.warning(
+                "The equations to be replaced are not found in the model."
+            )
+
+
     def synapse(self,
                 channel: str,
                 tag: str,
