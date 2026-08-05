@@ -138,7 +138,7 @@ Spike mechanism:
    * - :math:`w`
      - adaptation current
    * - :math:`\bar{g_A}`
-     - maximal adaptation conductance
+     - maximal subthreshold adaptation conductance
    * - :math:`E_A`
      - reversal potential of the adaptation
    * - :math:`τ_A`
@@ -187,13 +187,13 @@ Spike mechanism:
    * - :math:`w`
      - adaptation current
    * - :math:`a`
-     - maximal adaptation conductance
+     - maximal subthreshold adaptation conductance
    * - :math:`b`
      - spike-triggered adaptation current
    * - :math:`V_T`
      - voltage threshold
    * - :math:`\Delta_T`
-     - slope factor
+     - slope of the spike initiation
    * - :math:`τ_w`
      - adaptation time constant
    * - :math:`V_\theta`
@@ -205,6 +205,61 @@ Spike mechanism:
 
 * :doc:`../examples/point_adex`
 * :doc:`../examples/point_adex_synapses`
+
+
+
+Conductance-Based Adaptive Exponential Integrate-and-Fire
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+.. math::
+
+   C\dfrac{dV}{dt}=-g_L(V-E_L)+g_L\Delta_T\exp\left(\dfrac{V-V_T}{\Delta_T}\right)+g_A(E_A-V)+I
+
+.. math::
+
+   \tau_A\dfrac{dg_A}{dt}=\frac{\bar{g}_A}{1+\exp\left(\dfrac{V_A-V}{\Delta_A}\right)}-g_A
+
+Spike mechanism:
+
+.. math::
+
+   \text{if } V \geq V_D \text{ then } 
+   \begin{cases}
+   V \rightarrow V_r \\
+   g_A \rightarrow g_A + \delta g_A 
+   \end{cases}
+
+.. list-table::
+   :align: left
+   :header-rows: 1
+
+   * - Symbol
+     - Description
+   * - :math:`g_A`
+     - adaptation conductance
+   * - :math:`\bar{g}_A`
+     - maximal subthreshold adaptation conductance
+   * - :math:`\delta g_A`
+     - spike-triggered adaptation conductance
+   * - :math:`V_T`
+     - voltage threshold
+   * - :math:`\Delta_T`
+     - slope of the spike initiation
+   * - :math:`τ_A`
+     - adaptation time constant
+   * - :math:`\Delta_A`
+     - slope of subthreshold adaptation
+   * - :math:`E_A`
+     - reversal potential of the adaptation conductance
+   * - :math:`V_A`
+     - subthreshold adaptation activation voltage
+   * - :math:`V_D`
+     - detection limit (effective threshold)
+   * - :math:`V_r`
+     - reset potential
+
+**Examples:**
+
+* :doc:`../examples/point_cadex`
 
 ----
 
